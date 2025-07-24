@@ -218,6 +218,13 @@
     // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzv10XvOVc1s8UiM3CFtMu8gzdzYmXaQvvUwbMT0aKEEFJtNTxVVkapugfX8BZuUNE/exec"; 
 
+    // VERIFICAÇÃO DE LOGIN
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+      // Se não houver usuário, redireciona para a página de login
+      window.location.href = 'login.html';
+    }
+
     const fixedPhaseOrder = [
       'Fila de Recolha',
       'Tentativa 1 de Recolha',
@@ -370,6 +377,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+      // Atualiza as informações do usuário no cabeçalho
+      document.getElementById('user-name').textContent = user.displayName;
+      document.getElementById('user-email').textContent = user.email;
+      document.getElementById('user-avatar').src = user.photoURL;
+
       const searchInput = document.getElementById('searchInput');
       const slaFilter = document.getElementById('slaFilter');
       const kanbanView = document.getElementById('kanban-view');
@@ -481,7 +493,8 @@
       }
       
       function fetchData() {
-          const url = `${SCRIPT_URL}?t=${new Date().getTime()}`;
+          // Adiciona o e-mail do usuário como um parâmetro na URL
+          const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${new Date().getTime()}`;
           fetch(url)
               .then(response => {
                   if (!response.ok) {
