@@ -449,7 +449,6 @@
       }
       
       function fetchData() {
-          // Adiciona um timestamp à URL para evitar o cache
           const url = `${SCRIPT_URL}?t=${new Date().getTime()}`;
           fetch(url)
               .then(response => {
