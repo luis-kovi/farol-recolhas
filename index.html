@@ -15,6 +15,8 @@
     :root {
       --primary-color: #FF355A;
       --primary-color-darker: #E02E4D;
+      --scrollbar-track: #f1f1f1;
+      --scrollbar-thumb: #c1c1c1;
     }
     body {
       font-family: 'Inter', sans-serif;
@@ -48,35 +50,53 @@
       box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.4) !important;
     }
     
-    /* Estilos para ocultar a barra de rolagem até o hover */
-    .scrollbar-hidden::-webkit-scrollbar {
-      display: none;
+    /* Estilos aprimorados para barra de rolagem */
+    .scroll-container {
+      overflow: auto;
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+      transition: scrollbar-color 0.3s ease;
     }
     
-    .scrollbar-hidden {
-      -ms-overflow-style: none;  /* IE and Edge */
-      scrollbar-width: none;  /* Firefox */
+    .scroll-container:hover {
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
     }
     
-    .scrollbar-hidden:hover::-webkit-scrollbar {
-      display: block;
-    }
-    
-    .scrollbar-hidden:hover {
-      -ms-overflow-style: auto; /* IE and Edge */
-      scrollbar-width: auto; /* Firefox */
-    }
-    
-    .kanban-board::-webkit-scrollbar {
+    /* WebKit (Chrome, Safari) */
+    .scroll-container::-webkit-scrollbar {
+      width: 8px;
       height: 8px;
+      background-color: transparent;
     }
-    .kanban-board::-webkit-scrollbar-thumb {
-      background-color: #d1d5db;
+    
+    .scroll-container::-webkit-scrollbar-track {
+      background: transparent;
       border-radius: 4px;
     }
-    .kanban-board::-webkit-scrollbar-track {
-      background-color: #e5e7eb;
+    
+    .scroll-container::-webkit-scrollbar-thumb {
+      background-color: transparent;
+      border-radius: 4px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
     }
+    
+    .scroll-container:hover::-webkit-scrollbar-track {
+      background: var(--scrollbar-track);
+    }
+    
+    .scroll-container:hover::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
+    }
+    
+    .scroll-container::-webkit-scrollbar-thumb:hover {
+      background-color: #a0a0a0;
+    }
+    
+    .kanban-board {
+      scrollbar-gutter: stable;
+    }
+    
     .modal-overlay {
       transition: opacity 0.2s ease-in-out;
     }
@@ -193,7 +213,7 @@
       </div>
       
       <!-- Visualização Kanban (inicialmente oculta) -->
-      <div id="kanban-view" class="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-4 hidden scrollbar-hidden">
+      <div id="kanban-view" class="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-4 hidden scroll-container">
         <div id="kanban-container" class="flex gap-4">
             <!-- As colunas serão inseridas aqui pelo JavaScript -->
         </div>
@@ -201,7 +221,7 @@
       
       <!-- Visualização em Lista (inicialmente oculta) -->
       <div id="list-view" class="h-full w-full p-4 hidden">
-        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scrollbar-hidden">
+        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
           <table class="w-full text-sm text-left text-gray-500">
             <thead class="text-xs uppercase bg-gray-50 sticky top-0 z-10 table-header-primary">
               <tr>
@@ -230,10 +250,10 @@
         <button id="closeCardModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
       </div>
       <div class="split-modal">
-        <div class="split-modal-left scrollbar-hidden">
+        <div class="split-modal-left scroll-container">
           <div id="modal-content" class="space-y-4"></div>
         </div>
-        <div class="split-modal-right scrollbar-hidden">
+        <div class="split-modal-right scroll-container">
           <iframe id="modalFormIframe" src="" class="w-full h-full"></iframe>
         </div>
       </div>
@@ -300,7 +320,7 @@
                         <span class="text-sm font-semibold text-gray-500 bg-gray-200 rounded-md px-2 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
                         ${lateOrAlertCount > 0 ? `<span class="ml-auto flex items-center text-amber-600 font-semibold text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${lateOrAlertCount}</span>` : ''}
                     </div>
-                    <div class="flex-1 p-2 space-y-2 overflow-y-auto scrollbar-hidden">
+                    <div class="flex-1 p-2 space-y-2 overflow-y-auto scroll-container">
                         ${cardsInPhase.length > 0 ? cardsInPhase.map(card => buildCardHTML(card)).join('') : `<div class="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4"><p class="text-sm font-medium">Não há recolha nesta fase.</p></div>`}
                     </div>
                 </div>`;
