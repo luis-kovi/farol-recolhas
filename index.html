@@ -448,24 +448,23 @@
         console.log("Dados atualizados em: " + sheetData.lastUpdate);
       }
       
-      function initialLoad() {
-        google.script.run
-          .withSuccessHandler(sheetData => {
-            loadingIndicator.style.display = 'none';
-            kanbanView.classList.remove('hidden');
-            kanbanView.classList.add('flex');
-            onDataRefreshed(sheetData);
-            
-            // Inicia o polling após o sucesso do carregamento inicial
-            setInterval(() => {
-              google.script.run.withSuccessHandler(onDataRefreshed).getGoogleSheetData();
-            }, 30000); // Atualiza a cada 30 segundos
-          })
-          .withFailureHandler(err => {
-            console.error("Falha ao carregar dados iniciais:", err);
-            loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha e tente novamente.</p>`;
-          })
-          .getGoogleSheetData();
+      function fetchData() {
+          const url = `${SCRIPT_URL}?t=${new Date().getTime()}`;
+          fetch(url)
+              .then(response => response.json())
+              .then(data => {
+                  if (data.error) {
+                      throw new Error(data.error);
+                  }
+                  loadingIndicator.style.display = 'none';
+                  kanbanView.classList.remove('hidden');
+                  kanbanView.classList.add('flex');
+                  onDataRefreshed(data);
+              })
+              .catch(err => {
+                  console.error("Falha ao carregar dados iniciais:", err);
+                  loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha e o URL da API.</p>`;
+              });
       }
 
       closeCardModalBtn.addEventListener('click', closeCardModal);
@@ -473,8 +472,9 @@
       closeFormModalBtn.addEventListener('click', closeFormModal);
       formModal.addEventListener('click', e => { if (e.target === formModal) closeFormModal(); });
 
-      // Removido o carregamento dinâmico e voltado para o scriptlet inicial
-      attachEventListeners();
+      fetchData(); // Carregamento inicial
+
+      setInterval(fetchData, 30000); // Atualiza a cada 30 segundos
     });
   </script>
 
