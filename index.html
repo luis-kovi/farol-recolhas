@@ -141,6 +141,72 @@
       height: 100%;
       border: none;
     }
+    
+    /* Estilos para a calculadora */
+    .calculator-logo { text-align: center; margin-bottom: 20px; }
+    .calculator-logo img { max-height: 50px; }
+    .calculator-label {
+      font-weight: 600;
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 5px;
+    }
+    .calculator-input, .calculator-select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border 0.3s ease;
+      box-sizing: border-box;
+    }
+    .calculator-input:focus, .calculator-select:focus {
+      border-color: #FF355A;
+      outline: none;
+    }
+    .calculator-btn {
+      background-color: #FF355A;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      width: 100%;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .calculator-btn:hover { background-color: #e7304f; }
+    .calculator-result {
+      display: none; 
+      margin-top: 20px;
+      background: #f7f7f7;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 15px;
+      line-height: 1.6;
+      border-left: 5px solid #FF355A;
+      min-height: 20px;
+      word-wrap: break-word;
+    }
+    .calculator-loading {
+      text-align: center;
+      display: none;
+      margin-top: 20px;
+    }
+    .calculator-loading img { width: 40px; }
+    .calculator-address {
+      display: none;
+      font-size: 13px;
+      color: #555;
+      margin-top: 6px;
+      padding: 8px;
+      border-radius: 6px;
+      background-color: #f0f0f0;
+      min-height: 18px;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
   </style>
 </head>
 <body class="text-gray-800">
@@ -155,6 +221,14 @@
           <h1 class="text-lg font-semibold" style="font-family: 'Poppins', sans-serif; font-weight: 800;">Gestão de Recolhas</h1>
         </div>
         <div class="flex items-center gap-3">
+          <!-- Botão da Calculadora -->
+          <button id="calculator-btn" class="text-white hover:text-gray-200 ml-2 flex items-center gap-1 text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/>
+            </svg>
+            Calculadora KM
+          </button>
+          
           <img id="user-avatar" src="https://placehold.co/40x40/FFFFFF/FF355A?text=K" alt="Foto do Perfil" class="h-10 w-10 rounded-full">
           <div>
               <p id="user-name" class="font-bold text-sm">Utilizador Kovi</p>
@@ -262,10 +336,54 @@
       </div>
     </div>
   </div>
+  
+  <!-- Modal da Calculadora KM -->
+  <div id="calculatorModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+    <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-md transform scale-95 opacity-0">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h3 class="text-xl font-bold">Calculadora de KM adicional</h3>
+        <button id="closeCalculatorModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+      </div>
+      <div class="p-4">
+        <div class="calculator-logo">
+          <img src="https://i.imgur.com/m7INF9a.png" alt="Logo Kovi">
+        </div>
+        
+        <h2 class="text-center font-bold text-xl mb-4">Calculadora de Distância</h2>
+
+        <label for="calculator-origem" class="calculator-label">Coordenadas de Origem</label>
+        <input type="text" id="calculator-origem" placeholder="-23.188186-46.894350" class="calculator-input" />
+        
+        <div id="calculator-endereco" class="calculator-address"></div>
+
+        <label for="calculator-destino" class="calculator-label">Unidade de Destino</label>
+        <select id="calculator-destino" class="calculator-select">
+          <option value="">Selecione...</option>
+          <option value="-23.6713803,-46.706649">Kovi São Paulo (Jurubatuba)</option>
+          <option value="-29.9879565,-51.1660061">Kovi Porto Alegre</option>
+          <option value="-22.9310024,-47.081593">Kovi Campinas</option>
+          <option value="-23.9774346,-46.3120985">Kovi Santos</option>
+          <option value="-15.8313137,-48.0379609">Kovi Brasília</option>
+          <option value="-3.7946021,-38.4821463">Kovi Fortaleza</option>
+          <option value="-8.1290838,-34.9037255">Kovi Recife</option>
+          <option value="-27.5984641,-48.6214476">Kovi Florianópolis</option>
+        </select>
+
+        <button id="calculator-calculate-btn" class="calculator-btn">Calcular</button>
+
+        <div id="calculator-loading" class="calculator-loading">
+          <img src="https://www.teleinfotoday.com/wp-content/uploads/2018/10/loading.gif" alt="Carregando...">
+        </div>
+
+        <div id="calculator-result" class="calculator-result"></div>
+      </div>
+    </div>
+  </div>
 
   <script>
     // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; 
+    const CALCULATOR_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; // Usar a mesma URL para simplificar
 
     // VERIFICAÇÃO DE LOGIN
     const user = JSON.parse(localStorage.getItem('user'));
@@ -443,6 +561,15 @@
       const modalFormIframe = document.getElementById('modalFormIframe');
       const mainContent = document.querySelector('main');
       const logoutBtn = document.getElementById('logout-btn');
+      const calculatorBtn = document.getElementById('calculator-btn');
+      const calculatorModal = document.getElementById('calculatorModal');
+      const closeCalculatorModalBtn = document.getElementById('closeCalculatorModal');
+      const calculatorCalculateBtn = document.getElementById('calculator-calculate-btn');
+      const calculatorOrigemInput = document.getElementById('calculator-origem');
+      const calculatorDestinoSelect = document.getElementById('calculator-destino');
+      const calculatorResultDiv = document.getElementById('calculator-result');
+      const calculatorEnderecoDiv = document.getElementById('calculator-endereco');
+      const calculatorLoadingDiv = document.getElementById('calculator-loading');
 
       // Adiciona o event listener para os cards e botões de formulário
       mainContent.addEventListener('click', function(event) {
@@ -572,10 +699,92 @@
         localStorage.removeItem('user');
         window.location.href = 'login.html';
       }
+      
+      // Funções para a calculadora KM
+      function openCalculatorModal() {
+        // Limpar resultados anteriores
+        calculatorResultDiv.style.display = 'none';
+        calculatorEnderecoDiv.style.display = 'none';
+        calculatorLoadingDiv.style.display = 'none';
+        calculatorOrigemInput.value = '';
+        calculatorDestinoSelect.value = '';
+        
+        calculatorModal.classList.remove('hidden');
+        setTimeout(() => calculatorModal.querySelector('.modal-panel').classList.remove('opacity-0', 'scale-95'), 10);
+      }
+      
+      function closeCalculatorModal() {
+        const panel = calculatorModal.querySelector('.modal-panel');
+        panel.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => {
+          calculatorModal.classList.add('hidden');
+        }, 200);
+      }
+      
+      function calcularDistancia() {
+        const origem = calculatorOrigemInput.value;
+        const destino = calculatorDestinoSelect.value;
+        
+        // Mostrar loading e ocultar resultados
+        calculatorLoadingDiv.style.display = 'block';
+        calculatorResultDiv.style.display = 'none';
+        calculatorResultDiv.innerHTML = "";
+        calculatorEnderecoDiv.style.display = 'none';
+        calculatorEnderecoDiv.innerHTML = "";
+        
+        // Fazer requisição para o endpoint da calculadora
+        fetch(CALCULATOR_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            origem: origem,
+            destino: destino
+          })
+        })
+        .then(response => response.text())
+        .then(jsonString => {
+          calculatorLoadingDiv.style.display = 'none';
+          const res = JSON.parse(jsonString);
+          
+          // Exibir endereço de origem, se disponível
+          if (res.endereco) {
+            calculatorEnderecoDiv.innerHTML = `📍 <b>Origem:</b> ${res.endereco}`;
+            calculatorEnderecoDiv.style.display = 'block';
+          }
+          
+          // Exibir resultado ou erro
+          if (res.error) {
+            calculatorResultDiv.innerHTML = res.error;
+          } else {
+            calculatorResultDiv.innerHTML = res.distanciaHtml;
+          }
+          calculatorResultDiv.style.display = 'block';
+        })
+        .catch(error => {
+          calculatorLoadingDiv.style.display = 'none';
+          calculatorResultDiv.innerHTML = "❌ Ocorreu um erro inesperado: " + error.message;
+          calculatorResultDiv.style.display = 'block';
+        });
+      }
 
+      // Event Listeners
       closeCardModalBtn.addEventListener('click', closeCardModal);
       cardModal.addEventListener('click', e => { if (e.target === cardModal) closeCardModal(); });
       logoutBtn.addEventListener('click', logout);
+      calculatorBtn.addEventListener('click', openCalculatorModal);
+      closeCalculatorModalBtn.addEventListener('click', closeCalculatorModal);
+      calculatorModal.addEventListener('click', e => { if (e.target === calculatorModal) closeCalculatorModal(); });
+      calculatorCalculateBtn.addEventListener('click', calcularDistancia);
+      
+      // Permitir calcular com Enter
+      calculatorOrigemInput.addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          calcularDistancia();
+        }
+      });
 
       fetchData(); // Carregamento inicial
 
