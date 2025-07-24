@@ -198,7 +198,6 @@
     function buildUI(cards) {
         buildKanbanView(cards);
         buildListView(cards);
-        attachEventListeners();
         filterAndSearch();
     }
     
@@ -320,25 +319,6 @@
             <div><p class="text-sm text-gray-500">Data de Criação</p><p class="font-semibold">${data.criacao}</p></div>`;
     }
 
-    function attachEventListeners() {
-        const mainContent = document.querySelector('main');
-        mainContent.addEventListener('click', function(event) {
-            const target = event.target;
-            const formButton = target.closest('.open-form-btn');
-            if (formButton) {
-                event.stopPropagation();
-                const cardElement = formButton.closest('.data-item');
-                const formUrl = cardElement.dataset.formUrl;
-                if (formUrl) openFormModal(formUrl);
-                return;
-            }
-            const cardElement = target.closest('.data-item');
-            if (cardElement) {
-                openCardModal(cardElement);
-            }
-        });
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
       const searchInput = document.getElementById('searchInput');
       const slaFilter = document.getElementById('slaFilter');
@@ -354,6 +334,24 @@
       const closeFormModalBtn = document.getElementById('closeFormModal');
       const formIframe = document.getElementById('formIframe');
       const modalFormBtn = document.getElementById('modalFormBtn');
+      const mainContent = document.querySelector('main');
+
+      // Adiciona o event listener para os cards e botões de formulário
+      mainContent.addEventListener('click', function(event) {
+        const target = event.target;
+        const formButton = target.closest('.open-form-btn');
+        if (formButton) {
+            event.stopPropagation();
+            const cardElement = formButton.closest('.data-item');
+            const formUrl = cardElement.dataset.formUrl;
+            if (formUrl) openFormModal(formUrl);
+            return;
+        }
+        const cardElement = target.closest('.data-item');
+        if (cardElement) {
+            openCardModal(cardElement);
+        }
+      });
 
       function filterAndSearch() {
         const searchTerm = searchInput.value.toLowerCase();
