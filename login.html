@@ -1,36 +1,45 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Farol de Recolhas</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Gestão de Recolhas</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Removemos as importações antigas do Firebase -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f0f0f0, #e5e5e5);
+      font-family: 'Poppins', sans-serif;
+    }
+    .poppins-extrabold {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
-  <div class="text-center bg-white p-8 md:p-12 rounded-lg shadow-lg w-full max-w-md">
-    <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-12 mx-auto mb-4">
-    <h1 class="text-2xl font-bold text-gray-800 mb-2">Farol de Recolhas</h1>
-    <p class="text-gray-600 mb-8">Por favor, faça login para continuar.</p>
+<body class="flex items-center justify-center min-h-screen">
+  <div class="bg-[#FF355A] rounded-2xl shadow-2xl p-10 md:p-12 w-full max-w-md text-center space-y-6">
+    <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-12 mx-auto" />
     
-    <button id="login-btn" class="bg-[#FF355A] text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center mx-auto hover:bg-[#E02E4D] transition-colors w-full max-w-xs">
-      <svg class="w-6 h-6 mr-3" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></svg>
+    <h1 class="text-3xl poppins-extrabold text-white">Gestão de Recolhas</h1>
+    <p class="text-white text-opacity-80">Por favor, faça login para continuar.</p>
+
+    <button id="login-btn" class="flex items-center justify-center gap-3 bg-white border border-gray-200 hover:shadow-md transition px-6 py-3 rounded-full text-gray-700 font-medium mx-auto w-full max-w-xs">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="h-5 w-5" />
       Entrar com Google
     </button>
 
-    <div id="error-message" class="mt-4 text-red-500 hidden"></div>
+    <div id="error-message" class="text-yellow-100 text-sm hidden"></div>
   </div>
 
   <script type="module">
-    // Importação da versão modular do Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
-    import { 
-      getAuth, 
-      GoogleAuthProvider, 
-      signInWithPopup 
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup
     } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-auth.js";
 
-    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAO8aEPE1pU78rKwnf8DDW4u8NqNEVnyEw",
       authDomain: "gestaoderecolhas.firebaseapp.com",
@@ -40,36 +49,30 @@
       appId: "1:906043397693:web:a33ba5450933da51ba7c54"
     };
 
-    // Inicialização do Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // Evento de login
     document.getElementById('login-btn').addEventListener('click', async () => {
       try {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
-        
-        // Guarda as informações do usuário para a próxima página
+
         localStorage.setItem('user', JSON.stringify({
           displayName: user.displayName,
           email: user.email,
           photoURL: user.photoURL,
           uid: user.uid
         }));
-        
-        // Redireciona para a página principal
+
         window.location.href = 'index.html';
       } catch (error) {
         console.error("Erro de autenticação:", error);
-        
-        // Mostrar mensagem de erro para o usuário
+
         const errorMessage = document.getElementById('error-message');
         errorMessage.textContent = `Erro ao fazer login: ${error.message}`;
         errorMessage.classList.remove('hidden');
-        
-        // Esconder a mensagem após 5 segundos
+
         setTimeout(() => {
           errorMessage.classList.add('hidden');
         }, 5000);
