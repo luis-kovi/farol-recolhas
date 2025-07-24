@@ -449,9 +449,15 @@
       }
       
       function fetchData() {
+          // Adiciona um timestamp à URL para evitar o cache
           const url = `${SCRIPT_URL}?t=${new Date().getTime()}`;
           fetch(url)
-              .then(response => response.json())
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+                  return response.json();
+              })
               .then(data => {
                   if (data.error) {
                       throw new Error(data.error);
@@ -462,8 +468,8 @@
                   onDataRefreshed(data);
               })
               .catch(err => {
-                  console.error("Falha ao carregar dados iniciais:", err);
-                  loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha e o URL da API.</p>`;
+                  console.error("Falha ao carregar dados:", err);
+                  loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha, o URL da API e a configuração de implantação.</p>`;
               });
       }
 
