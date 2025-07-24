@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farol de Recolhas - Kovi</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #FF355A;
+      --primary-color-darker: #E02E4D;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7f9fa;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .bg-primary {
+      background-color: var(--primary-color);
+    }
+    .control-btn.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+      transition: background-color 0.2s;
+    }
+    .btn-primary:hover {
+      background-color: var(--primary-color-darker);
+    }
+    .text-primary {
+      color: var(--primary-color);
+    }
+    .border-primary {
+      border-color: var(--primary-color);
+    }
+    .focus-primary:focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.4) !important;
+    }
+    .kanban-board::-webkit-scrollbar {
+      height: 8px;
+    }
+    .kanban-board::-webkit-scrollbar-thumb {
+      background-color: #d1d5db;
+      border-radius: 4px;
+    }
+    .kanban-board::-webkit-scrollbar-track {
+      background-color: #e5e7eb;
+    }
+    .modal-overlay {
+      transition: opacity 0.2s ease-in-out;
+    }
+    .modal-panel {
+      transition: transform 0.2s ease-in-out;
+    }
+  </style>
+</head>
+<body class="text-gray-800">
+
+  <div class="flex flex-col h-screen">
+    <!-- Cabeçalho Principal -->
+    <header class="bg-primary text-white flex-shrink-0">
+      <div class="flex justify-between items-center px-4 py-3">
+        <div class="flex items-center gap-4">
+          <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-10">
+          <span class="text-white opacity-50">/</span>
+          <h1 class="text-lg font-semibold">Farol de Recolhas</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <img id="user-avatar" src="" alt="Foto do Perfil" class="h-10 w-10 rounded-full">
+          <div>
+              <p id="user-name" class="font-bold text-sm"></p>
+              <p id="user-email" class="text-xs"></p>
+          </div>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Barra de Controles -->
+    <div class="py-3 bg-white border-b border-gray-200 flex-shrink-0">
+        <div class="flex justify-between items-center px-4">
+            <div class="flex items-center border border-gray-300 rounded-lg p-1 bg-gray-100">
+              <button id="kanban-view-btn" class="control-btn active px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+                Kanban
+              </button>
+              <button id="list-view-btn" class="control-btn px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                Lista
+              </button>
+            </div>
+            <div class="flex items-center gap-4">
+                <select id="slaFilter" class="text-sm border border-gray-300 rounded-md p-2 focus-primary">
+                    <option value="all">Filtrar por SLA</option>
+                    <option value="No Prazo">No Prazo</option>
+                    <option value="Em Alerta">Em Alerta</option>
+                    <option value="Atrasado">Atrasado</option>
+                </select>
+                <div class="relative">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input type="search" id="searchInput" placeholder="Procurar cards..." class="w-64 p-2 pl-10 text-sm border border-gray-300 rounded-md focus-primary">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 flex overflow-hidden">
+      <!-- Indicador de Carregamento -->
+      <div id="loading-indicator" class="flex flex-col items-center justify-center w-full h-full">
+        <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p id="loading-text" class="mt-2 text-gray-600">A carregar dados...</p>
+      </div>
+      
+      <!-- Visualização Kanban (inicialmente oculta) -->
+      <div id="kanban-view" class="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-4 hidden">
+        <div id="kanban-container" class="flex gap-4">
+            <!-- As colunas serão inseridas aqui pelo JavaScript -->
+        </div>
+      </div>
+      
+      <!-- Visualização em Lista (inicialmente oculta) -->
+      <div id="list-view" class="h-full p-4 hidden w-full">
+        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative">
+          <table class="w-full text-sm text-left text-gray-500">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th scope="col" class="px-6 py-3">Placa</th>
+                <th scope="col" class="px-6 py-3">Driver</th>
+                <th scope="col" class="px-6 py-3">Chofer</th>
+                <th scope="col" class="px-6 py-3">Fase Atual</th>
+                <th scope="col" class="px-6 py-3">Data Criação</th>
+                <th scope="col" class="px-6 py-3 text-center">SLA (dias)</th>
+              </tr>
+            </thead>
+            <tbody id="list-container" class="bg-white">
+              <!-- As linhas serão inseridas aqui pelo JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de Detalhes -->
+  <div id="cardModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+    <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 opacity-0">
+      <div class="flex justify-between items-center p-4 border-b"><h3 class="text-xl font-bold" id="modalPlaca"></h3><button id="closeCardModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div>
+      <div id="modal-content" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        <!-- Conteúdo do modal inserido pelo JavaScript -->
+      </div>
+      <div class="p-4 bg-gray-50 border-t flex justify-end gap-2">
+        <button id="modalFormBtn" class="btn-primary inline-block px-4 py-2 rounded-md">Formulário do Card</button>
+        <a id="modalMapaLink" href="#" target="_blank" class="bg-gray-600 hover:bg-gray-700 text-white inline-block px-4 py-2 rounded-md">Abrir no Google Maps 🗺️</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal do Formulário -->
+  <div id="formModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden z-50">
+      <div class="modal-panel bg-white rounded-lg shadow-xl w-full h-full max-w-4xl transform scale-95 opacity-0 flex flex-col">
+          <div class="flex justify-between items-center p-3 border-b flex-shrink-0">
+              <h3 class="text-lg font-bold">Formulário do Card</h3>
+              <button id="closeFormModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+          </div>
+          <div class="flex-1 p-1">
+              <iframe id="formIframe" src="" class="w-full h-full border-0"></iframe>
+          </div>
+      </div>
+  </div>
+
+  <script>
+    // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_yEaLVd4R23a4JXpbID_1oKw9yn7DlQO5yvmnNZn-FpwHkVTX6XaxaZh9UbrEgQU/exec"; 
+
+    const fixedPhaseOrder = [
+      'Fila de Recolha',
+      'Tentativa 1 de Recolha',
+      'Tentativa 2 de Recolha',
+      'Tentativa 3 de Recolha',
+      'Nova tentativa de recolha',
+      'Confirmação de Entrega no Pátio'
+    ];
+
+    function buildUI(cards) {
+        buildKanbanView(cards);
+        buildListView(cards);
+        attachEventListeners();
+        filterAndSearch();
+    }
+    
+    function buildKanbanView(cards) {
+        const container = document.getElementById('kanban-container');
+        if (!container) return;
+        const phases = {};
+        fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
+        cards.forEach(card => {
+            if (phases[card.faseAtual]) {
+                phases[card.faseAtual].push(card);
+            }
+        });
+        let html = '';
+        fixedPhaseOrder.forEach(phaseName => {
+            const cardsInPhase = phases[phaseName];
+            const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
+            const displayPhaseName = phaseName === 'Confirmação de Entrega no Pátio' ? 'Confirmação de Recolha' : phaseName;
+            html += `
+                <div class="w-64 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
+                    <div class="p-3 flex items-center bg-white rounded-t-lg border-t-4 border-primary">
+                        <h2 class="font-semibold text-primary">${displayPhaseName}</h2>
+                        <span class="text-sm font-semibold text-gray-500 bg-gray-200 rounded-md px-2 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
+                        ${lateOrAlertCount > 0 ? `<span class="ml-auto flex items-center text-amber-600 font-semibold text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${lateOrAlertCount}</span>` : ''}
+                    </div>
+                    <div class="flex-1 p-2 space-y-2 overflow-y-auto">
+                        ${cardsInPhase.length > 0 ? cardsInPhase.map(card => buildCardHTML(card)).join('') : `<div class="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4"><p class="text-sm font-medium">Não há recolha nesta fase.</p></div>`}
+                    </div>
+                </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function buildCardHTML(card) {
+        let slaColor = '', slaText = '';
+        if (card.sla >= 3) { slaColor = 'bg-red-100 text-red-700'; slaText = 'Atrasado'; }
+        else if (card.sla == 2) { slaColor = 'bg-yellow-100 text-yellow-700'; slaText = 'Em Alerta'; }
+        else { slaColor = 'bg-green-100 text-green-700'; slaText = 'No Prazo'; }
+        return `
+            <div class="kanban-card data-item bg-white rounded-md shadow-sm border border-gray-200 flex flex-col h-56 cursor-pointer hover:border-primary transition-all" ${buildDataAttributes(card)}>
+                <div class="p-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs bg-gray-200 text-gray-600 font-medium px-2 py-0.5 rounded-full truncate">${card.origemLocacao}</span>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${slaColor}">${slaText}</span>
+                    </div>
+                    <h3 class="font-bold text-gray-800 card-placa truncate">${card.placa}</h3>
+                </div>
+                <div class="flex-grow px-3 space-y-1 text-sm">
+                    <p class="text-gray-500 card-driver truncate"><span class="font-semibold text-gray-600">DRIVER:</span> ${card.nomeDriver}</p>
+                    <p class="text-gray-500 truncate"><span class="font-semibold text-gray-600">MODELO:</span> ${card.modeloVeiculo}</p>
+                    ${card.faseAtual !== 'Fila de Recolha' ? `<p class="text-gray-500 card-chofer truncate"><span class="font-semibold text-gray-600">CHOFER:</span> ${card.chofer}</p>` : ''}
+                </div>
+                <div class="p-3 flex items-center justify-between border-t border-gray-100">
+                    <div class="flex items-center text-xs text-red-600 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        SLA: ${card.sla} dia(s)
+                    </div>
+                    ${card.urlPublica ? `<button class="open-form-btn text-xs text-gray-500 hover:text-primary flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Formulário</button>` : ''}
+                </div>
+            </div>`;
+    }
+
+    function buildListView(cards) {
+        const container = document.getElementById('list-container');
+        if (!container) return;
+        let html = '';
+        if (cards.length > 0) {
+            cards.forEach(card => {
+                let slaText = '', slaBg = '';
+                if (card.sla >= 3) { slaBg = 'bg-red-100'; slaText = 'Atrasado'; }
+                else if (card.sla == 2) { slaBg = 'bg-yellow-100'; slaText = 'Em Alerta'; }
+                else { slaBg = 'bg-green-100'; slaText = 'No Prazo'; }
+                const displayPhase = card.faseAtual === 'Confirmação de Entrega no Pátio' ? 'Confirmação de Recolha' : card.faseAtual;
+                html += `
+                    <tr class="table-list-item data-item border-b hover:bg-gray-50 cursor-pointer ${slaBg}" ${buildDataAttributes(card)}>
+                        <td class="px-6 py-4 font-bold text-gray-900 card-placa">${card.placa}</td>
+                        <td class="px-6 py-4 card-driver">${card.nomeDriver}</td>
+                        <td class="px-6 py-4 card-chofer">${card.chofer}</td>
+                        <td class="px-6 py-4">${displayPhase}</td>
+                        <td class="px-6 py-4">${card.dataCriacao}</td>
+                        <td class="px-6 py-4 text-center font-bold text-lg">${card.sla}</td>
+                    </tr>`;
+            });
+        }
+        container.innerHTML = html;
+    }
+
+    function buildDataAttributes(card) {
+        let slaText = '';
+        if (card.sla >= 3) { slaText = 'Atrasado'; }
+        else if (card.sla == 2) { slaText = 'Em Alerta'; }
+        else { slaText = 'No Prazo'; }
+        return `data-placa="${card.placa}" data-driver="${card.nomeDriver}" data-chofer="${card.chofer}" data-origem="${card.origemLocacao}" data-fase="${card.faseAtual}" data-criacao="${card.dataCriacao}" data-sla-dias="${card.sla}" data-mapa-url="${card.enderecoRecolhaUrl}" data-form-url="${card.urlPublica}" data-sla-text="${slaText}" data-valor-recolha="${card.valorRecolha}" data-custo-km="${card.custoKmAdicional}" data-modelo-veiculo="${card.modeloVeiculo}" data-telefone-contato="${card.telefoneContato}" data-telefone-opcional="${card.telefoneOpcional}" data-endereco-cadastro="${card.enderecoCadastro}" data-endereco-veiculo="${card.enderecoVeiculo}"`;
+    }
+    
+    function buildModalContent(data) {
+        const isFila = data.fase === 'Fila de Recolha';
+        const displayPhase = data.fase === 'Confirmação de Entrega no Pátio' ? 'Confirmação de Recolha' : data.fase;
+        let valorHTML = '';
+        if (!isFila && data.valorRecolha && data.valorRecolha !== 'N/A' && data.valorRecolha !== 'null') {
+            valorHTML = `<div><p class="text-sm text-gray-500">Valor da Recolha</p><p class="font-semibold">R$ ${data.valorRecolha}</p></div>`;
+        }
+        let custoKmHTML = '';
+        if (!isFila && data.custoKm && data.custoKm !== 'N/A' && data.custoKm !== 'null') {
+            custoKmHTML = `<div><p class="text-sm text-gray-500">Custo KM Adicional</p><p class="font-semibold">R$ ${data.custoKm}</p></div>`;
+        }
+        return `
+            <div class="grid grid-cols-2 gap-4"><div><p class="text-sm text-gray-500">SLA</p><p class="font-semibold text-lg">${data.slaDias} dias</p></div><div><p class="text-sm text-gray-500">Fase Atual</p><p class="font-semibold">${displayPhase}</p></div></div>
+            <div><p class="text-sm text-gray-500">Modelo do Veículo</p><p class="font-semibold">${data.modeloVeiculo}</p></div>
+            <div><p class="text-sm text-gray-500">Driver</p><p class="font-semibold">${data.driver}</p></div>
+            ${!isFila ? `<div><p class="text-sm text-gray-500">Chofer</p><p class="font-semibold">${data.chofer}</p></div>` : ''}
+            <div><p class="text-sm text-gray-500">Origem da Locação</p><p class="font-semibold">${data.origem}</p></div>
+            <div><p class="text-sm text-gray-500">Telefone de Contato</p><p class="font-semibold">${data.telefoneContato}</p></div>
+            <div><p class="text-sm text-gray-500">Telefone Opcional</p><p class="font-semibold">${data.telefoneOpcional}</p></div>
+            <div><p class="text-sm text-gray-500">Endereço de Cadastro</p><p class="font-semibold">${data.enderecoCadastro}</p></div>
+            <div><p class="text-sm text-gray-500">Endereço Onde o Veículo Está</p><p class="font-semibold">${data.enderecoVeiculo}</p></div>
+            ${valorHTML}
+            ${custoKmHTML}
+            <div><p class="text-sm text-gray-500">Data de Criação</p><p class="font-semibold">${data.criacao}</p></div>`;
+    }
+
+    function attachEventListeners() {
+        const mainContent = document.querySelector('main');
+        mainContent.addEventListener('click', function(event) {
+            const target = event.target;
+            const formButton = target.closest('.open-form-btn');
+            if (formButton) {
+                event.stopPropagation();
+                const cardElement = formButton.closest('.data-item');
+                const formUrl = cardElement.dataset.formUrl;
+                if (formUrl) openFormModal(formUrl);
+                return;
+            }
+            const cardElement = target.closest('.data-item');
+            if (cardElement) {
+                openCardModal(cardElement);
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('searchInput');
+      const slaFilter = document.getElementById('slaFilter');
+      const kanbanView = document.getElementById('kanban-view');
+      const listView = document.getElementById('list-view');
+      const loadingIndicator = document.getElementById('loading-indicator');
+      const loadingText = document.getElementById('loading-text');
+      const kanbanBtn = document.getElementById('kanban-view-btn');
+      const listBtn = document.getElementById('list-view-btn');
+      const cardModal = document.getElementById('cardModal');
+      const formModal = document.getElementById('formModal');
+      const closeCardModalBtn = document.getElementById('closeCardModal');
+      const closeFormModalBtn = document.getElementById('closeFormModal');
+      const formIframe = document.getElementById('formIframe');
+      const modalFormBtn = document.getElementById('modalFormBtn');
+
+      function filterAndSearch() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const currentSlaFilter = slaFilter.value;
+        document.querySelectorAll('.data-item').forEach(item => {
+          const placa = item.dataset.placa.toLowerCase();
+          const driver = item.dataset.driver.toLowerCase();
+          const chofer = item.dataset.chofer.toLowerCase();
+          const slaText = item.dataset.slaText;
+          const matchesSearch = placa.includes(searchTerm) || driver.includes(searchTerm) || chofer.includes(searchTerm);
+          const matchesSla = (currentSlaFilter === 'all') || (slaText === currentSlaFilter);
+          const shouldBeVisible = matchesSearch && matchesSla;
+          if (item.classList.contains('kanban-card')) {
+            item.style.display = shouldBeVisible ? 'block' : 'none';
+          } else if (item.classList.contains('table-list-item')) {
+            item.style.display = shouldBeVisible ? 'table-row' : 'none';
+          }
+        });
+        document.querySelectorAll('#kanban-view .w-64').forEach(column => {
+          const visibleCards = column.querySelectorAll('.kanban-card:not([style*="display: none"])').length;
+          const countElement = column.querySelector('.card-count');
+          if(countElement) { countElement.textContent = visibleCards; }
+        });
+      }
+
+      searchInput.addEventListener('input', filterAndSearch);
+      slaFilter.addEventListener('change', filterAndSearch);
+      
+      kanbanBtn.addEventListener('click', () => {
+        kanbanView.classList.remove('hidden');
+        kanbanView.classList.add('flex');
+        listView.classList.add('hidden');
+        kanbanBtn.classList.add('active');
+        listBtn.classList.remove('active');
+      });
+
+      listBtn.addEventListener('click', () => {
+        kanbanView.classList.add('hidden');
+        kanbanView.classList.remove('flex');
+        listView.classList.remove('hidden');
+        listBtn.classList.add('active');
+        kanbanBtn.classList.remove('active');
+      });
+
+      function openCardModal(itemElement) {
+        const data = itemElement.dataset;
+        document.getElementById('modalPlaca').textContent = data.placa;
+        document.getElementById('modal-content').innerHTML = buildModalContent(data);
+        const mapaLink = document.getElementById('modalMapaLink');
+        if (data.mapaUrl && data.mapaUrl !== 'null') {
+          mapaLink.href = data.mapaUrl;
+          mapaLink.style.display = 'inline-block';
+        } else {
+          mapaLink.style.display = 'none';
+        }
+        if (data.formUrl && data.formUrl !== 'null') {
+          modalFormBtn.style.display = 'inline-block';
+          modalFormBtn.onclick = () => {
+              closeCardModal();
+              setTimeout(() => openFormModal(data.formUrl), 250);
+          }
+        } else {
+          modalFormBtn.style.display = 'none';
+        }
+        cardModal.classList.remove('hidden');
+        setTimeout(() => cardModal.querySelector('.modal-panel').classList.remove('opacity-0', 'scale-95'), 10);
+      }
+
+      function openFormModal(url) {
+        formIframe.src = url;
+        formModal.classList.remove('hidden');
+        setTimeout(() => formModal.querySelector('.modal-panel').classList.remove('opacity-0', 'scale-95'), 10);
+      }
+
+      function closeCardModal() {
+        const panel = cardModal.querySelector('.modal-panel');
+        panel.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => cardModal.classList.add('hidden'), 200);
+      }
+
+      function closeFormModal() {
+        const panel = formModal.querySelector('.modal-panel');
+        panel.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => { 
+            formModal.classList.add('hidden');
+            formIframe.src = 'about:blank';
+        }, 200);
+      }
+      
+      function onDataRefreshed(sheetData) {
+        buildUI(sheetData.cards);
+        console.log("Dados atualizados em: " + sheetData.lastUpdate);
+      }
+      
+      function initialLoad() {
+        google.script.run
+          .withSuccessHandler(sheetData => {
+            loadingIndicator.style.display = 'none';
+            kanbanView.classList.remove('hidden');
+            kanbanView.classList.add('flex');
+            onDataRefreshed(sheetData);
+            
+            // Inicia o polling após o sucesso do carregamento inicial
+            setInterval(() => {
+              google.script.run.withSuccessHandler(onDataRefreshed).getGoogleSheetData();
+            }, 30000); // Atualiza a cada 30 segundos
+          })
+          .withFailureHandler(err => {
+            console.error("Falha ao carregar dados iniciais:", err);
+            loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha e tente novamente.</p>`;
+          })
+          .getGoogleSheetData();
+      }
+
+      closeCardModalBtn.addEventListener('click', closeCardModal);
+      cardModal.addEventListener('click', e => { if (e.target === cardModal) closeCardModal(); });
+      closeFormModalBtn.addEventListener('click', closeFormModal);
+      formModal.addEventListener('click', e => { if (e.target === formModal) closeFormModal(); });
+
+      // Removido o carregamento dinâmico e voltado para o scriptlet inicial
+      attachEventListeners();
+    });
+  </script>
+
+</body>
+</html>
