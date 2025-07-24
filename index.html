@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Farol de Recolhas - Kovi</title>
+  <title>Gestão de Recolhas - Kovi</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter -->
+  <!-- Google Fonts: Poppins e Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary-color: #FF355A;
@@ -62,6 +62,44 @@
     .modal-panel {
       transition: transform 0.2s ease-in-out;
     }
+    .phase-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .table-header-primary th {
+      color: var(--primary-color);
+      font-weight: 700;
+    }
+    .table-border-primary {
+      border-top: 4px solid var(--primary-color);
+    }
+    .compact-table td {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    .split-modal {
+      display: flex;
+      height: 60vh;
+    }
+    .split-modal-left {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      border-right: 1px solid #e5e7eb;
+    }
+    .split-modal-right {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+    }
+    .split-modal-right iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
   </style>
 </head>
 <body class="text-gray-800">
@@ -73,7 +111,7 @@
         <div class="flex items-center gap-4">
           <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-10">
           <span class="text-white opacity-50">/</span>
-          <h1 class="text-lg font-semibold">Farol de Recolhas</h1>
+          <h1 class="text-lg font-semibold" style="font-family: 'Poppins', sans-serif; font-weight: 800;">Gestão de Recolhas</h1>
         </div>
         <div class="flex items-center gap-3">
           <img id="user-avatar" src="https://placehold.co/40x40/FFFFFF/FF355A?text=K" alt="Foto do Perfil" class="h-10 w-10 rounded-full">
@@ -133,10 +171,10 @@
       </div>
       
       <!-- Visualização em Lista (inicialmente oculta) -->
-      <div id="list-view" class="h-full p-4 hidden w-full">
-        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative">
+      <div id="list-view" class="h-full w-full p-4 hidden">
+        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary">
           <table class="w-full text-sm text-left text-gray-500">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-10">
+            <thead class="text-xs uppercase bg-gray-50 sticky top-0 z-10 table-header-primary">
               <tr>
                 <th scope="col" class="px-6 py-3">Placa</th>
                 <th scope="col" class="px-6 py-3">Driver</th>
@@ -146,7 +184,7 @@
                 <th scope="col" class="px-6 py-3 text-center">SLA (dias)</th>
               </tr>
             </thead>
-            <tbody id="list-container" class="bg-white">
+            <tbody id="list-container" class="bg-white compact-table">
               <!-- As linhas serão inseridas aqui pelo JavaScript -->
             </tbody>
           </table>
@@ -157,29 +195,23 @@
 
   <!-- Modal de Detalhes -->
   <div id="cardModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-    <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 opacity-0">
-      <div class="flex justify-between items-center p-4 border-b"><h3 class="text-xl font-bold" id="modalPlaca"></h3><button id="closeCardModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div>
-      <div id="modal-content" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-        <!-- Conteúdo do modal inserido pelo JavaScript -->
+    <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-5xl transform scale-95 opacity-0">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h3 class="text-xl font-bold" id="modalPlaca"></h3>
+        <button id="closeCardModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
       </div>
-      <div class="p-4 bg-gray-50 border-t flex justify-end gap-2">
-        <button id="modalFormBtn" class="btn-primary inline-block px-4 py-2 rounded-md">Formulário do Card</button>
+      <div class="split-modal">
+        <div class="split-modal-left">
+          <div id="modal-content" class="space-y-4"></div>
+        </div>
+        <div class="split-modal-right">
+          <iframe id="modalFormIframe" src="" class="w-full h-full"></iframe>
+        </div>
+      </div>
+      <div class="p-4 bg-gray-50 border-t flex justify-end">
         <a id="modalMapaLink" href="#" target="_blank" class="bg-gray-600 hover:bg-gray-700 text-white inline-block px-4 py-2 rounded-md">Abrir no Google Maps 🗺️</a>
       </div>
     </div>
-  </div>
-
-  <!-- Modal do Formulário -->
-  <div id="formModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden z-50">
-      <div class="modal-panel bg-white rounded-lg shadow-xl w-full h-full max-w-4xl transform scale-95 opacity-0 flex flex-col">
-          <div class="flex justify-between items-center p-3 border-b flex-shrink-0">
-              <h3 class="text-lg font-bold">Formulário do Card</h3>
-              <button id="closeFormModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-          </div>
-          <div class="flex-1 p-1">
-              <iframe id="formIframe" src="" class="w-full h-full border-0"></iframe>
-          </div>
-      </div>
   </div>
 
   <script>
@@ -195,10 +227,19 @@
       'Confirmação de Entrega no Pátio'
     ];
 
+    // Mapeamento de fases para exibição
+    const phaseDisplayNames = {
+      'Fila de Recolha': 'Fila de Recolha',
+      'Tentativa 1 de Recolha': 'Tentativa 1',
+      'Tentativa 2 de Recolha': 'Tentativa 2',
+      'Tentativa 3 de Recolha': 'Tentativa 3',
+      'Nova tentativa de recolha': 'Nova Tentativa',
+      'Confirmação de Entrega no Pátio': 'Confirmação de Recolha'
+    };
+
     function buildUI(cards) {
         buildKanbanView(cards);
         buildListView(cards);
-        filterAndSearch();
     }
     
     function buildKanbanView(cards) {
@@ -215,11 +256,11 @@
         fixedPhaseOrder.forEach(phaseName => {
             const cardsInPhase = phases[phaseName];
             const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
-            const displayPhaseName = phaseName === 'Confirmação de Entrega no Pátio' ? 'Confirmação de Recolha' : phaseName;
+            const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
             html += `
                 <div class="w-64 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
                     <div class="p-3 flex items-center bg-white rounded-t-lg border-t-4 border-primary">
-                        <h2 class="font-semibold text-primary">${displayPhaseName}</h2>
+                        <h2 class="phase-title text-primary">${displayPhaseName}</h2>
                         <span class="text-sm font-semibold text-gray-500 bg-gray-200 rounded-md px-2 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
                         ${lateOrAlertCount > 0 ? `<span class="ml-auto flex items-center text-amber-600 font-semibold text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${lateOrAlertCount}</span>` : ''}
                     </div>
@@ -264,21 +305,30 @@
         const container = document.getElementById('list-container');
         if (!container) return;
         let html = '';
-        if (cards.length > 0) {
-            cards.forEach(card => {
+        
+        // Filtrar apenas as fases desejadas
+        const filteredCards = cards.filter(card => 
+            fixedPhaseOrder.includes(card.faseAtual)
+        );
+        
+        // Ordenar por SLA decrescente
+        filteredCards.sort((a, b) => b.sla - a.sla);
+        
+        if (filteredCards.length > 0) {
+            filteredCards.forEach(card => {
                 let slaText = '', slaBg = '';
                 if (card.sla >= 3) { slaBg = 'bg-red-100'; slaText = 'Atrasado'; }
                 else if (card.sla == 2) { slaBg = 'bg-yellow-100'; slaText = 'Em Alerta'; }
                 else { slaBg = 'bg-green-100'; slaText = 'No Prazo'; }
-                const displayPhase = card.faseAtual === 'Confirmação de Entrega no Pátio' ? 'Confirmação de Recolha' : card.faseAtual;
+                const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
                 html += `
                     <tr class="table-list-item data-item border-b hover:bg-gray-50 cursor-pointer ${slaBg}" ${buildDataAttributes(card)}>
-                        <td class="px-6 py-4 font-bold text-gray-900 card-placa">${card.placa}</td>
-                        <td class="px-6 py-4 card-driver">${card.nomeDriver}</td>
-                        <td class="px-6 py-4 card-chofer">${card.chofer}</td>
-                        <td class="px-6 py-4">${displayPhase}</td>
-                        <td class="px-6 py-4">${card.dataCriacao}</td>
-                        <td class="px-6 py-4 text-center font-bold text-lg">${card.sla}</td>
+                        <td class="px-6 py-2 font-bold text-gray-900 card-placa">${card.placa}</td>
+                        <td class="px-6 py-2 card-driver">${card.nomeDriver}</td>
+                        <td class="px-6 py-2 card-chofer">${card.chofer}</td>
+                        <td class="px-6 py-2">${displayPhase}</td>
+                        <td class="px-6 py-2">${card.dataCriacao}</td>
+                        <td class="px-6 py-2 text-center font-bold text-lg">${card.sla}</td>
                     </tr>`;
             });
         }
@@ -295,7 +345,7 @@
     
     function buildModalContent(data) {
         const isFila = data.fase === 'Fila de Recolha';
-        const displayPhase = data.fase === 'Confirmação de Entrega no Pátio' ? 'Confirmação de Recolha' : data.fase;
+        const displayPhase = phaseDisplayNames[data.fase] || data.fase;
         let valorHTML = '';
         if (!isFila && data.valorRecolha && data.valorRecolha !== 'N/A' && data.valorRecolha !== 'null') {
             valorHTML = `<div><p class="text-sm text-gray-500">Valor da Recolha</p><p class="font-semibold">R$ ${data.valorRecolha}</p></div>`;
@@ -325,15 +375,11 @@
       const kanbanView = document.getElementById('kanban-view');
       const listView = document.getElementById('list-view');
       const loadingIndicator = document.getElementById('loading-indicator');
-      const loadingText = document.getElementById('loading-text');
       const kanbanBtn = document.getElementById('kanban-view-btn');
       const listBtn = document.getElementById('list-view-btn');
       const cardModal = document.getElementById('cardModal');
-      const formModal = document.getElementById('formModal');
       const closeCardModalBtn = document.getElementById('closeCardModal');
-      const closeFormModalBtn = document.getElementById('closeFormModal');
-      const formIframe = document.getElementById('formIframe');
-      const modalFormBtn = document.getElementById('modalFormBtn');
+      const modalFormIframe = document.getElementById('modalFormIframe');
       const mainContent = document.querySelector('main');
 
       // Adiciona o event listener para os cards e botões de formulário
@@ -344,7 +390,7 @@
             event.stopPropagation();
             const cardElement = formButton.closest('.data-item');
             const formUrl = cardElement.dataset.formUrl;
-            if (formUrl) openFormModal(formUrl);
+            if (formUrl) openCardModal(cardElement);
             return;
         }
         const cardElement = target.closest('.data-item');
@@ -400,6 +446,14 @@
         const data = itemElement.dataset;
         document.getElementById('modalPlaca').textContent = data.placa;
         document.getElementById('modal-content').innerHTML = buildModalContent(data);
+        
+        // Carregar o formulário no iframe
+        if (data.formUrl && data.formUrl !== 'null') {
+          modalFormIframe.src = data.formUrl;
+        } else {
+          modalFormIframe.src = "about:blank";
+        }
+        
         const mapaLink = document.getElementById('modalMapaLink');
         if (data.mapaUrl && data.mapaUrl !== 'null') {
           mapaLink.href = data.mapaUrl;
@@ -407,37 +461,17 @@
         } else {
           mapaLink.style.display = 'none';
         }
-        if (data.formUrl && data.formUrl !== 'null') {
-          modalFormBtn.style.display = 'inline-block';
-          modalFormBtn.onclick = () => {
-              closeCardModal();
-              setTimeout(() => openFormModal(data.formUrl), 250);
-          }
-        } else {
-          modalFormBtn.style.display = 'none';
-        }
+        
         cardModal.classList.remove('hidden');
         setTimeout(() => cardModal.querySelector('.modal-panel').classList.remove('opacity-0', 'scale-95'), 10);
-      }
-
-      function openFormModal(url) {
-        formIframe.src = url;
-        formModal.classList.remove('hidden');
-        setTimeout(() => formModal.querySelector('.modal-panel').classList.remove('opacity-0', 'scale-95'), 10);
       }
 
       function closeCardModal() {
         const panel = cardModal.querySelector('.modal-panel');
         panel.classList.add('opacity-0', 'scale-95');
-        setTimeout(() => cardModal.classList.add('hidden'), 200);
-      }
-
-      function closeFormModal() {
-        const panel = formModal.querySelector('.modal-panel');
-        panel.classList.add('opacity-0', 'scale-95');
-        setTimeout(() => { 
-            formModal.classList.add('hidden');
-            formIframe.src = 'about:blank';
+        setTimeout(() => {
+          cardModal.classList.add('hidden');
+          modalFormIframe.src = "about:blank";
         }, 200);
       }
       
@@ -472,8 +506,6 @@
 
       closeCardModalBtn.addEventListener('click', closeCardModal);
       cardModal.addEventListener('click', e => { if (e.target === cardModal) closeCardModal(); });
-      closeFormModalBtn.addEventListener('click', closeFormModal);
-      formModal.addEventListener('click', e => { if (e.target === formModal) closeFormModal(); });
 
       fetchData(); // Carregamento inicial
 
