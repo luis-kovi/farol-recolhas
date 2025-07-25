@@ -197,6 +197,14 @@
   #calculatorContainer {
     pointer-events: auto !important;
   }
+    /* Efeito visual para tag "Atrasado" piscar */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+    .blink {
+      animation: blink 1s linear infinite;
+    }
   </style>
 </head>
 <body class="text-gray-800">
@@ -404,7 +412,31 @@
       }
     }
 
+    // Função para calcular o SLA considerando fuso de São Paulo e ignorando domingos
+    function calcularSLA(dataCriacaoStr) {
+      const tz = 'America/Sao_Paulo';
+      let dataCriacao = new Date(dataCriacaoStr);
+      if (isNaN(dataCriacao.getTime())) return 0;
+      // Data atual em São Paulo
+      const agora = new Date(new Date().toLocaleString("en-US", {timeZone: tz}));
+      // Zera horas/minutos/segundos para contar dias completos
+      dataCriacao.setHours(0,0,0,0);
+      agora.setHours(0,0,0,0);
+      // Conta dias, desconsiderando domingos
+      let dias = 0;
+      let temp = new Date(dataCriacao);
+      while (temp < agora) {
+        if (temp.getDay() !== 0) dias++;
+        temp.setDate(temp.getDate() + 1);
+      }
+      return dias;
+    }
+
     function buildUI(cards) {
+        // Aplica o cálculo do SLA em cada card
+        cards.forEach(card => {
+          card.sla = calcularSLA(card.dataCriacao);
+        });
         buildKanbanView(cards);
         buildListView(cards);
     }
@@ -485,7 +517,7 @@
         
         // Card normal para outras fases
         let slaColor = '', slaText = '';
-        if (card.sla >= 3) { slaColor = 'bg-red-100 text-red-700'; slaText = 'Atrasado'; }
+        if (card.sla >= 3) { slaColor = 'bg-red-100 text-red-700 blink'; slaText = 'Atrasado'; }
         else if (card.sla == 2) { slaColor = 'bg-yellow-100 text-yellow-700'; slaText = 'Em Alerta'; }
         else { slaColor = 'bg-green-100 text-green-700'; slaText = 'No Prazo'; }
         
@@ -542,7 +574,7 @@
             // Primeiro, renderizar cards normais
             normalCards.forEach(card => {
                 let slaText = '', slaBg = '';
-                if (card.sla >= 3) { slaBg = 'bg-red-100'; slaText = 'Atrasado'; }
+                if (card.sla >= 3) { slaBg = 'bg-red-100 blink'; slaText = 'Atrasado'; }
                 else if (card.sla == 2) { slaBg = 'bg-yellow-100'; slaText = 'Em Alerta'; }
                 else { slaBg = 'bg-green-100'; slaText = 'No Prazo'; }
                 const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
