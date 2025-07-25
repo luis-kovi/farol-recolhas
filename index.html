@@ -659,9 +659,15 @@
           // Verifica múltiplas fontes de permissão
           let userPermission = null;
           
-          // Primeira tentativa: permissionType da resposta
-          if (responseData && responseData.permissionType) {
-              userPermission = responseData.permissionType.toString().toLowerCase().trim();
+          // Primeira tentativa: permissionType da resposta (verificar múltiplas variações)
+          if (responseData) {
+              if (responseData.permissionType) {
+                  userPermission = responseData.permissionType.toString().toLowerCase().trim();
+              } else if (responseData.userPermission) {
+                  userPermission = responseData.userPermission.toString().toLowerCase().trim();
+              } else if (responseData.permission) {
+                  userPermission = responseData.permission.toString().toLowerCase().trim();
+              }
           }
           
           // Segunda tentativa: verificar no objeto user do localStorage
@@ -690,11 +696,15 @@
           console.log("ResponseData recebido:", responseData);
           
           // Verifica se o usuário tem permissão para ver a calculadora
-          if (userPermission && ['kovi', 'onsystem'].includes(userPermission)) {
+          const allowedPermissions = ['kovi', 'onsystem'];
+          const hasPermission = userPermission && allowedPermissions.includes(userPermission);
+          
+          if (hasPermission) {
               console.log("✅ Mostrando botão da calculadora - Permissão autorizada:", userPermission);
               openCalculatorBtn.classList.remove('hidden');
           } else {
               console.log("❌ Ocultando botão da calculadora - Permissão negada:", userPermission);
+              console.log("Permissões aceitas:", allowedPermissions);
               openCalculatorBtn.classList.add('hidden');
           }
       }
