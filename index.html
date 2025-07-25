@@ -159,39 +159,373 @@
     </header>
     
     <div class="py-3 bg-white border-b border-gray-200 flex-shrink-0">
+        <div class="flex justify-between items-center px-4">
+            <div class="flex items-center border border-gray-300 rounded-lg p-1 bg-gray-100">
+              <button id="kanban-view-btn" class="control-btn active px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+                Kanban
+              </button>
+              <button id="list-view-btn" class="control-btn px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                Lista
+              </button>
+            </div>
+            <div class="flex items-center gap-4">
+                <select id="slaFilter" class="text-sm border border-gray-300 rounded-md p-2 focus-primary">
+                    <option value="all">Filtrar por SLA</option>
+                    <option value="No Prazo">No Prazo</option>
+                    <option value="Em Alerta">Em Alerta</option>
+                    <option value="Atrasado">Atrasado</option>
+                </select>
+                <div class="relative">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input type="search" id="searchInput" placeholder="Procurar cards..." class="w-64 p-2 pl-10 text-sm border border-gray-300 rounded-md focus-primary">
+                </div>
+            </div>
         </div>
+    </div>
 
 
     <main class="flex-1 flex overflow-hidden">
-        </main>
+      <div id="loading-indicator" class="flex flex-col items-center justify-center w-full h-full">
+        <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p id="loading-text" class="mt-2 text-gray-600">A carregar dados...</p>
+      </div>
+      
+      <div id="kanban-view" class="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-4 hidden scroll-container">
+        <div id="kanban-container" class="flex gap-4">
+            </div>
+      </div>
+      
+      <div id="list-view" class="h-full w-full p-4 hidden">
+        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
+          <table class="w-full text-sm text-left text-gray-500">
+            <thead class="text-xs uppercase bg-gray-50 sticky top-0 z-10 table-header-primary">
+              <tr>
+                <th scope="col" class="px-6 py-3">Placa</th>
+                <th scope="col" class="px-6 py-3">Driver</th>
+                <th scope="col" class="px-6 py-3">Chofer</th>
+                <th scope="col" class="px-6 py-3">Fase Atual</th>
+                <th scope="col" class="px-6 py-3">Data Criação</th>
+                <th scope="col" class="px-6 py-3 text-center">SLA (dias)</th>
+              </tr>
+            </thead>
+            <tbody id="list-container" class="bg-white compact-table">
+              </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
   </div>
 
   <div id="cardModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+    <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-5xl transform scale-95 opacity-0">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h3 class="text-xl font-bold" id="modalPlaca"></h3>
+        <button id="closeCardModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
       </div>
+      <div class="split-modal">
+        <div class="split-modal-left scroll-container">
+          <div id="modal-content" class="space-y-4"></div>
+        </div>
+        <div class="split-modal-right scroll-container">
+          <iframe id="modalFormIframe" src="" class="w-full h-full"></iframe>
+        </div>
+      </div>
+      <div class="p-4 bg-gray-50 border-t flex justify-end">
+        <a id="modalMapaLink" href="#" target="_blank" class="bg-gray-600 hover:bg-gray-700 text-white inline-block px-4 py-2 rounded-md">Abrir no Google Maps 🗺️</a>
+      </div>
+    </div>
+  </div>
 
   <script>
-    const SCRIPT_URL = "SUA_URL_DE_IMPLANTAÇÃO_DO_APPS_SCRIPT_AQUI"; // Certifique-se que esta URL é da ÚLTIMA implantação
+    // IMPORTANTE: Substitua pela URL da sua NOVA implantação do Apps Script
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; 
 
+    // VERIFICAÇÃO DE LOGIN
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user) {
       window.location.href = 'login.html';
     }
 
-    // Suas funções de `buildUI`, `buildKanbanView`, etc., permanecem aqui...
+    const fixedPhaseOrder = [
+      'Fila de Recolha',
+      'Tentativa 1 de Recolha',
+      'Tentativa 2 de Recolha',
+      'Tentativa 3 de Recolha',
+      'Nova tentativa de recolha',
+      'Confirmação de Entrega no Pátio'
+    ];
+
+    const phaseDisplayNames = {
+      'Fila de Recolha': 'Fila de Recolha',
+      'Tentativa 1 de Recolha': 'Tentativa 1',
+      'Tentativa 2 de Recolha': 'Tentativa 2',
+      'Tentativa 3 de Recolha': 'Tentativa 3',
+      'Nova tentativa de recolha': 'Nova Tentativa',
+      'Confirmação de Entrega no Pátio': 'Confirmação de Recolha'
+    };
+
+    function buildUI(cards) {
+        buildKanbanView(cards);
+        buildListView(cards);
+    }
+    
+    function buildKanbanView(cards) {
+        const container = document.getElementById('kanban-container');
+        if (!container) return;
+        const phases = {};
+        fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
+        cards.forEach(card => {
+            if (phases[card.faseAtual]) {
+                phases[card.faseAtual].push(card);
+            }
+        });
+        let html = '';
+        fixedPhaseOrder.forEach(phaseName => {
+            const cardsInPhase = phases[phaseName];
+            const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
+            const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
+            html += `<div class="w-64 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
+                    <div class="p-3 flex items-center bg-white rounded-t-lg border-t-4 border-primary">
+                        <h2 class="phase-title text-primary">${displayPhaseName}</h2>
+                        <span class="text-sm font-semibold text-gray-500 bg-gray-200 rounded-md px-2 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
+                        ${lateOrAlertCount > 0 ? `<span class="ml-auto flex items-center text-amber-600 font-semibold text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${lateOrAlertCount}</span>` : ''}
+                    </div>
+                    <div class="flex-1 p-2 space-y-2 overflow-y-auto scroll-container">
+                        ${cardsInPhase.length > 0 ? cardsInPhase.map(card => buildCardHTML(card)).join('') : `<div class="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4"><p class="text-sm font-medium">Não há recolha nesta fase.</p></div>`}
+                    </div>
+                </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function buildCardHTML(card) {
+        let slaColor = '', slaText = '';
+        if (card.sla >= 3) { slaColor = 'bg-red-100 text-red-700'; slaText = 'Atrasado'; }
+        else if (card.sla == 2) { slaColor = 'bg-yellow-100 text-yellow-700'; slaText = 'Em Alerta'; }
+        else { slaColor = 'bg-green-100 text-green-700'; slaText = 'No Prazo'; }
+        return `<div class="kanban-card data-item bg-white rounded-md shadow-sm border border-gray-200 flex flex-col h-56 cursor-pointer hover:border-primary transition-all" ${buildDataAttributes(card)}>
+                <div class="p-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs bg-gray-200 text-gray-600 font-medium px-2 py-0.5 rounded-full truncate">${card.origemLocacao}</span>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${slaColor}">${slaText}</span>
+                    </div>
+                    <h3 class="font-bold text-gray-800 card-placa truncate">${card.placa}</h3>
+                </div>
+                <div class="flex-grow px-3 space-y-1 text-sm">
+                    <p class="text-gray-500 card-driver truncate"><span class="font-semibold text-gray-600">DRIVER:</span> ${card.nomeDriver}</p>
+                    <p class="text-gray-500 truncate"><span class="font-semibold text-gray-600">MODELO:</span> ${card.modeloVeiculo}</p>
+                    ${card.faseAtual !== 'Fila de Recolha' ? `<p class="text-gray-500 card-chofer truncate"><span class="font-semibold text-gray-600">CHOFER:</span> ${card.chofer}</p>` : ''}
+                </div>
+                <div class="p-3 flex items-center justify-between border-t border-gray-100">
+                    <div class="flex items-center text-xs text-red-600 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        SLA: ${card.sla} dia(s)
+                    </div>
+                    ${card.urlPublica ? `<button class="open-form-btn text-xs text-gray-500 hover:text-primary flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Formulário</button>` : ''}
+                </div>
+            </div>`;
+    }
+
+    function buildListView(cards) {
+        const container = document.getElementById('list-container');
+        if (!container) return;
+        let html = '';
+        
+        const filteredCards = cards.filter(card => 
+            fixedPhaseOrder.includes(card.faseAtual)
+        );
+        
+        filteredCards.sort((a, b) => b.sla - a.sla);
+        
+        if (filteredCards.length > 0) {
+            filteredCards.forEach(card => {
+                let slaText = '', slaBg = '';
+                if (card.sla >= 3) { slaBg = 'bg-red-100'; slaText = 'Atrasado'; }
+                else if (card.sla == 2) { slaBg = 'bg-yellow-100'; slaText = 'Em Alerta'; }
+                else { slaBg = 'bg-green-100'; slaText = 'No Prazo'; }
+                const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
+                html += `<tr class="table-list-item data-item border-b hover:bg-gray-50 cursor-pointer ${slaBg}" ${buildDataAttributes(card)}>
+                        <td class="px-6 py-2 font-bold text-gray-900 card-placa">${card.placa}</td>
+                        <td class="px-6 py-2 card-driver">${card.nomeDriver}</td>
+                        <td class="px-6 py-2 card-chofer">${card.chofer}</td>
+                        <td class="px-6 py-2">${displayPhase}</td>
+                        <td class="px-6 py-2">${card.dataCriacao}</td>
+                        <td class="px-6 py-2 text-center font-bold text-lg">${card.sla}</td>
+                    </tr>`;
+            });
+        }
+        container.innerHTML = html;
+    }
+
+    function buildDataAttributes(card) {
+        let slaText = '';
+        if (card.sla >= 3) { slaText = 'Atrasado'; }
+        else if (card.sla == 2) { slaText = 'Em Alerta'; }
+        else { slaText = 'No Prazo'; }
+        return `data-placa="${card.placa}" data-driver="${card.nomeDriver}" data-chofer="${card.chofer}" data-origem="${card.origemLocacao}" data-fase="${card.faseAtual}" data-criacao="${card.dataCriacao}" data-sla-dias="${card.sla}" data-mapa-url="${card.enderecoRecolhaUrl}" data-form-url="${card.urlPublica}" data-sla-text="${slaText}" data-valor-recolha="${card.valorRecolha}" data-custo-km="${card.custoKmAdicional}" data-modelo-veiculo="${card.modeloVeiculo}" data-telefone-contato="${card.telefoneContato}" data-telefone-opcional="${card.telefoneOpcional}" data-endereco-cadastro="${card.enderecoCadastro}" data-endereco-veiculo="${card.enderecoVeiculo}"`;
+    }
+    
+    function buildModalContent(data) {
+        const isFila = data.fase === 'Fila de Recolha';
+        const displayPhase = phaseDisplayNames[data.fase] || data.fase;
+        let valorHTML = '';
+        if (!isFila && data.valorRecolha && data.valorRecolha !== 'N/A' && data.valorRecolha !== 'null') {
+            valorHTML = `<div><p class="text-sm text-gray-500">Valor da Recolha</p><p class="font-semibold">R$ ${data.valorRecolha}</p></div>`;
+        }
+        let custoKmHTML = '';
+        if (!isFila && data.custoKm && data.custoKm !== 'N/A' && data.custoKm !== 'null') {
+            custoKmHTML = `<div><p class="text-sm text-gray-500">Custo KM Adicional</p><p class="font-semibold">R$ ${data.custoKm}</p></div>`;
+        }
+        return `<div class="grid grid-cols-2 gap-4"><div><p class="text-sm text-gray-500">SLA</p><p class="font-semibold text-lg">${data.slaDias} dias</p></div><div><p class="text-sm text-gray-500">Fase Atual</p><p class="font-semibold">${displayPhase}</p></div></div>
+            <div><p class="text-sm text-gray-500">Modelo do Veículo</p><p class="font-semibold">${data.modeloVeiculo}</p></div>
+            <div><p class="text-sm text-gray-500">Driver</p><p class="font-semibold">${data.driver}</p></div>
+            ${!isFila ? `<div><p class="text-sm text-gray-500">Chofer</p><p class="font-semibold">${data.chofer}</p></div>` : ''}
+            <div><p class="text-sm text-gray-500">Origem da Locação</p><p class="font-semibold">${data.origem}</p></div>
+            <div><p class="text-sm text-gray-500">Telefone de Contato</p><p class="font-semibold">${data.telefoneContato}</p></div>
+            <div><p class="text-sm text-gray-500">Telefone Opcional</p><p class="font-semibold">${data.telefoneOpcional}</p></div>
+            <div><p class="text-sm text-gray-500">Endereço de Cadastro</p><p class="font-semibold">${data.enderecoCadastro}</p></div>
+            <div><p class="text-sm text-gray-500">Endereço Onde o Veículo Está</p><p class="font-semibold">${data.enderecoVeiculo}</p></div>
+            ${valorHTML}
+            ${custoKmHTML}
+            <div><p class="text-sm text-gray-500">Data de Criação</p><p class="font-semibold">${data.criacao}</p></div>`;
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
-      // Suas constantes de elementos originais...
+      // Atualiza as informações do usuário no cabeçalho
+      document.getElementById('user-name').textContent = user.displayName;
+      document.getElementById('user-email').textContent = user.email;
+      document.getElementById('user-avatar').src = user.photoURL;
+
+      const searchInput = document.getElementById('searchInput');
+      const slaFilter = document.getElementById('slaFilter');
+      const kanbanView = document.getElementById('kanban-view');
+      const listView = document.getElementById('list-view');
+      const loadingIndicator = document.getElementById('loading-indicator');
+      const kanbanBtn = document.getElementById('kanban-view-btn');
+      const listBtn = document.getElementById('list-view-btn');
+      const cardModal = document.getElementById('cardModal');
+      const closeCardModalBtn = document.getElementById('closeCardModal');
+      const modalFormIframe = document.getElementById('modalFormIframe');
+      const mainContent = document.querySelector('main');
+      const logoutBtn = document.getElementById('logout-btn');
       const openCalculatorBtn = document.getElementById('open-calculator-btn');
 
-      // Suas funções e event listeners originais...
+      // Adiciona o event listener para os cards e botões de formulário
+      mainContent.addEventListener('click', function(event) {
+        const target = event.target;
+        const formButton = target.closest('.open-form-btn');
+        if (formButton) {
+            event.stopPropagation();
+            const cardElement = formButton.closest('.data-item');
+            const formUrl = cardElement.dataset.formUrl;
+            if (formUrl) openCardModal(cardElement);
+            return;
+        }
+        const cardElement = target.closest('.data-item');
+        if (cardElement) {
+            openCardModal(cardElement);
+        }
+      });
 
+      function filterAndSearch() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const currentSlaFilter = slaFilter.value;
+        document.querySelectorAll('.data-item').forEach(item => {
+          const placa = item.dataset.placa.toLowerCase();
+          const driver = item.dataset.driver.toLowerCase();
+          const chofer = item.dataset.chofer.toLowerCase();
+          const slaText = item.dataset.slaText;
+          const matchesSearch = placa.includes(searchTerm) || driver.includes(searchTerm) || chofer.includes(searchTerm);
+          const matchesSla = (currentSlaFilter === 'all') || (slaText === currentSlaFilter);
+          const shouldBeVisible = matchesSearch && matchesSla;
+          if (item.classList.contains('kanban-card')) {
+            item.style.display = shouldBeVisible ? 'flex' : 'none';
+          } else if (item.classList.contains('table-list-item')) {
+            item.style.display = shouldBeVisible ? 'table-row' : 'none';
+          }
+        });
+        document.querySelectorAll('#kanban-view .w-64').forEach(column => {
+          const visibleCards = Array.from(column.querySelectorAll('.kanban-card')).filter(card => card.style.display !== 'none').length;
+          const countElement = column.querySelector('.card-count');
+          if(countElement) { countElement.textContent = visibleCards; }
+        });
+      }
+
+      searchInput.addEventListener('input', filterAndSearch);
+      slaFilter.addEventListener('change', filterAndSearch);
+      
+      kanbanBtn.addEventListener('click', () => {
+        kanbanView.classList.remove('hidden');
+        kanbanView.classList.add('flex');
+        listView.classList.add('hidden');
+        kanbanBtn.classList.add('active');
+        listBtn.classList.remove('active');
+      });
+
+      listBtn.addEventListener('click', () => {
+        kanbanView.classList.add('hidden');
+        kanbanView.classList.remove('flex');
+        listView.classList.remove('hidden');
+        listBtn.classList.add('active');
+        kanbanBtn.classList.remove('active');
+      });
+
+      function openCardModal(itemElement) {
+        const data = itemElement.dataset;
+        document.getElementById('modalPlaca').textContent = data.placa;
+        document.getElementById('modal-content').innerHTML = buildModalContent(data);
+        
+        if (data.formUrl && data.formUrl !== 'null') {
+          modalFormIframe.src = data.formUrl;
+        } else {
+          modalFormIframe.src = "about:blank";
+        }
+        
+        const mapaLink = document.getElementById('modalMapaLink');
+        if (data.mapaUrl && data.mapaUrl !== 'null') {
+          mapaLink.href = data.mapaUrl;
+          mapaLink.style.display = 'inline-block';
+        } else {
+          mapaLink.style.display = 'none';
+        }
+        
+        cardModal.classList.remove('hidden');
+        setTimeout(() => cardModal.querySelector('.modal-panel').classList.remove('opacity-0', 'scale-95'), 10);
+      }
+
+      function closeCardModal() {
+        const panel = cardModal.querySelector('.modal-panel');
+        panel.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => {
+          cardModal.classList.add('hidden');
+          modalFormIframe.src = "about:blank";
+        }, 200);
+      }
+      
+      function onDataRefreshed(sheetData) {
+        buildUI(sheetData.cards);
+        console.log("Dados atualizados em: " + sheetData.lastUpdate);
+        filterAndSearch();
+      }
+      
       function fetchData() {
           const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${new Date().getTime()}`;
           fetch(url)
-              .then(response => response.json())
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+                  return response.json();
+              })
               .then(data => {
-                  if (data.error) throw new Error(data.error);
-                  
+                  if (data.error) {
+                      throw new Error(data.error);
+                  }
                   loadingIndicator.style.display = 'none';
                   kanbanView.classList.remove('hidden');
                   kanbanView.classList.add('flex');
@@ -205,28 +539,25 @@
               })
               .catch(err => {
                   console.error("Falha ao carregar dados:", err);
-                  loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique console.</p>`;
+                  loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha, o URL da API e a configuração de implantação.</p>`;
               });
       }
 
-      // --- NOVA LÓGICA DO MODAL DA CALCULADORA ---
+      // --- LÓGICA DO MODAL DA CALCULADORA ---
       
       openCalculatorBtn.addEventListener('click', async () => {
         if (document.getElementById('calculator-modal-container')) return;
 
-        // 1. Cria o contêiner do modal
         const modalContainer = document.createElement('div');
         modalContainer.id = 'calculator-modal-container';
         modalContainer.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-[60]';
         
-        // 2. Busca o HTML da calculadora e o injeta no contêiner
         try {
             const response = await fetch('calculadora.html');
             if (!response.ok) throw new Error('Não foi possível carregar calculadora.html');
             modalContainer.innerHTML = await response.text();
             document.body.appendChild(modalContainer);
             
-            // 3. Adiciona os eventos e a lógica APÓS o modal ser inserido na página
             setupCalculatorModal(modalContainer);
         } catch(error) {
             console.error("Erro ao carregar o modal da calculadora:", error);
@@ -239,11 +570,9 @@
         const closeBtn = modalContainer.querySelector('#close-calculator-btn');
         const calcBtn = modalContainer.querySelector('#calculate-btn');
 
-        // Lógica para fechar
         closeBtn.addEventListener('click', () => modalContainer.remove());
 
-        // Lógica para calcular
-        calcBtn.addEventListener('click', () => {
+        const performCalculation = () => {
           const origem = modalContainer.querySelector("#origem").value;
           const destino = modalContainer.querySelector("#destino").value;
           const resultDiv = modalContainer.querySelector("#result-calculator");
@@ -260,8 +589,14 @@
             method: 'POST',
             body: JSON.stringify(payload),
             headers: { 'Content-Type': 'application/json' },
+            mode: 'cors' // Habilita o CORS
           })
-          .then(res => res.json())
+          .then(res => {
+            if (!res.ok) {
+              throw new Error(`Erro na resposta da API: ${res.statusText}`);
+            }
+            return res.json();
+          })
           .then(data => {
             loading.style.display = 'none';
             resultDiv.style.display = 'block';
@@ -282,29 +617,42 @@
             resultDiv.innerHTML = "❌ Ocorreu um erro de comunicação com o servidor.";
             console.error(err);
           });
+        };
+
+        calcBtn.addEventListener('click', performCalculation);
+        modalContainer.querySelector('#origem').addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') performCalculation();
         });
 
-        // Lógica para arrastar
+
         let isDragging = false, offset = { x: 0, y: 0 };
         header.addEventListener('mousedown', (e) => {
           isDragging = true;
           offset = { x: e.clientX - modalContainer.offsetLeft, y: e.clientY - modalContainer.offsetTop };
         });
-        document.addEventListener('mouseup', () => isDragging = false );
+        document.addEventListener('mouseup', () => { isDragging = false; });
         document.addEventListener('mousemove', (e) => {
           if (!isDragging) return;
           modalContainer.style.left = `${e.clientX - offset.x}px`;
           modalContainer.style.top = `${e.clientY - offset.y}px`;
-          // Remove a transformação para que a posição seja absoluta
-          modalContainer.style.transform = 'none'; 
+          modalContainer.style.transform = 'none';
         });
       }
+      
+      // --- FIM DA LÓGICA DO MODAL DA CALCULADORA ---
 
-      // --- FIM DA NOVA LÓGICA ---
+      function logout() {
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+      }
 
-      // Seu código restante (logout, fetchData inicial, setInterval) permanece o mesmo
-      fetchData();
-      setInterval(fetchData, 30000);
+      closeCardModalBtn.addEventListener('click', closeCardModal);
+      cardModal.addEventListener('click', e => { if (e.target === cardModal) closeCardModal(); });
+      logoutBtn.addEventListener('click', logout);
+
+      fetchData(); // Carregamento inicial
+
+      setInterval(fetchData, 30000); // Atualiza a cada 30 segundos
     });
   </script>
 
