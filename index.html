@@ -1,683 +1,703 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Recolhas - Kovi</title>
-  <link rel="icon" type="image/png" href="https://i.ibb.co/ksMQSMQ2/web-app-manifest-192x192.png">
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Poppins e Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary-color: #FF355A;
-      --primary-color-darker: #E02E4D;
-      --scrollbar-track: #f1f1f1;
-      --scrollbar-thumb: #c1c1c1;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Recolhas - Kovi</title>
+  <link rel="icon" type="image/png" href="https://i.ibb.co/ksMQSMQ2/web-app-manifest-192x192.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #FF355A;
+      --primary-color-darker: #E02E4D;
+      --scrollbar-track: #f1f1f1;
+      --scrollbar-thumb: #c1c1c1;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7f9fa;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .bg-primary {
+      background-color: var(--primary-color);
+    }
+    .control-btn.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+      transition: background-color 0.2s;
+    }
+    .btn-primary:hover {
+      background-color: var(--primary-color-darker);
+    }
+    .text-primary {
+      color: var(--primary-color);
+    }
+    .border-primary {
+      border-color: var(--primary-color);
+    }
+    .focus-primary:focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.4) !important;
+    }
+    
+    /* Estilos aprimorados para barra de rolagem */
+    .scroll-container {
+      overflow: auto;
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+      transition: scrollbar-color 0.3s ease;
+    }
+    
+    .scroll-container:hover {
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+    
+    /* WebKit (Chrome, Safari) */
+    .scroll-container::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+      background-color: transparent;
+    }
+    
+    .scroll-container::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 4px;
+    }
+    
+    .scroll-container::-webkit-scrollbar-thumb {
+      background-color: transparent;
+      border-radius: 4px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+    
+    .scroll-container:hover::-webkit-scrollbar-track {
+      background: var(--scrollbar-track);
+    }
+    
+    .scroll-container:hover::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
+    }
+    
+    .scroll-container::-webkit-scrollbar-thumb:hover {
+      background-color: #a0a0a0;
+    }
+    
+    .kanban-board {
+      scrollbar-gutter: stable;
+    }
+    
+    .modal-overlay {
+      transition: opacity 0.2s ease-in-out;
+    }
+    .modal-panel {
+      transition: transform 0.2s ease-in-out;
+    }
+    .phase-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .table-header-primary th {
+      color: var(--primary-color);
+      font-weight: 700;
+    }
+    .table-border-primary {
+      border-top: 4px solid var(--primary-color);
+    }
+    .compact-table td {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    .split-modal {
+      display: flex;
+      height: 60vh;
+    }
+    .split-modal-left {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      border-right: 1px solid #e5e7eb;
+    }
+    .split-modal-right {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+    }
+    .split-modal-right iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    /* --- MUDANÇAS AQUI --- */
+    /* Estilos para o modal da calculadora */
+    #calculatorContainer {
+      position: fixed; /* Essencial para o arraste */
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%); /* Centraliza inicialmente */
     }
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f7f9fa;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    .bg-primary {
-      background-color: var(--primary-color);
-    }
-    .control-btn.active {
-      background-color: var(--primary-color);
-      color: white;
-    }
-    .btn-primary {
-      background-color: var(--primary-color);
-      color: white;
-      transition: background-color 0.2s;
-    }
-    .btn-primary:hover {
-      background-color: var(--primary-color-darker);
-    }
-    .text-primary {
-      color: var(--primary-color);
-    }
-    .border-primary {
-      border-color: var(--primary-color);
-    }
-    .focus-primary:focus {
-      border-color: var(--primary-color) !important;
-      box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.4) !important;
-    }
-    
-    /* Estilos aprimorados para barra de rolagem */
-    .scroll-container {
-      overflow: auto;
-      scrollbar-width: thin;
-      scrollbar-color: transparent transparent;
-      transition: scrollbar-color 0.3s ease;
-    }
-    
-    .scroll-container:hover {
-      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-    }
-    
-    /* WebKit (Chrome, Safari) */
-    .scroll-container::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-      background-color: transparent;
-    }
-    
-    .scroll-container::-webkit-scrollbar-track {
-      background: transparent;
-      border-radius: 4px;
-    }
-    
-    .scroll-container::-webkit-scrollbar-thumb {
-      background-color: transparent;
-      border-radius: 4px;
-      border: 2px solid transparent;
-      background-clip: padding-box;
-    }
-    
-    .scroll-container:hover::-webkit-scrollbar-track {
-      background: var(--scrollbar-track);
-    }
-    
-    .scroll-container:hover::-webkit-scrollbar-thumb {
-      background-color: var(--scrollbar-thumb);
-    }
-    
-    .scroll-container::-webkit-scrollbar-thumb:hover {
-      background-color: #a0a0a0;
-    }
-    
-    .kanban-board {
-      scrollbar-gutter: stable;
-    }
-    
-    .modal-overlay {
-      transition: opacity 0.2s ease-in-out;
-    }
-    .modal-panel {
-      transition: transform 0.2s ease-in-out;
-    }
-    .phase-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .table-header-primary th {
-      color: var(--primary-color);
-      font-weight: 700;
-    }
-    .table-border-primary {
-      border-top: 4px solid var(--primary-color);
-    }
-    .compact-table td {
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
-    }
-    .split-modal {
-      display: flex;
-      height: 60vh;
-    }
-    .split-modal-left {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      border-right: 1px solid #e5e7eb;
-    }
-    .split-modal-right {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0;
-    }
-    .split-modal-right iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-    /* Estilos para o modal da calculadora */
-    .calculator-modal {
-      width: 400px;
-      height: 500px;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      overflow: hidden;
-      background: white;
-    }
-    .calculator-header {
-      background-color: var(--primary-color);
-      color: white;
-      padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: move;
-    }
-    .calculator-iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-    .close-calculator {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 1.5rem;
-      cursor: pointer;
-      padding: 4px;
-    }
-  </style>
+    .calculator-modal {
+      width: 400px;
+      height: 680px; /* Aumentado para caber o conteúdo */
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      overflow: hidden;
+      background: white;
+      border: 3px solid var(--primary-color); /* Borda na cor primária */
+    }
+    .calculator-header {
+      background-color: var(--primary-color); /* Fundo na cor primária */
+      color: white;
+      padding: 8px 16px;
+      display: flex;
+      justify-content: flex-end; /* Alinha o botão de fechar à direita */
+      align-items: center;
+      cursor: move; /* Indica que é arrastável */
+      user-select: none; /* Evita seleção de texto ao arrastar */
+    }
+    .calculator-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .close-calculator {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.8rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px;
+    }
+  </style>
 </head>
 <body class="text-gray-800">
 
-  <div class="flex flex-col h-screen">
-    <!-- Cabeçalho Principal -->
-    <header class="bg-primary text-white flex-shrink-0">
-      <div class="flex justify-between items-center px-4 py-3">
-        <div class="flex items-center gap-4">
-          <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-10">
-          <span class="text-white opacity-50">/</span>
-          <h1 class="text-lg font-semibold" style="font-family: 'Poppins', sans-serif; font-weight: 800;">Gestão de Recolhas</h1>
-        </div>
-        <div class="flex items-center gap-3">
-          <img id="user-avatar" src="https://placehold.co/40x40/FFFFFF/FF355A?text=K" alt="Foto do Perfil" class="h-10 w-10 rounded-full">
-          <div>
-              <p id="user-name" class="font-bold text-sm">Utilizador Kovi</p>
-              <p id="user-email" class="text-xs">A carregar...</p>
-          </div>
-          <!-- Botão de Logoff -->
-          <button id="logout-btn" class="text-white hover:text-gray-200 ml-2 flex items-center gap-1 text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
-              <path d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-            </svg>
-            Sair
-          </button>
-        </div>
-      </div>
-    </header>
-    
-    <!-- Barra de Controles -->
-    <div class="py-3 bg-white border-b border-gray-200 flex-shrink-0">
-        <div class="flex justify-between items-center px-4">
-            <div class="flex items-center border border-gray-300 rounded-lg p-1 bg-gray-100">
-              <button id="kanban-view-btn" class="control-btn active px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
-                Kanban
-              </button>
-              <button id="list-view-btn" class="control-btn px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
-                Lista
-              </button>
-            </div>
-            <div class="flex items-center gap-4">
-                <select id="slaFilter" class="text-sm border border-gray-300 rounded-md p-2 focus-primary">
-                    <option value="all">Filtrar por SLA</option>
-                    <option value="No Prazo">No Prazo</option>
-                    <option value="Em Alerta">Em Alerta</option>
-                    <option value="Atrasado">Atrasado</option>
-                </select>
-                <div class="relative">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                  <input type="search" id="searchInput" placeholder="Procurar cards..." class="w-64 p-2 pl-10 text-sm border border-gray-300 rounded-md focus-primary">
-                </div>
-                <!-- NOVO: Botão Calculadora KM -->
-                <button id="openCalculatorBtn" class="hidden btn-primary px-3 py-2 text-sm font-medium rounded-md flex items-center gap-2">
+  <div class="flex flex-col h-screen">
+        <header class="bg-primary text-white flex-shrink-0">
+      <div class="flex justify-between items-center px-4 py-3">
+        <div class="flex items-center gap-4">
+          <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-10">
+          <span class="text-white opacity-50">/</span>
+          <h1 class="text-lg font-semibold" style="font-family: 'Poppins', sans-serif; font-weight: 800;">Gestão de Recolhas</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <img id="user-avatar" src="https://placehold.co/40x40/FFFFFF/FF355A?text=K" alt="Foto do Perfil" class="h-10 w-10 rounded-full">
+          <div>
+              <p id="user-name" class="font-bold text-sm">Utilizador Kovi</p>
+              <p id="user-email" class="text-xs">A carregar...</p>
+          </div>
+                    <button id="logout-btn" class="text-white hover:text-gray-200 ml-2 flex items-center gap-1 text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+              <path d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+            </svg>
+            Sair
+          </button>
+        </div>
+      </div>
+    </header>
+    
+        <div class="py-3 bg-white border-b border-gray-200 flex-shrink-0">
+        <div class="flex justify-between items-center px-4">
+            <div class="flex items-center border border-gray-300 rounded-lg p-1 bg-gray-100">
+              <button id="kanban-view-btn" class="control-btn active px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+                Kanban
+              </button>
+              <button id="list-view-btn" class="control-btn px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                Lista
+              </button>
+            </div>
+            <div class="flex items-center gap-4">
+                <select id="slaFilter" class="text-sm border border-gray-300 rounded-md p-2 focus-primary">
+                    <option value="all">Filtrar por SLA</option>
+                    <option value="No Prazo">No Prazo</option>
+                    <option value="Em Alerta">Em Alerta</option>
+                    <option value="Atrasado">Atrasado</option>
+                </select>
+                <div class="relative">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input type="search" id="searchInput" placeholder="Procurar cards..." class="w-64 p-2 pl-10 text-sm border border-gray-300 rounded-md focus-primary">
+                </div>
+                                <button id="openCalculatorBtn" class="hidden btn-primary px-3 py-2 text-sm font-medium rounded-md flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
-                        <path d="M4 2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5zM7.5 6a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zM6.5 8a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zM5.5 10a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm2 0a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm2 0a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm2-2a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-2-2a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm2 0a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zM8.5 8a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zM8.5 10.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
+                      <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm2 .5v2a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-7a.5.5 0 0 0-.5.5m0 4v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5M4.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM4 12.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5M7.5 6a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM8 9.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM7.5 12a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM10.5 6a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM11 9.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM10.5 12a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z"/>
                     </svg>
-                    Calculadora km
-                </button>
-            </div>
-        </div>
-    </div>
+                    Calculadora km
+                </button>
+            </div>
+        </div>
+    </div>
 
 
-    <!-- Conteúdo Principal -->
-    <main class="flex-1 flex overflow-hidden">
-      <!-- Indicador de Carregamento -->
-      <div id="loading-indicator" class="flex flex-col items-center justify-center w-full h-full">
-        <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p id="loading-text" class="mt-2 text-gray-600">A carregar dados...</p>
-      </div>
-      
-      <!-- Visualização Kanban (inicialmente oculta) -->
-      <div id="kanban-view" class="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-4 hidden scroll-container">
-        <div id="kanban-container" class="flex gap-4">
-            <!-- As colunas serão inseridas aqui pelo JavaScript -->
-        </div>
-      </div>
-      
-      <!-- Visualização em Lista (inicialmente oculta) -->
-      <div id="list-view" class="h-full w-full p-4 hidden">
-        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
-          <table class="w-full text-sm text-left text-gray-500">
-            <thead class="text-xs uppercase bg-gray-50 sticky top-0 z-10 table-header-primary">
-              <tr>
-                <th scope="col" class="px-6 py-3">Placa</th>
-                <th scope="col" class="px-6 py-3">Driver</th>
-                <th scope="col" class="px-6 py-3">Chofer</th>
-                <th scope="col" class="px-6 py-3">Fase Atual</th>
-                <th scope="col" class="px-6 py-3">Data Criação</th>
-                <th scope="col" class="px-6 py-3 text-center">SLA (dias)</th>
-              </tr>
-            </thead>
-            <tbody id="list-container" class="bg-white compact-table">
-              <!-- As linhas serão inseridas aqui pelo JavaScript -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </main>
-  </div>
+        <main class="flex-1 flex overflow-hidden">
+            <div id="loading-indicator" class="flex flex-col items-center justify-center w-full h-full">
+        <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p id="loading-text" class="mt-2 text-gray-600">A carregar dados...</p>
+      </div>
+      
+            <div id="kanban-view" class="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-4 hidden scroll-container">
+        <div id="kanban-container" class="flex gap-4">
+                    </div>
+      </div>
+      
+            <div id="list-view" class="h-full w-full p-4 hidden">
+        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
+          <table class="w-full text-sm text-left text-gray-500">
+            <thead class="text-xs uppercase bg-gray-50 sticky top-0 z-10 table-header-primary">
+              <tr>
+                <th scope="col" class="px-6 py-3">Placa</th>
+                <th scope="col" class="px-6 py-3">Driver</th>
+                <th scope="col" class="px-6 py-3">Chofer</th>
+                <th scope="col" class="px-6 py-3">Fase Atual</th>
+                <th scope="col" class="px-6 py-3">Data Criação</th>
+                <th scope="col" class="px-6 py-3 text-center">SLA (dias)</th>
+              </tr>
+            </thead>
+            <tbody id="list-container" class="bg-white compact-table">
+                          </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
 
-  <!-- Modal de Detalhes -->
-  <div id="cardModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-    <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-5xl transform scale-95 opacity-0">
-      <div class="flex justify-between items-center p-4 border-b">
-        <h3 class="text-xl font-bold" id="modalPlaca"></h3>
-        <button id="closeCardModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-      </div>
-      <div class="split-modal">
-        <div class="split-modal-left scroll-container">
-          <div id="modal-content" class="space-y-4"></div>
-        </div>
-        <div class="split-modal-right scroll-container">
-          <iframe id="modalFormIframe" src="" class="w-full h-full"></iframe>
-        </div>
-      </div>
-      <div class="p-4 bg-gray-50 border-t flex justify-end">
-        <a id="modalMapaLink" href="#" target="_blank" class="bg-gray-600 hover:bg-gray-700 text-white inline-block px-4 py-2 rounded-md">Abrir no Google Maps 🗺️</a>
-      </div>
-    </div>
-  </div>
+    <div id="cardModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+    <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-5xl transform scale-95 opacity-0">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h3 class="text-xl font-bold" id="modalPlaca"></h3>
+        <button id="closeCardModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+      </div>
+      <div class="split-modal">
+        <div class="split-modal-left scroll-container">
+          <div id="modal-content" class="space-y-4"></div>
+        </div>
+        <div class="split-modal-right scroll-container">
+          <iframe id="modalFormIframe" src="" class="w-full h-full"></iframe>
+        </div>
+      </div>
+      <div class="p-4 bg-gray-50 border-t flex justify-end">
+        <a id="modalMapaLink" href="#" target="_blank" class="bg-gray-600 hover:bg-gray-700 text-white inline-block px-4 py-2 rounded-md">Abrir no Google Maps 🗺️</a>
+      </div>
+    </div>
+  </div>
 
-  <!-- NOVO: Modal da Calculadora KM -->
-  <div id="calculatorModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-    <div id="calculatorContainer" class="calculator-modal">
-      <div class="calculator-header">
-        <button id="closeCalculator" class="close-calculator">&times;</button>
-      </div>
-      <iframe id="calculatorIframe" src="https://calculadorakm.vercel.app/" class="calculator-iframe"></iframe>
-    </div>
-  </div>
+    <div id="calculatorModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 p-4 hidden z-50">
+    <div id="calculatorContainer" class="calculator-modal">
+      <div class="calculator-header">
+                <button id="closeCalculator" class="close-calculator">&times;</button>
+      </div>
+      <iframe id="calculatorIframe" src="https://calculadorakm.vercel.app/" class="calculator-iframe"></iframe>
+    </div>
+  </div>
 
-  <script>
-    // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; 
+  <script>
+    // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; 
 
-    // VERIFICAÇÃO DE LOGIN
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user) {
-      // Se não houver usuário, redireciona para a página de login
-      window.location.href = 'login.html';
-    }
+    // VERIFICAÇÃO DE LOGIN
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+      // Se não houver usuário, redireciona para a página de login
+      window.location.href = 'login.html';
+    }
 
-    const fixedPhaseOrder = [
-      'Fila de Recolha',
-      'Tentativa 1 de Recolha',
-      'Tentativa 2 de Recolha',
-      'Tentativa 3 de Recolha',
-      'Nova tentativa de recolha',
-      'Confirmação de Entrega no Pátio'
-    ];
+    const fixedPhaseOrder = [
+      'Fila de Recolha',
+      'Tentativa 1 de Recolha',
+      'Tentativa 2 de Recolha',
+      'Tentativa 3 de Recolha',
+      'Nova tentativa de recolha',
+      'Confirmação de Entrega no Pátio'
+    ];
 
-    // Mapeamento de fases para exibição
-    const phaseDisplayNames = {
-      'Fila de Recolha': 'Fila de Recolha',
-      'Tentativa 1 de Recolha': 'Tentativa 1',
-      'Tentativa 2 de Recolha': 'Tentativa 2',
-      'Tentativa 3 de Recolha': 'Tentativa 3',
-      'Nova tentativa de recolha': 'Nova Tentativa',
-      'Confirmação de Entrega no Pátio': 'Confirmação de Recolha'
-    };
+    // Mapeamento de fases para exibição
+    const phaseDisplayNames = {
+      'Fila de Recolha': 'Fila de Recolha',
+      'Tentativa 1 de Recolha': 'Tentativa 1',
+      'Tentativa 2 de Recolha': 'Tentativa 2',
+      'Tentativa 3 de Recolha': 'Tentativa 3',
+      'Nova tentativa de recolha': 'Nova Tentativa',
+      'Confirmação de Entrega no Pátio': 'Confirmação de Recolha'
+    };
 
-    function buildUI(cards) {
-        buildKanbanView(cards);
-        buildListView(cards);
-    }
-    
-    function buildKanbanView(cards) {
-        const container = document.getElementById('kanban-container');
-        if (!container) return;
-        const phases = {};
-        fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
-        cards.forEach(card => {
-            if (phases[card.faseAtual]) {
-                phases[card.faseAtual].push(card);
-            }
-        });
-        let html = '';
-        fixedPhaseOrder.forEach(phaseName => {
-            const cardsInPhase = phases[phaseName];
-            const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
-            const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
-            html += `
-                <div class="w-64 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
-                    <div class="p-3 flex items-center bg-white rounded-t-lg border-t-4 border-primary">
-                        <h2 class="phase-title text-primary">${displayPhaseName}</h2>
-                        <span class="text-sm font-semibold text-gray-500 bg-gray-200 rounded-md px-2 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
-                        ${lateOrAlertCount > 0 ? `<span class="ml-auto flex items-center text-amber-600 font-semibold text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${lateOrAlertCount}</span>` : ''}
-                    </div>
-                    <div class="flex-1 p-2 space-y-2 overflow-y-auto scroll-container">
-                        ${cardsInPhase.length > 0 ? cardsInPhase.map(card => buildCardHTML(card)).join('') : `<div class="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4"><p class="text-sm font-medium">Não há recolha nesta fase.</p></div>`}
-                    </div>
-                </div>`;
-        });
-        container.innerHTML = html;
-    }
+    function buildUI(cards) {
+        buildKanbanView(cards);
+        buildListView(cards);
+    }
+    
+    function buildKanbanView(cards) {
+        const container = document.getElementById('kanban-container');
+        if (!container) return;
+        const phases = {};
+        fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
+        cards.forEach(card => {
+            if (phases[card.faseAtual]) {
+                phases[card.faseAtual].push(card);
+            }
+        });
+        let html = '';
+        fixedPhaseOrder.forEach(phaseName => {
+            const cardsInPhase = phases[phaseName];
+            const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
+            const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
+            html += `
+                <div class="w-64 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
+                    <div class="p-3 flex items-center bg-white rounded-t-lg border-t-4 border-primary">
+                        <h2 class="phase-title text-primary">${displayPhaseName}</h2>
+                        <span class="text-sm font-semibold text-gray-500 bg-gray-200 rounded-md px-2 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
+                        ${lateOrAlertCount > 0 ? `<span class="ml-auto flex items-center text-amber-600 font-semibold text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${lateOrAlertCount}</span>` : ''}
+                    </div>
+                    <div class="flex-1 p-2 space-y-2 overflow-y-auto scroll-container">
+                        ${cardsInPhase.length > 0 ? cardsInPhase.map(card => buildCardHTML(card)).join('') : `<div class="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4"><p class="text-sm font-medium">Não há recolha nesta fase.</p></div>`}
+                    </div>
+                </div>`;
+        });
+        container.innerHTML = html;
+    }
 
-    function buildCardHTML(card) {
-        let slaColor = '', slaText = '';
-        if (card.sla >= 3) { slaColor = 'bg-red-100 text-red-700'; slaText = 'Atrasado'; }
-        else if (card.sla == 2) { slaColor = 'bg-yellow-100 text-yellow-700'; slaText = 'Em Alerta'; }
-        else { slaColor = 'bg-green-100 text-green-700'; slaText = 'No Prazo'; }
-        return `
-            <div class="kanban-card data-item bg-white rounded-md shadow-sm border border-gray-200 flex flex-col h-56 cursor-pointer hover:border-primary transition-all" ${buildDataAttributes(card)}>
-                <div class="p-3">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs bg-gray-200 text-gray-600 font-medium px-2 py-0.5 rounded-full truncate">${card.origemLocacao}</span>
-                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${slaColor}">${slaText}</span>
-                    </div>
-                    <h3 class="font-bold text-gray-800 card-placa truncate">${card.placa}</h3>
-                </div>
-                <div class="flex-grow px-3 space-y-1 text-sm">
-                    <p class="text-gray-500 card-driver truncate"><span class="font-semibold text-gray-600">DRIVER:</span> ${card.nomeDriver}</p>
-                    <p class="text-gray-500 truncate"><span class="font-semibold text-gray-600">MODELO:</span> ${card.modeloVeiculo}</p>
-                    ${card.faseAtual !== 'Fila de Recolha' ? `<p class="text-gray-500 card-chofer truncate"><span class="font-semibold text-gray-600">CHOFER:</span> ${card.chofer}</p>` : ''}
-                </div>
-                <div class="p-3 flex items-center justify-between border-t border-gray-100">
-                    <div class="flex items-center text-xs text-red-600 font-semibold">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        SLA: ${card.sla} dia(s)
-                    </div>
-                    ${card.urlPublica ? `<button class="open-form-btn text-xs text-gray-500 hover:text-primary flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Formulário</button>` : ''}
-                </div>
-            </div>`;
-    }
+    function buildCardHTML(card) {
+        let slaColor = '', slaText = '';
+        if (card.sla >= 3) { slaColor = 'bg-red-100 text-red-700'; slaText = 'Atrasado'; }
+        else if (card.sla == 2) { slaColor = 'bg-yellow-100 text-yellow-700'; slaText = 'Em Alerta'; }
+        else { slaColor = 'bg-green-100 text-green-700'; slaText = 'No Prazo'; }
+        return `
+            <div class="kanban-card data-item bg-white rounded-md shadow-sm border border-gray-200 flex flex-col h-56 cursor-pointer hover:border-primary transition-all" ${buildDataAttributes(card)}>
+                <div class="p-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs bg-gray-200 text-gray-600 font-medium px-2 py-0.5 rounded-full truncate">${card.origemLocacao}</span>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${slaColor}">${slaText}</span>
+                    </div>
+                    <h3 class="font-bold text-gray-800 card-placa truncate">${card.placa}</h3>
+                </div>
+                <div class="flex-grow px-3 space-y-1 text-sm">
+                    <p class="text-gray-500 card-driver truncate"><span class="font-semibold text-gray-600">DRIVER:</span> ${card.nomeDriver}</p>
+                    <p class="text-gray-500 truncate"><span class="font-semibold text-gray-600">MODELO:</span> ${card.modeloVeiculo}</p>
+                    ${card.faseAtual !== 'Fila de Recolha' ? `<p class="text-gray-500 card-chofer truncate"><span class="font-semibold text-gray-600">CHOFER:</span> ${card.chofer}</p>` : ''}
+                </div>
+                <div class="p-3 flex items-center justify-between border-t border-gray-100">
+                    <div class="flex items-center text-xs text-red-600 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        SLA: ${card.sla} dia(s)
+                    </div>
+                    ${card.urlPublica ? `<button class="open-form-btn text-xs text-gray-500 hover:text-primary flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Formulário</button>` : ''}
+                </div>
+            </div>`;
+    }
 
-    function buildListView(cards) {
-        const container = document.getElementById('list-container');
-        if (!container) return;
-        let html = '';
+    function buildListView(cards) {
+        const container = document.getElementById('list-container');
+        if (!container) return;
+        let html = '';
+        
+        const filteredCards = cards.filter(card => 
+            fixedPhaseOrder.includes(card.faseAtual)
+        );
+        
+        filteredCards.sort((a, b) => b.sla - a.sla);
+        
+        if (filteredCards.length > 0) {
+            filteredCards.forEach(card => {
+                let slaText = '', slaBg = '';
+                if (card.sla >= 3) { slaBg = 'bg-red-100'; slaText = 'Atrasado'; }
+                else if (card.sla == 2) { slaBg = 'bg-yellow-100'; slaText = 'Em Alerta'; }
+                else { slaBg = 'bg-green-100'; slaText = 'No Prazo'; }
+                const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
+                html += `
+                    <tr class="table-list-item data-item border-b hover:bg-gray-50 cursor-pointer ${slaBg}" ${buildDataAttributes(card)}>
+                        <td class="px-6 py-2 font-bold text-gray-900 card-placa">${card.placa}</td>
+                        <td class="px-6 py-2 card-driver">${card.nomeDriver}</td>
+                        <td class="px-6 py-2 card-chofer">${card.chofer}</td>
+                        <td class="px-6 py-2">${displayPhase}</td>
+                        <td class="px-6 py-2">${card.dataCriacao}</td>
+                        <td class="px-6 py-2 text-center font-bold text-lg">${card.sla}</td>
+                    </tr>`;
+            });
+        }
+        container.innerHTML = html;
+    }
+
+    function buildDataAttributes(card) {
+        let slaText = '';
+        if (card.sla >= 3) { slaText = 'Atrasado'; }
+        else if (card.sla == 2) { slaText = 'Em Alerta'; }
+        else { slaText = 'No Prazo'; }
+        return `data-placa="${card.placa}" data-driver="${card.nomeDriver}" data-chofer="${card.chofer}" data-origem="${card.origemLocacao}" data-fase="${card.faseAtual}" data-criacao="${card.dataCriacao}" data-sla-dias="${card.sla}" data-mapa-url="${card.enderecoRecolhaUrl}" data-form-url="${card.urlPublica}" data-sla-text="${slaText}" data-valor-recolha="${card.valorRecolha}" data-custo-km="${card.custoKmAdicional}" data-modelo-veiculo="${card.modeloVeiculo}" data-telefone-contato="${card.telefoneContato}" data-telefone-opcional="${card.telefoneOpcional}" data-endereco-cadastro="${card.enderecoCadastro}" data-endereco-veiculo="${card.enderecoVeiculo}"`;
+    }
+    
+    function buildModalContent(data) {
+        const isFila = data.fase === 'Fila de Recolha';
+        const displayPhase = phaseDisplayNames[data.fase] || data.fase;
+        let valorHTML = '';
+        if (!isFila && data.valorRecolha && data.valorRecolha !== 'N/A' && data.valorRecolha !== 'null') {
+            valorHTML = `<div><p class="text-sm text-gray-500">Valor da Recolha</p><p class="font-semibold">R$ ${data.valorRecolha}</p></div>`;
+        }
+        let custoKmHTML = '';
+        if (!isFila && data.custoKm && data.custoKm !== 'N/A' && data.custoKm !== 'null') {
+            custoKmHTML = `<div><p class="text-sm text-gray-500">Custo KM Adicional</p><p class="font-semibold">R$ ${data.custoKm}</p></div>`;
+        }
+        return `
+            <div class="grid grid-cols-2 gap-4"><div><p class="text-sm text-gray-500">SLA</p><p class="font-semibold text-lg">${data.slaDias} dias</p></div><div><p class="text-sm text-gray-500">Fase Atual</p><p class="font-semibold">${displayPhase}</p></div></div>
+            <div><p class="text-sm text-gray-500">Modelo do Veículo</p><p class="font-semibold">${data.modeloVeiculo}</p></div>
+            <div><p class="text-sm text-gray-500">Driver</p><p class="font-semibold">${data.driver}</p></div>
+            ${!isFila ? `<div><p class="text-sm text-gray-500">Chofer</p><p class="font-semibold">${data.chofer}</p></div>` : ''}
+            <div><p class="text-sm text-gray-500">Origem da Locação</p><p class="font-semibold">${data.origem}</p></div>
+            <div><p class="text-sm text-gray-500">Telefone de Contato</p><p class="font-semibold">${data.telefoneContato}</p></div>
+            <div><p class="text-sm text-gray-500">Telefone Opcional</p><p class="font-semibold">${data.telefoneOpcional}</p></div>
+            <div><p class="text-sm text-gray-500">Endereço de Cadastro</p><p class="font-semibold">${data.enderecoCadastro}</p></div>
+            <div><p class="text-sm text-gray-500">Endereço Onde o Veículo Está</p><p class="font-semibold">${data.enderecoVeiculo}</p></div>
+            ${valorHTML}
+            ${custoKmHTML}
+            <div><p class="text-sm text-gray-500">Data de Criação</p><p class="font-semibold">${data.criacao}</p></div>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Atualiza as informações do usuário no cabeçalho
+      document.getElementById('user-name').textContent = user.displayName;
+      document.getElementById('user-email').textContent = user.email;
+      document.getElementById('user-avatar').src = user.photoURL;
+
+      const searchInput = document.getElementById('searchInput');
+      const slaFilter = document.getElementById('slaFilter');
+      const kanbanView = document.getElementById('kanban-view');
+      const listView = document.getElementById('list-view');
+      const loadingIndicator = document.getElementById('loading-indicator');
+      const kanbanBtn = document.getElementById('kanban-view-btn');
+      const listBtn = document.getElementById('list-view-btn');
+      const cardModal = document.getElementById('cardModal');
+      const closeCardModalBtn = document.getElementById('closeCardModal');
+      const modalFormIframe = document.getElementById('modalFormIframe');
+      const mainContent = document.querySelector('main');
+      const logoutBtn = document.getElementById('logout-btn');
+      
+      // Elementos da calculadora
+      const openCalculatorBtn = document.getElementById('openCalculatorBtn');
+      const calculatorModal = document.getElementById('calculatorModal');
+      const closeCalculatorBtn = document.getElementById('closeCalculator');
+      const calculatorContainer = document.getElementById('calculatorContainer');
+      const calculatorHeader = document.querySelector('.calculator-header');
+      const calculatorIframe = document.getElementById('calculatorIframe');
+
+      // --- MUDANÇA AQUI: LÓGICA PARA ARRASTAR O MODAL ---
+      let isDragging = false;
+      let offsetX, offsetY;
+
+      calculatorHeader.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        // Calcula a diferença entre o clique do mouse e o canto superior esquerdo do modal
+        offsetX = e.clientX - calculatorContainer.getBoundingClientRect().left;
+        offsetY = e.clientY - calculatorContainer.getBoundingClientRect().top;
         
-        // Filtrar apenas as fases desejadas
-        const filteredCards = cards.filter(card => 
-            fixedPhaseOrder.includes(card.faseAtual)
-        );
+        // Impede que o iframe intercepte eventos do mouse enquanto arrasta
+        calculatorIframe.style.pointerEvents = 'none';
         
-        // Ordenar por SLA decrescente
-        filteredCards.sort((a, b) => b.sla - a.sla);
-        
-        if (filteredCards.length > 0) {
-            filteredCards.forEach(card => {
-                let slaText = '', slaBg = '';
-                if (card.sla >= 3) { slaBg = 'bg-red-100'; slaText = 'Atrasado'; }
-                else if (card.sla == 2) { slaBg = 'bg-yellow-100'; slaText = 'Em Alerta'; }
-                else { slaBg = 'bg-green-100'; slaText = 'No Prazo'; }
-                const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
-                html += `
-                    <tr class="table-list-item data-item border-b hover:bg-gray-50 cursor-pointer ${slaBg}" ${buildDataAttributes(card)}>
-                        <td class="px-6 py-2 font-bold text-gray-900 card-placa">${card.placa}</td>
-                        <td class="px-6 py-2 card-driver">${card.nomeDriver}</td>
-                        <td class="px-6 py-2 card-chofer">${card.chofer}</td>
-                        <td class="px-6 py-2">${displayPhase}</td>
-                        <td class="px-6 py-2">${card.dataCriacao}</td>
-                        <td class="px-6 py-2 text-center font-bold text-lg">${card.sla}</td>
-                    </tr>`;
-            });
-        }
-        container.innerHTML = html;
-    }
-
-    function buildDataAttributes(card) {
-        let slaText = '';
-        if (card.sla >= 3) { slaText = 'Atrasado'; }
-        else if (card.sla == 2) { slaText = 'Em Alerta'; }
-        else { slaText = 'No Prazo'; }
-        return `data-placa="${card.placa}" data-driver="${card.nomeDriver}" data-chofer="${card.chofer}" data-origem="${card.origemLocacao}" data-fase="${card.faseAtual}" data-criacao="${card.dataCriacao}" data-sla-dias="${card.sla}" data-mapa-url="${card.enderecoRecolhaUrl}" data-form-url="${card.urlPublica}" data-sla-text="${slaText}" data-valor-recolha="${card.valorRecolha}" data-custo-km="${card.custoKmAdicional}" data-modelo-veiculo="${card.modeloVeiculo}" data-telefone-contato="${card.telefoneContato}" data-telefone-opcional="${card.telefoneOpcional}" data-endereco-cadastro="${card.enderecoCadastro}" data-endereco-veiculo="${card.enderecoVeiculo}"`;
-    }
-    
-    function buildModalContent(data) {
-        const isFila = data.fase === 'Fila de Recolha';
-        const displayPhase = phaseDisplayNames[data.fase] || data.fase;
-        let valorHTML = '';
-        if (!isFila && data.valorRecolha && data.valorRecolha !== 'N/A' && data.valorRecolha !== 'null') {
-            valorHTML = `<div><p class="text-sm text-gray-500">Valor da Recolha</p><p class="font-semibold">R$ ${data.valorRecolha}</p></div>`;
-        }
-        let custoKmHTML = '';
-        if (!isFila && data.custoKm && data.custoKm !== 'N/A' && data.custoKm !== 'null') {
-            custoKmHTML = `<div><p class="text-sm text-gray-500">Custo KM Adicional</p><p class="font-semibold">R$ ${data.custoKm}</p></div>`;
-        }
-        return `
-            <div class="grid grid-cols-2 gap-4"><div><p class="text-sm text-gray-500">SLA</p><p class="font-semibold text-lg">${data.slaDias} dias</p></div><div><p class="text-sm text-gray-500">Fase Atual</p><p class="font-semibold">${displayPhase}</p></div></div>
-            <div><p class="text-sm text-gray-500">Modelo do Veículo</p><p class="font-semibold">${data.modeloVeiculo}</p></div>
-            <div><p class="text-sm text-gray-500">Driver</p><p class="font-semibold">${data.driver}</p></div>
-            ${!isFila ? `<div><p class="text-sm text-gray-500">Chofer</p><p class="font-semibold">${data.chofer}</p></div>` : ''}
-            <div><p class="text-sm text-gray-500">Origem da Locação</p><p class="font-semibold">${data.origem}</p></div>
-            <div><p class="text-sm text-gray-500">Telefone de Contato</p><p class="font-semibold">${data.telefoneContato}</p></div>
-            <div><p class="text-sm text-gray-500">Telefone Opcional</p><p class="font-semibold">${data.telefoneOpcional}</p></div>
-            <div><p class="text-sm text-gray-500">Endereço de Cadastro</p><p class="font-semibold">${data.enderecoCadastro}</p></div>
-            <div><p class="text-sm text-gray-500">Endereço Onde o Veículo Está</p><p class="font-semibold">${data.enderecoVeiculo}</p></div>
-            ${valorHTML}
-            ${custoKmHTML}
-            <div><p class="text-sm text-gray-500">Data de Criação</p><p class="font-semibold">${data.criacao}</p></div>`;
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      // Atualiza as informações do usuário no cabeçalho
-      document.getElementById('user-name').textContent = user.displayName;
-      document.getElementById('user-email').textContent = user.email;
-      document.getElementById('user-avatar').src = user.photoURL;
-
-      const searchInput = document.getElementById('searchInput');
-      const slaFilter = document.getElementById('slaFilter');
-      const kanbanView = document.getElementById('kanban-view');
-      const listView = document.getElementById('list-view');
-      const loadingIndicator = document.getElementById('loading-indicator');
-      const kanbanBtn = document.getElementById('kanban-view-btn');
-      const listBtn = document.getElementById('list-view-btn');
-      const cardModal = document.getElementById('cardModal');
-      const closeCardModalBtn = document.getElementById('closeCardModal');
-      const modalFormIframe = document.getElementById('modalFormIframe');
-      const mainContent = document.querySelector('main');
-      const logoutBtn = document.getElementById('logout-btn');
-      
-      // Elementos da calculadora
-      const openCalculatorBtn = document.getElementById('openCalculatorBtn');
-      const calculatorModal = document.getElementById('calculatorModal');
-      const closeCalculatorBtn = document.getElementById('closeCalculator');
-      const calculatorContainer = document.getElementById('calculatorContainer');
-      const calculatorIframe = document.getElementById('calculatorIframe');
-
-      // Adiciona o event listener para os cards e botões de formulário
-      mainContent.addEventListener('click', function(event) {
-        const target = event.target;
-        const formButton = target.closest('.open-form-btn');
-        if (formButton) {
-            event.stopPropagation();
-            const cardElement = formButton.closest('.data-item');
-            const formUrl = cardElement.dataset.formUrl;
-            if (formUrl) openCardModal(cardElement);
-            return;
-        }
-        const cardElement = target.closest('.data-item');
-        if (cardElement) {
-            openCardModal(cardElement);
-        }
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
       });
 
-      function filterAndSearch() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const currentSlaFilter = slaFilter.value;
-        document.querySelectorAll('.data-item').forEach(item => {
-          const placa = item.dataset.placa.toLowerCase();
-          const driver = item.dataset.driver.toLowerCase();
-          const chofer = item.dataset.chofer.toLowerCase();
-          const slaText = item.dataset.slaText;
-          const matchesSearch = placa.includes(searchTerm) || driver.includes(searchTerm) || chofer.includes(searchTerm);
-          const matchesSla = (currentSlaFilter === 'all') || (slaText === currentSlaFilter);
-          const shouldBeVisible = matchesSearch && matchesSla;
-          if (item.classList.contains('kanban-card')) {
-            item.style.display = shouldBeVisible ? 'block' : 'none';
-          } else if (item.classList.contains('table-list-item')) {
-            item.style.display = shouldBeVisible ? 'table-row' : 'none';
-          }
-        });
-        document.querySelectorAll('#kanban-view .w-64').forEach(column => {
-          const visibleCards = column.querySelectorAll('.kanban-card:not([style*="display: none"])').length;
-          const countElement = column.querySelector('.card-count');
-          if(countElement) { countElement.textContent = visibleCards; }
-        });
+      function onMouseMove(e) {
+        if (!isDragging) return;
+        // Define a nova posição do modal
+        calculatorContainer.style.left = `${e.clientX - offsetX}px`;
+        calculatorContainer.style.top = `${e.clientY - offsetY}px`;
+        // Remove a transformação para evitar conflitos de posicionamento
+        calculatorContainer.style.transform = 'none'; 
       }
 
-      searchInput.addEventListener('input', filterAndSearch);
-      slaFilter.addEventListener('change', filterAndSearch);
-      
-      kanbanBtn.addEventListener('click', () => {
-        kanbanView.classList.remove('hidden');
-        kanbanView.classList.add('flex');
-        listView.classList.add('hidden');
-        kanbanBtn.classList.add('active');
-        listBtn.classList.remove('active');
-      });
-
-      listBtn.addEventListener('click', () => {
-        kanbanView.classList.add('hidden');
-        kanbanView.classList.remove('flex');
-        listView.classList.remove('hidden');
-        listBtn.classList.add('active');
-        kanbanBtn.classList.remove('active');
-      });
-
-      function openCardModal(itemElement) {
-        const data = itemElement.dataset;
-        document.getElementById('modalPlaca').textContent = data.placa;
-        document.getElementById('modal-content').innerHTML = buildModalContent(data);
+      function onMouseUp() {
+        isDragging = false;
+        // Permite que o iframe volte a receber eventos do mouse
+        calculatorIframe.style.pointerEvents = 'auto';
         
-        // Carregar o formulário no iframe
-        if (data.formUrl && data.formUrl !== 'null') {
-          modalFormIframe.src = data.formUrl;
-        } else {
-          modalFormIframe.src = "about:blank";
-        }
-        
-        const mapaLink = document.getElementById('modalMapaLink');
-        if (data.mapaUrl && data.mapaUrl !== 'null') {
-          mapaLink.href = data.mapaUrl;
-          mapaLink.style.display = 'inline-block';
-        } else {
-          mapaLink.style.display = 'none';
-        }
-        
-        cardModal.classList.remove('hidden');
-        setTimeout(() => cardModal.querySelector('.modal-panel').classList.remove('opacity-0', 'scale-95'), 10);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
       }
+      // --- FIM DA LÓGICA DE ARRASTAR ---
 
-      function closeCardModal() {
-        const panel = cardModal.querySelector('.modal-panel');
-        panel.classList.add('opacity-0', 'scale-95');
-        setTimeout(() => {
-          cardModal.classList.add('hidden');
-          modalFormIframe.src = "about:blank";
-        }, 200);
+      // Adiciona o event listener para os cards e botões de formulário
+      mainContent.addEventListener('click', function(event) {
+        const target = event.target;
+        const formButton = target.closest('.open-form-btn');
+        if (formButton) {
+            event.stopPropagation();
+            const cardElement = formButton.closest('.data-item');
+            const formUrl = cardElement.dataset.formUrl;
+            if (formUrl) openCardModal(cardElement);
+            return;
+        }
+        const cardElement = target.closest('.data-item');
+        if (cardElement) {
+            openCardModal(cardElement);
+        }
+      });
+
+      function filterAndSearch() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const currentSlaFilter = slaFilter.value;
+        document.querySelectorAll('.data-item').forEach(item => {
+          const placa = item.dataset.placa.toLowerCase();
+          const driver = item.dataset.driver.toLowerCase();
+          const chofer = item.dataset.chofer.toLowerCase();
+          const slaText = item.dataset.slaText;
+          const matchesSearch = placa.includes(searchTerm) || driver.includes(searchTerm) || chofer.includes(searchTerm);
+          const matchesSla = (currentSlaFilter === 'all') || (slaText === currentSlaFilter);
+          const shouldBeVisible = matchesSearch && matchesSla;
+          if (item.classList.contains('kanban-card')) {
+            item.style.display = shouldBeVisible ? 'flex' : 'none';
+          } else if (item.classList.contains('table-list-item')) {
+            item.style.display = shouldBeVisible ? 'table-row' : 'none';
+          }
+        });
+        document.querySelectorAll('#kanban-view .w-64').forEach(column => {
+          const visibleCards = column.querySelectorAll('.kanban-card:not([style*="display: none"])').length;
+          const countElement = column.querySelector('.card-count');
+          if(countElement) { countElement.textContent = visibleCards; }
+        });
+      }
+
+      searchInput.addEventListener('input', filterAndSearch);
+      slaFilter.addEventListener('change', filterAndSearch);
+      
+      kanbanBtn.addEventListener('click', () => {
+        kanbanView.classList.remove('hidden');
+        kanbanView.classList.add('flex');
+        listView.classList.add('hidden');
+        kanbanBtn.classList.add('active');
+        listBtn.classList.remove('active');
+      });
+
+      listBtn.addEventListener('click', () => {
+        kanbanView.classList.add('hidden');
+        kanbanView.classList.remove('flex');
+        listView.classList.remove('hidden');
+        listBtn.classList.add('active');
+        kanbanBtn.classList.remove('active');
+      });
+
+      function openCardModal(itemElement) {
+        const data = itemElement.dataset;
+        document.getElementById('modalPlaca').textContent = data.placa;
+        document.getElementById('modal-content').innerHTML = buildModalContent(data);
+        
+        if (data.formUrl && data.formUrl !== 'null') {
+          modalFormIframe.src = data.formUrl;
+        } else {
+          modalFormIframe.src = "about:blank";
+        }
+        
+        const mapaLink = document.getElementById('modalMapaLink');
+        if (data.mapaUrl && data.mapaUrl !== 'null') {
+          mapaLink.href = data.mapaUrl;
+          mapaLink.style.display = 'inline-block';
+        } else {
+          mapaLink.style.display = 'none';
+        }
+        
+        cardModal.classList.remove('hidden');
+        setTimeout(() => cardModal.querySelector('.modal-panel').classList.remove('opacity-0', 'scale-95'), 10);
+      }
+
+      function closeCardModal() {
+        const panel = cardModal.querySelector('.modal-panel');
+        panel.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => {
+          cardModal.classList.add('hidden');
+          modalFormIframe.src = "about:blank";
+        }, 200);
+      }
+      
+      function openCalculator() {
+        calculatorModal.classList.remove('hidden');
+        // Recarrega o iframe para garantir que esteja limpo
+        calculatorIframe.src = "https://calculadorakm.vercel.app/";
+        // Reseta a posição do modal para o centro
+        calculatorContainer.style.left = '50%';
+        calculatorContainer.style.top = '50%';
+        calculatorContainer.style.transform = 'translate(-50%, -50%)';
+      }
+
+      function closeCalculator() {
+        calculatorModal.classList.add('hidden');
+        calculatorIframe.src = "about:blank";
+      }
+
+      calculatorModal.addEventListener('click', (e) => {
+        if (e.target === calculatorModal) {
+          closeCalculator();
+        }
+      });
+
+      closeCalculatorBtn.addEventListener('click', closeCalculator);
+      
+      function onDataRefreshed(responseData) {
+      console.log("Dados completos recebidos:", responseData);
+      buildUI(responseData.cards);
+      console.log("Dados atualizados em: " + responseData.lastUpdate);
+      const userPermission = responseData.permissionType?.toString().toLowerCase().trim();
+      console.log("Permissão do usuário:", userPermission);
+      if (userPermission && ['kovi', 'onsystem'].includes(userPermission)) {
+          console.log("Mostrando botão da calculadora");
+          openCalculatorBtn.classList.remove('hidden');
+      } else {
+          console.log("Ocultando botão da calculadora. Permissão:", userPermission);
+          openCalculatorBtn.classList.add('hidden');
       }
-      
-      // Funções para a calculadora de KM
-      function openCalculator() {
-        calculatorModal.classList.remove('hidden');
-        calculatorIframe.src = "https://calculadorakm.vercel.app/";
-      }
-
-      function closeCalculator() {
-        calculatorModal.classList.add('hidden');
-        calculatorIframe.src = "about:blank";
-      }
-
-      // Fechar ao clicar fora do modal
-      calculatorModal.addEventListener('click', (e) => {
-        if (e.target === calculatorModal) {
-          closeCalculator();
-        }
-      });
-
-      // Configurar evento de fechar
-      closeCalculatorBtn.addEventListener('click', closeCalculator);
-      
-      function onDataRefreshed(responseData) {
-    console.log("Dados completos recebidos:", responseData);
-    
-    buildUI(responseData.cards);
-    console.log("Dados atualizados em: " + responseData.lastUpdate);
-    
-    // CORREÇÃO: Usar permissionType em vez de userPermission
-    const userPermission = responseData.permissionType?.toString().toLowerCase().trim();
-    console.log("Permissão do usuário:", userPermission);
-    
-    if (userPermission && ['kovi', 'onsystem'].includes(userPermission)) {
-        console.log("Mostrando botão da calculadora");
-        openCalculatorBtn.classList.remove('hidden');
-    } else {
-        console.log("Ocultando botão da calculadora. Permissão:", userPermission);
-        openCalculatorBtn.classList.add('hidden');
     }
-}
-      
-      function fetchData() {
-          // Adiciona o e-mail do usuário como um parâmetro na URL
-          const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${new Date().getTime()}`;
-          console.log("Buscando dados da URL:", url);
-          
-          fetch(url)
-              .then(response => {
-                  console.log("Resposta recebida. Status:", response.status);
-                  if (!response.ok) {
-                      throw new Error(`HTTP error! status: ${response.status}`);
-                  }
-                  return response.json();
-              })
-              .then(data => {
-                  console.log("Dados recebidos:", data);
-                  if (data.error) {
-                      throw new Error(data.error);
-                  }
-                  loadingIndicator.style.display = 'none';
-                  kanbanView.classList.remove('hidden');
-                  kanbanView.classList.add('flex');
-                  onDataRefreshed(data);
-              })
-              .catch(err => {
-                  console.error("Falha ao carregar dados:", err);
-                  loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha, o URL da API e a configuração de implantação.</p>`;
-              });
-      }
+      
+      function fetchData() {
+          const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${new Date().getTime()}`;
+          console.log("Buscando dados da URL:", url);
+          fetch(url)
+              .then(response => {
+                  console.log("Resposta recebida. Status:", response.status);
+                  if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+                  return response.json();
+              })
+              .then(data => {
+                  console.log("Dados recebidos:", data);
+                  if (data.error) { throw new Error(data.error); }
+                  loadingIndicator.style.display = 'none';
+                  kanbanView.classList.remove('hidden');
+                  kanbanView.classList.add('flex');
+                  onDataRefreshed(data);
+              })
+              .catch(err => {
+                  console.error("Falha ao carregar dados:", err);
+                  loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha, o URL da API e a configuração de implantação.</p>`;
+              });
+      }
 
-      // Função de Logoff
-      function logout() {
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-      }
+      function logout() {
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+      }
 
-      closeCardModalBtn.addEventListener('click', closeCardModal);
-      cardModal.addEventListener('click', e => { if (e.target === cardModal) closeCardModal(); });
-      openCalculatorBtn.addEventListener('click', openCalculator);
-      logoutBtn.addEventListener('click', logout);
+      closeCardModalBtn.addEventListener('click', closeCardModal);
+      cardModal.addEventListener('click', e => { if (e.target === cardModal) closeCardModal(); });
+      openCalculatorBtn.addEventListener('click', openCalculator);
+      logoutBtn.addEventListener('click', logout);
 
-      fetchData(); // Carregamento inicial
+      fetchData();
 
-      setInterval(fetchData, 10000); // Atualiza a cada 30 segundos
-    });
-  </script>
+      setInterval(fetchData, 10000);
+    });
+  </script>
 
 </body>
 </html>
