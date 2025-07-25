@@ -537,6 +537,11 @@
       
       // Elementos da calculadora
       const openCalculatorBtn = document.getElementById('openCalculatorBtn');
+      
+      // Força o botão da calculadora a ficar oculto inicialmente
+      if (openCalculatorBtn) {
+        openCalculatorBtn.classList.add('hidden');
+      }
       const calculatorModal = document.getElementById('calculatorModal');
       const closeCalculatorBtn = document.getElementById('closeCalculator');
       const calculatorIframe = document.getElementById('calculatorIframe');
@@ -670,8 +675,8 @@
               }
           }
           
-          // Segunda tentativa: verificar no objeto user do localStorage
-          if (!userPermission && user) {
+          // Segunda tentativa: verificar no objeto user do localStorage (apenas se há dados da API)
+          if (!userPermission && responseData && user) {
               if (user.permission) {
                   userPermission = user.permission.toString().toLowerCase().trim();
               } else if (user.role) {
@@ -681,8 +686,8 @@
               }
           }
           
-          // Terceira tentativa: verificar email específico (fallback)
-          if (!userPermission && user && user.email) {
+          // Terceira tentativa: verificar email específico (fallback) - APENAS se há dados da API
+          if (!userPermission && responseData && user && user.email) {
               const email = user.email.toLowerCase();
               if (email.includes('kovi') || email.includes('onsystem') || 
                   email.endsWith('@kovi.com.br') || email.endsWith('@onsystem.com.br')) {
@@ -699,12 +704,18 @@
           const allowedPermissions = ['kovi', 'onsystem'];
           const hasPermission = userPermission && allowedPermissions.includes(userPermission);
           
-          if (hasPermission) {
+          // Força ocultação para permissões específicas que não devem ver o botão
+          const deniedPermissions = ['ativa', 'inativa', 'bloqueado'];
+          const isDenied = userPermission && deniedPermissions.includes(userPermission);
+          
+          if (hasPermission && !isDenied) {
               console.log("✅ Mostrando botão da calculadora - Permissão autorizada:", userPermission);
               openCalculatorBtn.classList.remove('hidden');
           } else {
               console.log("❌ Ocultando botão da calculadora - Permissão negada:", userPermission);
               console.log("Permissões aceitas:", allowedPermissions);
+              console.log("Permissões negadas:", deniedPermissions);
+              console.log("É permissão negada?", isDenied);
               openCalculatorBtn.classList.add('hidden');
           }
       }
@@ -758,8 +769,8 @@
       openCalculatorBtn.addEventListener('click', openCalculator);
       logoutBtn.addEventListener('click', logout);
 
-      // Verificação inicial das permissões (antes de carregar os dados)
-      checkCalculatorPermission(null);
+      // Garantir que o botão comece oculto até que as permissões sejam verificadas via API
+      openCalculatorBtn.classList.add('hidden');
 
       fetchData(); // Carregamento inicial
 
