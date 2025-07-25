@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Recolhas - Kovi</title>
   <link rel="icon" type="image/png" href="https://i.ibb.co/ksMQSMQ2/web-app-manifest-192x192.png">
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Poppins e Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -139,11 +141,43 @@
       height: 100%;
       border: none;
     }
+    /* Estilos para o modal da calculadora */
+    .calculator-modal {
+      width: 400px;
+      height: 500px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      overflow: hidden;
+      background: white;
+    }
+    .calculator-header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: move;
+    }
+    .calculator-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .close-calculator {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 4px;
+    }
   </style>
 </head>
 <body class="text-gray-800">
 
   <div class="flex flex-col h-screen">
+    <!-- Cabeçalho Principal -->
     <header class="bg-primary text-white flex-shrink-0">
       <div class="flex justify-between items-center px-4 py-3">
         <div class="flex items-center gap-4">
@@ -157,6 +191,7 @@
               <p id="user-name" class="font-bold text-sm">Utilizador Kovi</p>
               <p id="user-email" class="text-xs">A carregar...</p>
           </div>
+          <!-- Botão de Logoff -->
           <button id="logout-btn" class="text-white hover:text-gray-200 ml-2 flex items-center gap-1 text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
               <path d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
@@ -168,6 +203,7 @@
       </div>
     </header>
     
+    <!-- Barra de Controles -->
     <div class="py-3 bg-white border-b border-gray-200 flex-shrink-0">
         <div class="flex justify-between items-center px-4">
             <div class="flex items-center border border-gray-300 rounded-lg p-1 bg-gray-100">
@@ -191,6 +227,7 @@
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                   <input type="search" id="searchInput" placeholder="Procurar cards..." class="w-64 p-2 pl-10 text-sm border border-gray-300 rounded-md focus-primary">
                 </div>
+                <!-- NOVO: Botão Calculadora KM -->
                 <button id="openCalculatorBtn" class="hidden btn-primary px-3 py-2 text-sm font-medium rounded-md flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
@@ -203,7 +240,9 @@
     </div>
 
 
+    <!-- Conteúdo Principal -->
     <main class="flex-1 flex overflow-hidden">
+      <!-- Indicador de Carregamento -->
       <div id="loading-indicator" class="flex flex-col items-center justify-center w-full h-full">
         <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -212,11 +251,14 @@
         <p id="loading-text" class="mt-2 text-gray-600">A carregar dados...</p>
       </div>
       
+      <!-- Visualização Kanban (inicialmente oculta) -->
       <div id="kanban-view" class="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-4 hidden scroll-container">
         <div id="kanban-container" class="flex gap-4">
-            </div>
+            <!-- As colunas serão inseridas aqui pelo JavaScript -->
+        </div>
       </div>
       
+      <!-- Visualização em Lista (inicialmente oculta) -->
       <div id="list-view" class="h-full w-full p-4 hidden">
         <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
           <table class="w-full text-sm text-left text-gray-500">
@@ -231,13 +273,15 @@
               </tr>
             </thead>
             <tbody id="list-container" class="bg-white compact-table">
-              </tbody>
+              <!-- As linhas serão inseridas aqui pelo JavaScript -->
+            </tbody>
           </table>
         </div>
       </div>
     </main>
   </div>
 
+  <!-- Modal de Detalhes -->
   <div id="cardModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
     <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-5xl transform scale-95 opacity-0">
       <div class="flex justify-between items-center p-4 border-b">
@@ -257,15 +301,17 @@
       </div>
     </div>
   </div>
-  
-  <div id="calculatorModal" class="fixed top-1/4 left-1/4 w-[400px] h-[600px] bg-white rounded-lg shadow-2xl flex flex-col hidden z-50">
-    <div id="calculatorModalHeader" class="h-8 bg-gray-700 text-white rounded-t-lg flex justify-between items-center px-3" style="cursor: move;">
-      <span class="text-sm font-semibold">Calculadora KM</span>
-      <button id="closeCalculatorModal" class="text-white hover:text-gray-300 font-bold text-xl">&times;</button>
-    </div>
-    <iframe id="calculatorIframe" src="" class="w-full flex-1 border-0 rounded-b-lg"></iframe>
-  </div>
 
+  <!-- NOVO: Modal da Calculadora KM -->
+  <div id="calculatorModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+    <div id="calculatorContainer" class="calculator-modal">
+      <div class="calculator-header">
+        <h3 class="text-lg font-bold">Calculadora de KM</h3>
+        <button id="closeCalculator" class="close-calculator">&times;</button>
+      </div>
+      <iframe id="calculatorIframe" src="https://calculadorakm.vercel.app/" class="calculator-iframe"></iframe>
+    </div>
+  </div>
 
   <script>
     // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
@@ -448,12 +494,12 @@
       const mainContent = document.querySelector('main');
       const logoutBtn = document.getElementById('logout-btn');
       
-      // const openCalculatorBtn = document.getElementById('openCalculatorBtn');
+      // Elementos da calculadora
+      const openCalculatorBtn = document.getElementById('openCalculatorBtn');
       const calculatorModal = document.getElementById('calculatorModal');
-      const closeCalculatorModalBtn = document.getElementById('closeCalculatorModal');
+      const closeCalculatorBtn = document.getElementById('closeCalculator');
+      const calculatorContainer = document.getElementById('calculatorContainer');
       const calculatorIframe = document.getElementById('calculatorIframe');
-      const calculatorHeader = document.getElementById('calculatorModalHeader');
-
 
       // Adiciona o event listener para os cards e botões de formulário
       mainContent.addEventListener('click', function(event) {
@@ -548,15 +594,35 @@
         }, 200);
       }
       
+      // Funções para a calculadora de KM
+      function openCalculator() {
+        calculatorModal.classList.remove('hidden');
+        calculatorIframe.src = "https://calculadorakm.vercel.app/";
+      }
+
+      function closeCalculator() {
+        calculatorModal.classList.add('hidden');
+        calculatorIframe.src = "about:blank";
+      }
+
+      // Fechar ao clicar fora do modal
+      calculatorModal.addEventListener('click', (e) => {
+        if (e.target === calculatorModal) {
+          closeCalculator();
+        }
+      });
+
+      // Configurar evento de fechar
+      closeCalculatorBtn.addEventListener('click', closeCalculator);
+      
       function onDataRefreshed(sheetData) {
         buildUI(sheetData.cards);
         console.log("Dados atualizados em: " + sheetData.lastUpdate);
-
-        // const permission = (sheetData.permissionType || '').toLowerCase();
-        if (permission === 'kovi' || permission === 'onsystem') {
-            openCalculatorBtn.classList.remove('hidden');
-        } else {
-            openCalculatorBtn.classList.add('hidden');
+        
+        // NOVO: Mostrar botão da calculadora se o usuário tiver permissão
+        const userPermission = sheetData.userPermission?.toLowerCase();
+        if (['kovi', 'onsystem'].includes(userPermission)) {
+          openCalculatorBtn.classList.remove('hidden');
         }
       }
       
@@ -581,7 +647,7 @@
               })
               .catch(err => {
                   console.error("Falha ao carregar dados:", err);
-                  loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados: ${err.message}. Verifique as permissões, URL e implantação.</p>`;
+                  loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha, o URL da API e a configuração de implantação.</p>`;
               });
       }
 
@@ -590,51 +656,15 @@
         localStorage.removeItem('user');
         window.location.href = 'login.html';
       }
-      
-      // function openCalculator() {
-        calculatorModal.classList.remove('hidden');
-        calculatorIframe.src = 'https://calculadorakm.vercel.app/';
-      }
-      
-      function closeCalculator() {
-        calculatorModal.classList.add('hidden');
-        calculatorIframe.src = 'about:blank'; // Para parar a execução do iframe
-      }
-      
-      // function makeDraggable(element, handle) {
-        let isDragging = false;
-        let offsetX, offsetY;
-
-        handle.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            offsetX = e.clientX - element.offsetLeft;
-            offsetY = e.clientY - element.offsetTop;
-            document.body.style.userSelect = 'none'; // Evita seleção de texto ao arrastar
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            element.style.left = `${e.clientX - offsetX}px`;
-            element.style.top = `${e.clientY - offsetY}px`;
-        });
-
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            document.body.style.userSelect = '';
-        });
-      }
 
       closeCardModalBtn.addEventListener('click', closeCardModal);
       cardModal.addEventListener('click', e => { if (e.target === cardModal) closeCardModal(); });
+      openCalculatorBtn.addEventListener('click', openCalculator);
       logoutBtn.addEventListener('click', logout);
-      
-      // openCalculatorBtn.addEventListener('click', openCalculator);
-      closeCalculatorModalBtn.addEventListener('click', closeCalculator);
-      makeDraggable(calculatorModal, calculatorHeader); // Torna o modal arrastável
 
       fetchData(); // Carregamento inicial
 
-      setInterval(fetchData, 30000); // Atualiza a cada 30 segundos
+      setInterval(fetchData, 10000); // Atualiza a cada 30 segundos
     });
   </script>
 
