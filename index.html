@@ -548,7 +548,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                         SLA: ${card.sla}d
                     </div>
-                    ${card.urlPublica ? `<button class="open-form-btn text-xs text-gray-500 hover:text-primary flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Form</button>` : ''}
+                    <span class="text-xs text-gray-500 font-medium flex items-center gap-1">${keepOriginalFormat(card.origemLocacao)}</span>
                 </div>
             </div>`;
     }
