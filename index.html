@@ -1,6 +1,249 @@
-<script>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Recolhas - Kovi</title>
+  <link rel="icon" type="image/png" href="https://i.ibb.co/ksMQSMQ2/web-app-manifest-192x192.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #FF355A;
+      --primary-color-darker: #E02E4D;
+      --scrollbar-track: #f1f1f1;
+      --scrollbar-thumb: #c1c1c1;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7f9fa;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .bg-primary {
+      background-color: var(--primary-color);
+    }
+    .control-btn.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+      transition: background-color 0.2s;
+    }
+    .btn-primary:hover {
+      background-color: var(--primary-color-darker);
+    }
+    .text-primary {
+      color: var(--primary-color);
+    }
+    .border-primary {
+      border-color: var(--primary-color);
+    }
+    .focus-primary:focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.4) !important;
+    }
+    .scroll-container {
+      overflow: auto;
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+      transition: scrollbar-color 0.3s ease;
+    }
+    .scroll-container:hover {
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+    .scroll-container::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+      background-color: transparent;
+    }
+    .scroll-container::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 4px;
+    }
+    .scroll-container::-webkit-scrollbar-thumb {
+      background-color: transparent;
+      border-radius: 4px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+    .scroll-container:hover::-webkit-scrollbar-track {
+      background: var(--scrollbar-track);
+    }
+    .scroll-container:hover::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
+    }
+    .scroll-container::-webkit-scrollbar-thumb:hover {
+      background-color: #a0a0a0;
+    }
+    .kanban-board {
+      scrollbar-gutter: stable;
+    }
+    .modal-overlay {
+      transition: opacity 0.2s ease-in-out;
+    }
+    .modal-panel {
+      transition: transform 0.2s ease-in-out;
+    }
+    .phase-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .table-header-primary th {
+      color: var(--primary-color);
+      font-weight: 700;
+    }
+    .table-border-primary {
+      border-top: 4px solid var(--primary-color);
+    }
+    .compact-table td {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    .split-modal {
+      display: flex;
+      height: 60vh;
+    }
+    .split-modal-left {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      border-right: 1px solid #e5e7eb;
+    }
+    .split-modal-right {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+    }
+    .split-modal-right iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body class="text-gray-800">
+
+  <div class="flex flex-col h-screen">
+    <header class="bg-primary text-white flex-shrink-0">
+      <div class="flex justify-between items-center px-4 py-3">
+        <div class="flex items-center gap-4">
+          <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-10">
+          <span class="text-white opacity-50">/</span>
+          <h1 class="text-lg font-semibold" style="font-family: 'Poppins', sans-serif; font-weight: 800;">Gestão de Recolhas</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="open-calculator-btn" title="Abrir Calculadora de Distância" class="hidden bg-white text-primary px-3 py-1.5 rounded-md text-sm font-semibold hover:bg-gray-100 transition flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8zM4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4z"/><path d="M4 2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-2zm0 4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-4z"/></svg>
+            Calculadora
+          </button>
+          
+          <img id="user-avatar" src="https://placehold.co/40x40/FFFFFF/FF355A?text=K" alt="Foto do Perfil" class="h-10 w-10 rounded-full">
+          <div>
+              <p id="user-name" class="font-bold text-sm">Utilizador Kovi</p>
+              <p id="user-email" class="text-xs">A carregar...</p>
+          </div>
+          <button id="logout-btn" class="text-white hover:text-gray-200 ml-2 flex items-center gap-1 text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/><path d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/></svg>
+            Sair
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <div class="py-3 bg-white border-b border-gray-200 flex-shrink-0">
+        <div class="flex justify-between items-center px-4">
+            <div class="flex items-center border border-gray-300 rounded-lg p-1 bg-gray-100">
+              <button id="kanban-view-btn" class="control-btn active px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+                Kanban
+              </button>
+              <button id="list-view-btn" class="control-btn px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                Lista
+              </button>
+            </div>
+            <div class="flex items-center gap-4">
+                <select id="slaFilter" class="text-sm border border-gray-300 rounded-md p-2 focus-primary">
+                    <option value="all">Filtrar por SLA</option>
+                    <option value="No Prazo">No Prazo</option>
+                    <option value="Em Alerta">Em Alerta</option>
+                    <option value="Atrasado">Atrasado</option>
+                </select>
+                <div class="relative">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input type="search" id="searchInput" placeholder="Procurar cards..." class="w-64 p-2 pl-10 text-sm border border-gray-300 rounded-md focus-primary">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <main class="flex-1 flex overflow-hidden">
+      <div id="loading-indicator" class="flex flex-col items-center justify-center w-full h-full">
+        <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p id="loading-text" class="mt-2 text-gray-600">A carregar dados...</p>
+      </div>
+      
+      <div id="kanban-view" class="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-4 hidden scroll-container">
+        <div id="kanban-container" class="flex gap-4">
+            </div>
+      </div>
+      
+      <div id="list-view" class="h-full w-full p-4 hidden">
+        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
+          <table class="w-full text-sm text-left text-gray-500">
+            <thead class="text-xs uppercase bg-gray-50 sticky top-0 z-10 table-header-primary">
+              <tr>
+                <th scope="col" class="px-6 py-3">Placa</th>
+                <th scope="col" class="px-6 py-3">Driver</th>
+                <th scope="col" class="px-6 py-3">Chofer</th>
+                <th scope="col" class="px-6 py-3">Fase Atual</th>
+                <th scope="col" class="px-6 py-3">Data Criação</th>
+                <th scope="col" class="px-6 py-3 text-center">SLA (dias)</th>
+              </tr>
+            </thead>
+            <tbody id="list-container" class="bg-white compact-table">
+              </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="cardModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+    <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-5xl transform scale-95 opacity-0">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h3 class="text-xl font-bold" id="modalPlaca"></h3>
+        <button id="closeCardModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+      </div>
+      <div class="split-modal">
+        <div class="split-modal-left scroll-container">
+          <div id="modal-content" class="space-y-4"></div>
+        </div>
+        <div class="split-modal-right scroll-container">
+          <iframe id="modalFormIframe" src="" class="w-full h-full"></iframe>
+        </div>
+      </div>
+      <div class="p-4 bg-gray-50 border-t flex justify-end">
+        <a id="modalMapaLink" href="#" target="_blank" class="bg-gray-600 hover:bg-gray-700 text-white inline-block px-4 py-2 rounded-md">Abrir no Google Maps 🗺️</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
     // IMPORTANTE: Verifique se esta é a URL da sua ÚLTIMA implantação
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec";
 
     // VERIFICAÇÃO DE LOGIN
     const user = JSON.parse(localStorage.getItem('user'));
@@ -393,3 +636,6 @@
       setInterval(fetchData, 30000);
     });
   </script>
+
+</body>
+</html>
