@@ -572,9 +572,16 @@
 
         closeBtn.addEventListener('click', () => modalContainer.remove());
 
+        function setupCalculatorModal(modalContainer) {
+        const header = modalContainer.querySelector('#calculator-modal-header');
+        const closeBtn = modalContainer.querySelector('#close-calculator-btn');
+        const calcBtn = modalContainer.querySelector('#calculate-btn');
+
+        closeBtn.addEventListener('click', () => modalContainer.remove());
+
         const performCalculation = () => {
-          const origem = modalContainer.querySelector("#origem").value;
-          const destino = modalContainer.querySelector("#destino").value;
+          const origemInput = modalContainer.querySelector("#origem").value;
+          const destinoInput = modalContainer.querySelector("#destino").value;
           const resultDiv = modalContainer.querySelector("#result-calculator");
           const enderecoDiv = modalContainer.querySelector("#enderecoOrigem");
           const loading = modalContainer.querySelector("#loading-calculator");
@@ -583,14 +590,14 @@
           resultDiv.style.display = 'none';
           enderecoDiv.style.display = 'none';
 
-          const payload = { action: 'calcularDistancia', data: { origemStr: origem, destinoStr: destino }};
+          // Constrói a nova URL com parâmetros de busca
+          const calculationUrl = new URL(SCRIPT_URL);
+          calculationUrl.searchParams.append('action', 'calcularDistancia');
+          calculationUrl.searchParams.append('origem', origemInput);
+          calculationUrl.searchParams.append('destino', destinoInput);
 
-          fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload),
-            headers: { 'Content-Type': 'application/json' },
-            mode: 'cors' // Habilita o CORS
-          })
+          // Faz a requisição usando GET
+          fetch(calculationUrl)
           .then(res => {
             if (!res.ok) {
               throw new Error(`Erro na resposta da API: ${res.statusText}`);
@@ -624,7 +631,7 @@
             if (e.key === 'Enter') performCalculation();
         });
 
-
+        // Lógica para arrastar (permanece a mesma)
         let isDragging = false, offset = { x: 0, y: 0 };
         header.addEventListener('mousedown', (e) => {
           isDragging = true;
