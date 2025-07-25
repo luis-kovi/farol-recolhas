@@ -616,23 +616,23 @@
       closeCalculatorBtn.addEventListener('click', closeCalculator);
       
       function onDataRefreshed(responseData) {
-        console.log("Dados completos recebidos:", responseData);
-        
-        buildUI(responseData.cards);
-        console.log("Dados atualizados em: " + responseData.lastUpdate);
-        
-        // Verificação corrigida da permissão
-        const userPermission = responseData.userPermission?.toString().toLowerCase().trim();
-        console.log("Permissão do usuário:", userPermission);
-        
-        if (userPermission && ['kovi', 'onsystem'].includes(userPermission)) {
-            console.log("Mostrando botão da calculadora");
-            openCalculatorBtn.classList.remove('hidden');
-        } else {
-            console.log("Ocultando botão da calculadora. Permissão:", userPermission);
-            openCalculatorBtn.classList.add('hidden');
-        }
-      }
+    console.log("Dados completos recebidos:", responseData);
+    
+    buildUI(responseData.cards);
+    console.log("Dados atualizados em: " + responseData.lastUpdate);
+    
+    // CORREÇÃO: Usar permissionType em vez de userPermission
+    const userPermission = responseData.permissionType?.toString().toLowerCase().trim();
+    console.log("Permissão do usuário:", userPermission);
+    
+    if (userPermission && ['kovi', 'onsystem'].includes(userPermission)) {
+        console.log("Mostrando botão da calculadora");
+        openCalculatorBtn.classList.remove('hidden');
+    } else {
+        console.log("Ocultando botão da calculadora. Permissão:", userPermission);
+        openCalculatorBtn.classList.add('hidden');
+    }
+}
       
       function fetchData() {
           // Adiciona o e-mail do usuário como um parâmetro na URL
