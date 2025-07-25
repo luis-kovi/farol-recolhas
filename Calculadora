@@ -144,6 +144,7 @@ function onOpen() {
 
 /**
  * Abre o modal da calculadora com tratamento de erro
+ * ATENÇÃO: certifique-se de ter um arquivo 'Calculadora.html' no projeto (nome sem extensão no código)
  */
 function abrirCalculadora() {
   const ui = SpreadsheetApp.getUi();
@@ -153,6 +154,7 @@ function abrirCalculadora() {
       .setHeight(580);
     ui.showModalDialog(html, 'Calculadora KM');
   } catch (err) {
-    ui.alert('Não foi possível abrir a calculadora:\n' + err.toString());
+    Logger.log('Erro ao abrir calculadora: ' + err.toString());
+    ui.alert('Não foi possível abrir a calculadora: ' + err.message);
   }
 }
