@@ -111,6 +111,9 @@
     .border-t-3 {
       border-top-width: 3px;
     }
+    .max-w-20 {
+      max-width: 5rem;
+    }
     .table-header-primary th {
       color: var(--primary-color);
       font-weight: 700;
@@ -368,7 +371,7 @@
     // Função para formatar nomes (primeira letra de cada palavra maiúscula)
     function formatName(name) {
       if (!name || name === 'N/A') return name;
-      return name.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+      return name.toLowerCase().replace(/\b[\wÀ-ÿ]/g, l => l.toUpperCase());
     }
 
     // Função para formatar data
@@ -445,28 +448,30 @@
             const message = disabledPhaseMessages[card.faseAtual];
             return `
                 <div class="kanban-card bg-gray-200 rounded-md shadow-sm border border-gray-300 flex flex-col h-48 opacity-70 cursor-not-allowed">
-                    <div class="p-2">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs bg-gray-300 text-gray-500 font-medium px-1.5 py-0.5 rounded-full truncate">${formatName(card.origemLocacao)}</span>
-                            <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-gray-300 text-gray-500">Processando</span>
+                    <div class="p-2 flex justify-between">
+                        <div class="flex-1 pr-2">
+                            <h3 class="font-bold text-gray-500 card-placa truncate text-sm mb-1">${card.placa}</h3>
                         </div>
-                        <h3 class="font-bold text-gray-500 card-placa truncate text-sm">${card.placa}</h3>
+                        <div class="flex flex-col space-y-1">
+                            <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-gray-300 text-gray-500 text-center">Processando</span>
+                            <span class="text-xs bg-gray-300 text-gray-500 font-medium px-1.5 py-0.5 rounded-full truncate text-center max-w-20">${formatName(card.origemLocacao)}</span>
+                        </div>
                     </div>
-                    <div class="px-2 space-y-1 text-xs h-20">
+                    <div class="px-2 space-y-1 text-xs flex-1">
                         <div class="text-gray-400 card-driver">
-                            <div class="font-bold text-gray-500 text-xs">👤 DRIVER</div>
+                            <div class="font-bold text-gray-500" style="font-size: 10px;">👤 DRIVER</div>
                             <div class="truncate">${formatName(card.nomeDriver)}</div>
                         </div>
                         <div class="text-gray-400">
-                            <div class="font-bold text-gray-500 text-xs">🚗 MODELO</div>
+                            <div class="font-bold text-gray-500" style="font-size: 10px;">🚗 MODELO</div>
                             <div class="truncate">${formatName(card.modeloVeiculo)}</div>
                         </div>
                         <div class="text-gray-400 card-chofer">
-                            <div class="font-bold text-gray-500 text-xs">🚛 CHOFER</div>
+                            <div class="font-bold text-gray-500" style="font-size: 10px;">🚛 CHOFER</div>
                             <div class="truncate">${formatName(card.chofer)}</div>
                         </div>
                     </div>
-                    <div class="p-2 flex items-center justify-center border-t border-gray-300 mt-auto">
+                    <div class="p-2 flex items-center justify-center border-t border-gray-300">
                         <div class="flex items-center text-xs text-gray-500 font-medium">
                             <svg class="animate-spin mr-1 h-3 w-3 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -488,28 +493,30 @@
         
         return `
             <div class="kanban-card data-item bg-white rounded-md shadow-sm border border-gray-200 flex flex-col h-48 cursor-pointer hover:border-primary transition-all" ${buildDataAttributes(card)}>
-                <div class="p-2">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs bg-gray-200 text-gray-600 font-medium px-1.5 py-0.5 rounded-full truncate">${formatName(card.origemLocacao)}</span>
-                        <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full ${slaColor}">${slaText}</span>
+                <div class="p-2 flex justify-between">
+                    <div class="flex-1 pr-2">
+                        <h3 class="font-bold text-gray-800 card-placa truncate text-sm mb-1">${card.placa}</h3>
                     </div>
-                    <h3 class="font-bold text-gray-800 card-placa truncate text-sm">${card.placa}</h3>
+                    <div class="flex flex-col space-y-1">
+                        <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full ${slaColor} text-center">${slaText}</span>
+                        <span class="text-xs bg-gray-200 text-gray-600 font-medium px-1.5 py-0.5 rounded-full truncate text-center max-w-20">${formatName(card.origemLocacao)}</span>
+                    </div>
                 </div>
-                <div class="px-2 space-y-1 text-xs h-20">
+                <div class="px-2 space-y-1 text-xs flex-1">
                     <div class="text-gray-500 card-driver">
-                        <div class="font-bold text-gray-600 text-xs">👤 DRIVER</div>
+                        <div class="font-bold text-gray-600" style="font-size: 10px;">👤 DRIVER</div>
                         <div class="truncate">${formatName(card.nomeDriver)}</div>
                     </div>
                     <div class="text-gray-500">
-                        <div class="font-bold text-gray-600 text-xs">🚗 MODELO</div>
+                        <div class="font-bold text-gray-600" style="font-size: 10px;">🚗 MODELO</div>
                         <div class="truncate">${formatName(card.modeloVeiculo)}</div>
                     </div>
                     <div class="text-gray-500 card-chofer">
-                        <div class="font-bold text-gray-600 text-xs">🚛 CHOFER</div>
+                        <div class="font-bold text-gray-600" style="font-size: 10px;">🚛 CHOFER</div>
                         <div class="truncate">${card.faseAtual !== 'Fila de Recolha' ? formatName(card.chofer) : '-'}</div>
                     </div>
                 </div>
-                <div class="p-2 flex items-center justify-between border-t border-gray-100 mt-auto">
+                <div class="p-2 flex items-center justify-between border-t border-gray-100">
                     <div class="flex items-center text-xs text-red-600 font-semibold">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                         SLA: ${card.sla}d
