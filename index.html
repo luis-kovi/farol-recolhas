@@ -364,6 +364,37 @@
       'Solicitar Guincho': 'Aguarde enquanto a Kovi analisa a solicitação de desbloqueio'
     };
 
+    // Função para formatar nomes (primeira letra de cada palavra maiúscula)
+    function formatName(name) {
+      if (!name || name === 'N/A') return name;
+      return name.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    // Função para formatar data
+    function formatDate(dateString) {
+      if (!dateString || dateString === 'N/A') return dateString;
+      
+      try {
+        // Se já estiver no formato correto, retorna como está
+        if (dateString.match(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)) {
+          return dateString;
+        }
+        
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+      } catch (e) {
+        return dateString;
+      }
+    }
+
     function buildUI(cards) {
         buildKanbanView(cards);
         buildListView(cards);
@@ -391,7 +422,7 @@
             const headerTextClass = isDisabledPhase ? 'text-gray-400' : 'text-primary';
             
             html += `
-                <div class="w-64 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
+                <div class="w-52 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
                     <div class="p-3 flex items-center bg-white rounded-t-lg border-t-4 ${headerBorderClass}">
                         <h2 class="phase-title ${headerTextClass}">${displayPhaseName}</h2>
                         <span class="text-sm font-semibold text-gray-500 bg-gray-200 rounded-md px-2 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
@@ -412,26 +443,36 @@
             // Card desabilitado para fases específicas
             const message = disabledPhaseMessages[card.faseAtual];
             return `
-                <div class="kanban-card bg-gray-200 rounded-md shadow-sm border border-gray-300 flex flex-col h-56 opacity-70 cursor-not-allowed">
-                    <div class="p-3">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs bg-gray-300 text-gray-500 font-medium px-2 py-0.5 rounded-full truncate">${card.origemLocacao}</span>
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-300 text-gray-500">Processando</span>
+                <div class="kanban-card bg-gray-200 rounded-md shadow-sm border border-gray-300 flex flex-col h-44 opacity-70 cursor-not-allowed">
+                    <div class="p-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs bg-gray-300 text-gray-500 font-medium px-1.5 py-0.5 rounded-full truncate">${formatName(card.origemLocacao)}</span>
+                            <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-gray-300 text-gray-500">Processando</span>
                         </div>
-                        <h3 class="font-bold text-gray-500 card-placa truncate">${card.placa}</h3>
+                        <h3 class="font-bold text-gray-500 card-placa truncate text-sm">${card.placa}</h3>
                     </div>
-                    <div class="flex-grow px-3 space-y-1 text-sm">
-                        <p class="text-gray-400 card-driver truncate"><span class="font-semibold text-gray-500">DRIVER:</span> ${card.nomeDriver}</p>
-                        <p class="text-gray-400 truncate"><span class="font-semibold text-gray-500">MODELO:</span> ${card.modeloVeiculo}</p>
-                        ${card.faseAtual !== 'Fila de Recolha' ? `<p class="text-gray-400 card-chofer truncate"><span class="font-semibold text-gray-500">CHOFER:</span> ${card.chofer}</p>` : ''}
+                    <div class="flex-grow px-2 space-y-1 text-xs">
+                        <div class="text-gray-400 card-driver">
+                            <div class="font-bold text-gray-500 text-xs">👤 DRIVER</div>
+                            <div class="truncate">${formatName(card.nomeDriver)}</div>
+                        </div>
+                        <div class="text-gray-400">
+                            <div class="font-bold text-gray-500 text-xs">🚗 MODELO</div>
+                            <div class="truncate">${formatName(card.modeloVeiculo)}</div>
+                        </div>
+                        ${card.faseAtual !== 'Fila de Recolha' ? `
+                        <div class="text-gray-400 card-chofer">
+                            <div class="font-bold text-gray-500 text-xs">🚛 CHOFER</div>
+                            <div class="truncate">${formatName(card.chofer)}</div>
+                        </div>` : ''}
                     </div>
-                    <div class="p-3 flex items-center justify-center border-t border-gray-300">
+                    <div class="p-2 flex items-center justify-center border-t border-gray-300">
                         <div class="flex items-center text-xs text-gray-500 font-medium">
-                            <svg class="animate-spin mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <svg class="animate-spin mr-1 h-3 w-3 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            <span class="text-center">${message}</span>
+                            <span class="text-center text-xs">${message}</span>
                         </div>
                     </div>
                 </div>`;
@@ -442,26 +483,39 @@
         if (card.sla >= 3) { slaColor = 'bg-red-100 text-red-700'; slaText = 'Atrasado'; }
         else if (card.sla == 2) { slaColor = 'bg-yellow-100 text-yellow-700'; slaText = 'Em Alerta'; }
         else { slaColor = 'bg-green-100 text-green-700'; slaText = 'No Prazo'; }
+        
+        const formattedDate = formatDate(card.dataCriacao);
+        
         return `
-            <div class="kanban-card data-item bg-white rounded-md shadow-sm border border-gray-200 flex flex-col h-56 cursor-pointer hover:border-primary transition-all" ${buildDataAttributes(card)}>
-                <div class="p-3">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs bg-gray-200 text-gray-600 font-medium px-2 py-0.5 rounded-full truncate">${card.origemLocacao}</span>
-                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${slaColor}">${slaText}</span>
+            <div class="kanban-card data-item bg-white rounded-md shadow-sm border border-gray-200 flex flex-col h-44 cursor-pointer hover:border-primary transition-all" ${buildDataAttributes(card)}>
+                <div class="p-2">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs bg-gray-200 text-gray-600 font-medium px-1.5 py-0.5 rounded-full truncate">${formatName(card.origemLocacao)}</span>
+                        <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full ${slaColor}">${slaText}</span>
                     </div>
-                    <h3 class="font-bold text-gray-800 card-placa truncate">${card.placa}</h3>
+                    <h3 class="font-bold text-gray-800 card-placa truncate text-sm">${card.placa}</h3>
                 </div>
-                <div class="flex-grow px-3 space-y-1 text-sm">
-                    <p class="text-gray-500 card-driver truncate"><span class="font-semibold text-gray-600">DRIVER:</span> ${card.nomeDriver}</p>
-                    <p class="text-gray-500 truncate"><span class="font-semibold text-gray-600">MODELO:</span> ${card.modeloVeiculo}</p>
-                    ${card.faseAtual !== 'Fila de Recolha' ? `<p class="text-gray-500 card-chofer truncate"><span class="font-semibold text-gray-600">CHOFER:</span> ${card.chofer}</p>` : ''}
+                <div class="flex-grow px-2 space-y-1 text-xs">
+                    <div class="text-gray-500 card-driver">
+                        <div class="font-bold text-gray-600 text-xs">👤 DRIVER</div>
+                        <div class="truncate">${formatName(card.nomeDriver)}</div>
+                    </div>
+                    <div class="text-gray-500">
+                        <div class="font-bold text-gray-600 text-xs">🚗 MODELO</div>
+                        <div class="truncate">${formatName(card.modeloVeiculo)}</div>
+                    </div>
+                    ${card.faseAtual !== 'Fila de Recolha' ? `
+                    <div class="text-gray-500 card-chofer">
+                        <div class="font-bold text-gray-600 text-xs">🚛 CHOFER</div>
+                        <div class="truncate">${formatName(card.chofer)}</div>
+                    </div>` : ''}
                 </div>
-                <div class="p-3 flex items-center justify-between border-t border-gray-100">
+                <div class="p-2 flex items-center justify-between border-t border-gray-100">
                     <div class="flex items-center text-xs text-red-600 font-semibold">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        SLA: ${card.sla} dia(s)
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        SLA: ${card.sla}d
                     </div>
-                    ${card.urlPublica ? `<button class="open-form-btn text-xs text-gray-500 hover:text-primary flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Formulário</button>` : ''}
+                    ${card.urlPublica ? `<button class="open-form-btn text-xs text-gray-500 hover:text-primary flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Form</button>` : ''}
                 </div>
             </div>`;
     }
@@ -491,13 +545,14 @@
                 else if (card.sla == 2) { slaBg = 'bg-yellow-100'; slaText = 'Em Alerta'; }
                 else { slaBg = 'bg-green-100'; slaText = 'No Prazo'; }
                 const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
+                const formattedDate = formatDate(card.dataCriacao);
                 html += `
                     <tr class="table-list-item data-item border-b hover:bg-gray-50 cursor-pointer ${slaBg}" ${buildDataAttributes(card)}>
                         <td class="px-6 py-2 font-bold text-gray-900 card-placa">${card.placa}</td>
-                        <td class="px-6 py-2 card-driver">${card.nomeDriver}</td>
-                        <td class="px-6 py-2 card-chofer">${card.chofer}</td>
+                        <td class="px-6 py-2 card-driver">${formatName(card.nomeDriver)}</td>
+                        <td class="px-6 py-2 card-chofer">${formatName(card.chofer)}</td>
                         <td class="px-6 py-2">${displayPhase}</td>
-                        <td class="px-6 py-2">${card.dataCriacao}</td>
+                        <td class="px-6 py-2">${formattedDate}</td>
                         <td class="px-6 py-2 text-center font-bold text-lg">${card.sla}</td>
                     </tr>`;
             });
@@ -506,18 +561,19 @@
             disabledCards.forEach(card => {
                 const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
                 const message = disabledPhaseMessages[card.faseAtual];
+                const formattedDate = formatDate(card.dataCriacao);
                 html += `
                     <tr class="table-list-item border-b bg-gray-100 opacity-70 cursor-not-allowed">
                         <td class="px-6 py-2 font-bold text-gray-500 card-placa">${card.placa}</td>
-                        <td class="px-6 py-2 text-gray-500 card-driver">${card.nomeDriver}</td>
-                        <td class="px-6 py-2 text-gray-500 card-chofer">${card.chofer}</td>
+                        <td class="px-6 py-2 text-gray-500 card-driver">${formatName(card.nomeDriver)}</td>
+                        <td class="px-6 py-2 text-gray-500 card-chofer">${formatName(card.chofer)}</td>
                         <td class="px-6 py-2 text-gray-500">${displayPhase}</td>
-                        <td class="px-6 py-2 text-gray-500">${card.dataCriacao}</td>
+                        <td class="px-6 py-2 text-gray-500">${formattedDate}</td>
                         <td class="px-6 py-2 text-center">
                             <div class="flex items-center justify-center">
                                 <svg class="animate-spin h-4 w-4 text-gray-500 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                                 <span class="text-xs text-gray-500">Processando</span>
                             </div>
@@ -533,7 +589,8 @@
         if (card.sla >= 3) { slaText = 'Atrasado'; }
         else if (card.sla == 2) { slaText = 'Em Alerta'; }
         else { slaText = 'No Prazo'; }
-        return `data-placa="${card.placa}" data-driver="${card.nomeDriver}" data-chofer="${card.chofer}" data-origem="${card.origemLocacao}" data-fase="${card.faseAtual}" data-criacao="${card.dataCriacao}" data-sla-dias="${card.sla}" data-mapa-url="${card.enderecoRecolhaUrl}" data-form-url="${card.urlPublica}" data-sla-text="${slaText}" data-valor-recolha="${card.valorRecolha}" data-custo-km="${card.custoKmAdicional}" data-modelo-veiculo="${card.modeloVeiculo}" data-telefone-contato="${card.telefoneContato}" data-telefone-opcional="${card.telefoneOpcional}" data-endereco-cadastro="${card.enderecoCadastro}" data-endereco-veiculo="${card.enderecoVeiculo}"`;
+        const formattedDate = formatDate(card.dataCriacao);
+        return `data-placa="${card.placa}" data-driver="${formatName(card.nomeDriver)}" data-chofer="${formatName(card.chofer)}" data-origem="${formatName(card.origemLocacao)}" data-fase="${card.faseAtual}" data-criacao="${formattedDate}" data-sla-dias="${card.sla}" data-mapa-url="${card.enderecoRecolhaUrl}" data-form-url="${card.urlPublica}" data-sla-text="${slaText}" data-valor-recolha="${card.valorRecolha}" data-custo-km="${card.custoKmAdicional}" data-modelo-veiculo="${formatName(card.modeloVeiculo)}" data-telefone-contato="${card.telefoneContato}" data-telefone-opcional="${card.telefoneOpcional}" data-endereco-cadastro="${card.enderecoCadastro}" data-endereco-veiculo="${card.enderecoVeiculo}"`;
     }
     
     function buildModalContent(data) {
@@ -541,25 +598,164 @@
         const displayPhase = phaseDisplayNames[data.fase] || data.fase;
         let valorHTML = '';
         if (!isFila && data.valorRecolha && data.valorRecolha !== 'N/A' && data.valorRecolha !== 'null') {
-            valorHTML = `<div><p class="text-sm text-gray-500">Valor da Recolha</p><p class="font-semibold">R$ ${data.valorRecolha}</p></div>`;
+            valorHTML = `
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div class="flex items-center mb-2">
+                        <span class="text-green-600 mr-2">💰</span>
+                        <p class="text-sm font-semibold text-green-800">Valor da Recolha</p>
+                    </div>
+                    <p class="text-lg font-bold text-green-900">R$ ${data.valorRecolha}</p>
+                </div>`;
         }
         let custoKmHTML = '';
         if (!isFila && data.custoKm && data.custoKm !== 'N/A' && data.custoKm !== 'null') {
-            custoKmHTML = `<div><p class="text-sm text-gray-500">Custo KM Adicional</p><p class="font-semibold">R$ ${data.custoKm}</p></div>`;
+            custoKmHTML = `
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div class="flex items-center mb-2">
+                        <span class="text-blue-600 mr-2">🛣️</span>
+                        <p class="text-sm font-semibold text-blue-800">Custo KM Adicional</p>
+                    </div>
+                    <p class="text-lg font-bold text-blue-900">R$ ${data.custoKm}</p>
+                </div>`;
         }
+        
         return `
-            <div class="grid grid-cols-2 gap-4"><div><p class="text-sm text-gray-500">SLA</p><p class="font-semibold text-lg">${data.slaDias} dias</p></div><div><p class="text-sm text-gray-500">Fase Atual</p><p class="font-semibold">${displayPhase}</p></div></div>
-            <div><p class="text-sm text-gray-500">Modelo do Veículo</p><p class="font-semibold">${data.modeloVeiculo}</p></div>
-            <div><p class="text-sm text-gray-500">Driver</p><p class="font-semibold">${data.driver}</p></div>
-            ${!isFila ? `<div><p class="text-sm text-gray-500">Chofer</p><p class="font-semibold">${data.chofer}</p></div>` : ''}
-            <div><p class="text-sm text-gray-500">Origem da Locação</p><p class="font-semibold">${data.origem}</p></div>
-            <div><p class="text-sm text-gray-500">Telefone de Contato</p><p class="font-semibold">${data.telefoneContato}</p></div>
-            <div><p class="text-sm text-gray-500">Telefone Opcional</p><p class="font-semibold">${data.telefoneOpcional}</p></div>
-            <div><p class="text-sm text-gray-500">Endereço de Cadastro</p><p class="font-semibold">${data.enderecoCadastro}</p></div>
-            <div><p class="text-sm text-gray-500">Endereço Onde o Veículo Está</p><p class="font-semibold">${data.enderecoVeiculo}</p></div>
-            ${valorHTML}
-            ${custoKmHTML}
-            <div><p class="text-sm text-gray-500">Data de Criação</p><p class="font-semibold">${data.criacao}</p></div>`;
+            <div class="space-y-6">
+                <!-- Status e Fase -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center">
+                            <div class="flex items-center justify-center mb-2">
+                                <span class="text-red-600 mr-2">⏰</span>
+                                <p class="text-sm font-semibold text-gray-700">SLA</p>
+                            </div>
+                            <p class="text-2xl font-bold text-red-600">${data.slaDias} dias</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="flex items-center justify-center mb-2">
+                                <span class="text-primary mr-2">📋</span>
+                                <p class="text-sm font-semibold text-gray-700">Fase Atual</p>
+                            </div>
+                            <p class="font-bold text-primary">${displayPhase}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações do Veículo -->
+                <div class="bg-white border rounded-lg p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="mr-2">🚗</span>
+                        Informações do Veículo
+                    </h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="flex items-start">
+                            <span class="text-gray-600 mr-3 mt-1">🏷️</span>
+                            <div>
+                                <p class="text-sm text-gray-500">Modelo do Veículo</p>
+                                <p class="font-semibold text-gray-800">${data.modeloVeiculo}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-gray-600 mr-3 mt-1">🏢</span>
+                            <div>
+                                <p class="text-sm text-gray-500">Origem da Locação</p>
+                                <p class="font-semibold text-gray-800">${data.origem}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pessoas Envolvidas -->
+                <div class="bg-white border rounded-lg p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="mr-2">👥</span>
+                        Pessoas Envolvidas
+                    </h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="flex items-start">
+                            <span class="text-gray-600 mr-3 mt-1">👤</span>
+                            <div>
+                                <p class="text-sm text-gray-500">Driver</p>
+                                <p class="font-semibold text-gray-800">${data.driver}</p>
+                            </div>
+                        </div>
+                        ${!isFila ? `
+                        <div class="flex items-start">
+                            <span class="text-gray-600 mr-3 mt-1">🚛</span>
+                            <div>
+                                <p class="text-sm text-gray-500">Chofer</p>
+                                <p class="font-semibold text-gray-800">${data.chofer}</p>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                </div>
+
+                <!-- Contatos -->
+                <div class="bg-white border rounded-lg p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="mr-2">📞</span>
+                        Contatos
+                    </h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="flex items-start">
+                            <span class="text-gray-600 mr-3 mt-1">📱</span>
+                            <div>
+                                <p class="text-sm text-gray-500">Telefone de Contato</p>
+                                <p class="font-semibold text-gray-800">${data.telefoneContato}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-gray-600 mr-3 mt-1">📞</span>
+                            <div>
+                                <p class="text-sm text-gray-500">Telefone Opcional</p>
+                                <p class="font-semibold text-gray-800">${data.telefoneOpcional}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Endereços -->
+                <div class="bg-white border rounded-lg p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="mr-2">📍</span>
+                        Endereços
+                    </h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="flex items-start">
+                            <span class="text-gray-600 mr-3 mt-1">🏠</span>
+                            <div>
+                                <p class="text-sm text-gray-500">Endereço de Cadastro</p>
+                                <p class="font-semibold text-gray-800">${data.enderecoCadastro}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-gray-600 mr-3 mt-1">📍</span>
+                            <div>
+                                <p class="text-sm text-gray-500">Endereço Onde o Veículo Está</p>
+                                <p class="font-semibold text-gray-800">${data.enderecoVeiculo}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Valores (se existirem) -->
+                ${valorHTML || custoKmHTML ? `
+                <div class="grid grid-cols-1 gap-4">
+                    ${valorHTML}
+                    ${custoKmHTML}
+                </div>` : ''}
+
+                <!-- Data de Criação -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <span class="text-gray-600 mr-3">📅</span>
+                        <div>
+                            <p class="text-sm text-gray-500">Data de Criação</p>
+                            <p class="font-semibold text-gray-800">${data.criacao}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
     }
     
     // Função para tornar o modal arrastável
@@ -695,7 +891,7 @@
         });
         
         // Atualizar contadores das colunas
-        document.querySelectorAll('#kanban-view .w-64').forEach(column => {
+        document.querySelectorAll('#kanban-view .w-52').forEach(column => {
           const visibleCards = column.querySelectorAll('.kanban-card:not([style*="display: none"])').length;
           const countElement = column.querySelector('.card-count');
           if(countElement) { countElement.textContent = visibleCards; }
