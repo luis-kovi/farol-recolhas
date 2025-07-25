@@ -514,7 +514,7 @@
       }
       
       function fetchData() {
-          const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${new Date().getTime()}`;
+          const url = `${SCRIPT_URL}?req=cards&email=${encodeURIComponent(user.email)}&t=${new Date().getTime()}`;
           fetch(url)
               .then(response => {
                   if (!response.ok) {
