@@ -541,6 +541,8 @@
       // Força o botão da calculadora a ficar oculto inicialmente
       if (openCalculatorBtn) {
         openCalculatorBtn.classList.add('hidden');
+        openCalculatorBtn.style.display = 'none'; // Força ocultação com CSS inline
+        console.log("🔒 Botão da calculadora forçadamente oculto na inicialização");
       }
       const calculatorModal = document.getElementById('calculatorModal');
       const closeCalculatorBtn = document.getElementById('closeCalculator');
@@ -668,11 +670,18 @@
           if (responseData) {
               if (responseData.permissionType) {
                   userPermission = responseData.permissionType.toString().toLowerCase().trim();
+                  console.log("📋 Permissão encontrada em responseData.permissionType:", userPermission);
               } else if (responseData.userPermission) {
                   userPermission = responseData.userPermission.toString().toLowerCase().trim();
+                  console.log("📋 Permissão encontrada em responseData.userPermission:", userPermission);
               } else if (responseData.permission) {
                   userPermission = responseData.permission.toString().toLowerCase().trim();
+                  console.log("📋 Permissão encontrada em responseData.permission:", userPermission);
+              } else {
+                  console.log("⚠️ Nenhum campo de permissão encontrado na resposta da API");
               }
+          } else {
+              console.log("⚠️ responseData é null ou undefined");
           }
           
           // Segunda tentativa: verificar no objeto user do localStorage (apenas se há dados da API)
@@ -701,22 +710,22 @@
           console.log("ResponseData recebido:", responseData);
           
           // Verifica se o usuário tem permissão para ver a calculadora
-          const allowedPermissions = ['kovi', 'onsystem'];
-          const hasPermission = userPermission && allowedPermissions.includes(userPermission);
+          // APENAS 'kovi' e 'onsystem' podem ver o botão
+          console.log("🔍 Verificando permissão:", userPermission);
           
-          // Força ocultação para permissões específicas que não devem ver o botão
-          const deniedPermissions = ['ativa', 'inativa', 'bloqueado'];
-          const isDenied = userPermission && deniedPermissions.includes(userPermission);
+          // Armazena a permissão detectada no localStorage para verificação de segurança
+          const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+          currentUser.detectedPermission = userPermission;
+          localStorage.setItem('user', JSON.stringify(currentUser));
           
-          if (hasPermission && !isDenied) {
-              console.log("✅ Mostrando botão da calculadora - Permissão autorizada:", userPermission);
+          if (userPermission === 'kovi' || userPermission === 'onsystem') {
+              console.log("✅ AUTORIZADO - Mostrando botão da calculadora para:", userPermission);
               openCalculatorBtn.classList.remove('hidden');
+              openCalculatorBtn.style.display = 'flex'; // Força exibição
           } else {
-              console.log("❌ Ocultando botão da calculadora - Permissão negada:", userPermission);
-              console.log("Permissões aceitas:", allowedPermissions);
-              console.log("Permissões negadas:", deniedPermissions);
-              console.log("É permissão negada?", isDenied);
+              console.log("❌ NÃO AUTORIZADO - Ocultando botão da calculadora para:", userPermission);
               openCalculatorBtn.classList.add('hidden');
+              openCalculatorBtn.style.display = 'none'; // Força ocultação
           }
       }
 
@@ -725,6 +734,11 @@
           
           buildUI(responseData.cards);
           console.log("Dados atualizados em: " + responseData.lastUpdate);
+          
+          // Força ocultação antes de verificar permissões
+          openCalculatorBtn.classList.add('hidden');
+          openCalculatorBtn.style.display = 'none';
+          console.log("🔒 Botão forçadamente oculto antes da verificação de permissões");
           
           // Verifica permissões para a calculadora
           checkCalculatorPermission(responseData);
@@ -771,10 +785,55 @@
 
       // Garantir que o botão comece oculto até que as permissões sejam verificadas via API
       openCalculatorBtn.classList.add('hidden');
+      openCalculatorBtn.style.display = 'none';
+      console.log("🔒 Verificação final: botão da calculadora oculto antes de fetchData");
 
       fetchData(); // Carregamento inicial
 
-      setInterval(fetchData, 10000); // Atualiza a cada 30 segundos
+      setInterval(fetchData, 10000); // Atualiza a cada 10 segundos
+      
+      // Verificação de segurança: força ocultação do botão a cada 1 segundo até permissão válida
+      const securityCheck = setInterval(() => {
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const currentPermission = currentUser.detectedPermission; // Vamos armazenar a permissão detectada
+        
+        if (currentPermission !== 'kovi' && currentPermission !== 'onsystem') {
+          if (openCalculatorBtn && !openCalculatorBtn.classList.contains('hidden')) {
+            openCalculatorBtn.classList.add('hidden');
+            openCalculatorBtn.style.display = 'none';
+            console.log("🛡️ Verificação de segurança: botão forçadamente oculto");
+          }
+        } else {
+          // Se a permissão for válida, podemos parar a verificação de segurança
+          clearInterval(securityCheck);
+          console.log("🛡️ Verificação de segurança finalizada - permissão válida detectada");
+        }
+      }, 1000);
+      
+      // MutationObserver para detectar mudanças não autorizadas no botão
+      if (openCalculatorBtn) {
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes') {
+              const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+              const currentPermission = currentUser.detectedPermission;
+              
+              if (currentPermission !== 'kovi' && currentPermission !== 'onsystem') {
+                if (!openCalculatorBtn.classList.contains('hidden') || openCalculatorBtn.style.display !== 'none') {
+                  console.log("🚨 Mudança não autorizada detectada no botão da calculadora! Forçando ocultação...");
+                  openCalculatorBtn.classList.add('hidden');
+                  openCalculatorBtn.style.display = 'none';
+                }
+              }
+            }
+          });
+        });
+        
+        observer.observe(openCalculatorBtn, { 
+          attributes: true, 
+          attributeFilter: ['class', 'style'] 
+        });
+      }
     });
   </script>
 
