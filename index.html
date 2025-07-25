@@ -615,14 +615,20 @@
       // Configurar evento de fechar
       closeCalculatorBtn.addEventListener('click', closeCalculator);
       
-      function onDataRefreshed(sheetData) {
-        buildUI(sheetData.cards);
-        console.log("Dados atualizados em: " + sheetData.lastUpdate);
+      function onDataRefreshed(responseData) {
+        buildUI(responseData.cards);
+        console.log("Dados atualizados em: " + responseData.lastUpdate);
         
-        // NOVO: Mostrar botão da calculadora se o usuário tiver permissão
-        const userPermission = sheetData.userPermission?.toLowerCase();
-        if (['kovi', 'onsystem'].includes(userPermission)) {
-          openCalculatorBtn.classList.remove('hidden');
+        // Verificação corrigida da permissão
+        const userPermission = responseData.userPermission?.toLowerCase().trim();
+        console.log("Permissão do usuário:", userPermission);
+        
+        if (userPermission && ['kovi', 'onsystem'].includes(userPermission)) {
+            console.log("Mostrando botão da calculadora");
+            openCalculatorBtn.classList.remove('hidden');
+        } else {
+            console.log("Ocultando botão da calculadora");
+            openCalculatorBtn.classList.add('hidden');
         }
       }
       
