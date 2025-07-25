@@ -5,18 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Recolhas - Kovi</title>
   <link rel="icon" type="image/png" href="https://i.ibb.co/ksMQSMQ2/web-app-manifest-192x192.png">
-  
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Google Fonts: Poppins e Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Interact.js para arrastar o modal -->
-  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-  
   <style>
     :root {
       --primary-color: #FF355A;
@@ -24,41 +16,33 @@
       --scrollbar-track: #f1f1f1;
       --scrollbar-thumb: #c1c1c1;
     }
-    
     body {
       font-family: 'Inter', sans-serif;
       background-color: #f7f9fa;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
-    
     .bg-primary {
       background-color: var(--primary-color);
     }
-    
     .control-btn.active {
       background-color: var(--primary-color);
       color: white;
     }
-    
     .btn-primary {
       background-color: var(--primary-color);
       color: white;
       transition: background-color 0.2s;
     }
-    
     .btn-primary:hover {
       background-color: var(--primary-color-darker);
     }
-    
     .text-primary {
       color: var(--primary-color);
     }
-    
     .border-primary {
       border-color: var(--primary-color);
     }
-    
     .focus-primary:focus {
       border-color: var(--primary-color) !important;
       box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.4) !important;
@@ -114,11 +98,9 @@
     .modal-overlay {
       transition: opacity 0.2s ease-in-out;
     }
-    
     .modal-panel {
       transition: transform 0.2s ease-in-out;
     }
-    
     .phase-title {
       font-size: 0.9rem;
       font-weight: 600;
@@ -126,71 +108,62 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    
     .table-header-primary th {
       color: var(--primary-color);
       font-weight: 700;
     }
-    
     .table-border-primary {
       border-top: 4px solid var(--primary-color);
     }
-    
     .compact-table td {
       padding-top: 0.5rem;
       padding-bottom: 0.5rem;
     }
-    
     .split-modal {
       display: flex;
       height: 60vh;
     }
-    
     .split-modal-left {
       flex: 1;
       overflow-y: auto;
       padding: 1rem;
       border-right: 1px solid #e5e7eb;
     }
-    
     .split-modal-right {
       flex: 1;
       overflow-y: auto;
       padding: 0;
     }
-    
     .split-modal-right iframe {
       width: 100%;
       height: 100%;
       border: none;
     }
-    
-    /* Estilos para o modal da calculadora */
+    /* NOVOS ESTILOS PARA MODAL CALCULADORA */
     .calculator-modal {
-      width: 420px;
-      height: 520px;
+      width: 425px;
+      height: 580px; /* Altura aumentada */
       border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
       overflow: hidden;
-      background: white;
+      background: var(--primary-color); /* Cor primária */
+      border: 2px solid var(--primary-color); /* Borda primária */
     }
-    
     .calculator-header {
-      background-color: var(--primary-color);
-      color: white;
-      padding: 12px 16px;
+      background-color: var(--primary-color); /* Cor primária */
+      padding: 8px 12px;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end; /* Botão apenas no canto direito */
       align-items: center;
       cursor: move;
+      height: 40px; /* Altura reduzida */
     }
-    
     .calculator-iframe {
       width: 100%;
-      height: 100%;
+      height: calc(100% - 40px); /* Ajustar altura para caber no header */
       border: none;
+      background-color: white; /* Fundo branco para o iframe */
     }
-    
     .close-calculator {
       background: none;
       border: none;
@@ -199,22 +172,23 @@
       cursor: pointer;
       padding: 4px;
     }
-    
-    /* Novo estilo para o modal de detalhes */
-    .card-modal-header {
-      background-color: var(--primary-color);
+    /* Novo estilo para botão Calculadora KM */
+    #openCalculatorBtn {
+      background-color: var(--primary-color); /* Cor primária */
+      color: white;
+      transition: background-color 0.2s;
       display: flex;
-      justify-content: flex-end;
-      padding: 0.5rem 1rem;
-      border-top-left-radius: 0.5rem;
-      border-top-right-radius: 0.5rem;
+      align-items: center;
+      gap: 8px;
+    }
+    #openCalculatorBtn:hover {
+      background-color: var(--primary-color-darker);
     }
   </style>
 </head>
 <body class="text-gray-800">
 
   <div class="flex flex-col h-screen">
-    <!-- Cabeçalho Principal -->
     <header class="bg-primary text-white flex-shrink-0">
       <div class="flex justify-between items-center px-4 py-3">
         <div class="flex items-center gap-4">
@@ -228,7 +202,6 @@
               <p id="user-name" class="font-bold text-sm">Utilizador Kovi</p>
               <p id="user-email" class="text-xs">A carregar...</p>
           </div>
-          <!-- Botão de Logoff -->
           <button id="logout-btn" class="text-white hover:text-gray-200 ml-2 flex items-center gap-1 text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
               <path d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
@@ -240,7 +213,6 @@
       </div>
     </header>
     
-    <!-- Barra de Controles -->
     <div class="py-3 bg-white border-b border-gray-200 flex-shrink-0">
         <div class="flex justify-between items-center px-4">
             <div class="flex items-center border border-gray-300 rounded-lg p-1 bg-gray-100">
@@ -264,14 +236,9 @@
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                   <input type="search" id="searchInput" placeholder="Procurar cards..." class="w-64 p-2 pl-10 text-sm border border-gray-300 rounded-md focus-primary">
                 </div>
-                <!-- Botão Calculadora KM com novo ícone -->
                 <button id="openCalculatorBtn" class="hidden btn-primary px-3 py-2 text-sm font-medium rounded-md flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
-                      <line x1="8" y1="6" x2="16" y2="6"/>
-                      <line x1="8" y1="14" x2="16" y2="14"/>
-                      <line x1="8" y1="10" x2="12" y2="10"/>
-                      <line x1="16" y1="10" x2="16" y2="14"/>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M12 .5a.5.5 0 0 1 .5.5v12a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5v-12a.5.5 0 0 1 .5-.5h8Zm-11 1A1.5 1.5 0 0 0 1 3v10a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 15 13V3a1.5 1.5 0 0 0-1.5-1.5h-11ZM4 2a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-.5a.5.5 0 0 1 0-1h.5V2.5A.5.5 0 0 1 4 2Zm1 0a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1 0-1h1V2.5A.5.5 0 0 1 5 2Zm2 0a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1 0-1h1V2.5A.5.5 0 0 1 7 2Zm3 0a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1 0-1h1V2.5A.5.5 0 0 1 10 2Zm1.5 1.5a.5.5 0 0 1 .5-.5h.5a.5.5 0 0 1 .5.5v.5a.5.5 0 0 1-.5.5h-.5a.5.5 0 0 1-.5-.5v-.5Zm-9 1A.5.5 0 0 1 4 5h8a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5v-8ZM5 6v1h1V6H5Zm2 0v1h1V6H7Zm2 0v1h1V6H9Zm2 0v1h1V6h-1Zm-6 2v1h1V8H5Zm2 0v1h1V8H7Zm2 0v1h1V8H9Zm2 0v1h1V8h-1Zm-6 2v1h1v-1H5Zm2 0v1h1v-1H7Zm2 0v1h1v-1H9Zm2 0v1h1v-1h-1Zm-6 2v1h1v-1H5Zm2 0v1h1v-1H7Zm3 0v1h1v-1h-1Z"/>
                     </svg>
                     Calculadora km
                 </button>
@@ -279,9 +246,7 @@
         </div>
     </div>
 
-    <!-- Conteúdo Principal -->
     <main class="flex-1 flex overflow-hidden">
-      <!-- Indicador de Carregamento -->
       <div id="loading-indicator" class="flex flex-col items-center justify-center w-full h-full">
         <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -290,14 +255,11 @@
         <p id="loading-text" class="mt-2 text-gray-600">A carregar dados...</p>
       </div>
       
-      <!-- Visualização Kanban (inicialmente oculta) -->
       <div id="kanban-view" class="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-4 hidden scroll-container">
         <div id="kanban-container" class="flex gap-4">
-            <!-- As colunas serão inseridas aqui pelo JavaScript -->
-        </div>
+            </div>
       </div>
       
-      <!-- Visualização em Lista (inicialmente oculta) -->
       <div id="list-view" class="h-full w-full p-4 hidden">
         <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
           <table class="w-full text-sm text-left text-gray-500">
@@ -312,19 +274,18 @@
               </tr>
             </thead>
             <tbody id="list-container" class="bg-white compact-table">
-              <!-- As linhas serão inseridas aqui pelo JavaScript -->
-            </tbody>
+              </tbody>
           </table>
         </div>
       </div>
     </main>
   </div>
 
-  <!-- Modal de Detalhes - Modificado -->
   <div id="cardModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
     <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-5xl transform scale-95 opacity-0">
-      <div class="card-modal-header">
-        <button id="closeCardModal" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+      <div class="flex justify-between items-center p-4 border-b">
+        <h3 class="text-xl font-bold" id="modalPlaca"></h3>
+        <button id="closeCardModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
       </div>
       <div class="split-modal">
         <div class="split-modal-left scroll-container">
@@ -340,14 +301,13 @@
     </div>
   </div>
 
-  <!-- Modal da Calculadora KM - Modificado -->
   <div id="calculatorModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-    <div id="calculatorContainer" class="calculator-modal" style="border: 3px solid #FF355A;">
-      <div class="calculator-header" id="calculator-header">
-        <button id="closeCalculator" class="close-calculator">&times;</button>
+      <div id="calculatorContainer" class="calculator-modal" style="position: absolute;">
+          <div class="calculator-header">
+              <button id="closeCalculator" class="close-calculator text-white text-xl font-bold">&times;</button>
+          </div>
+          <iframe id="calculatorIframe" src="https://calculadorakm.vercel.app/" class="calculator-iframe"></iframe>
       </div>
-      <iframe id="calculatorIframe" src="https://calculadorakm.vercel.app/" class="calculator-iframe"></iframe>
-    </div>
   </div>
 
   <script>
@@ -400,8 +360,8 @@
             const cardsInPhase = phases[phaseName];
             const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
             const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
-            html += 
-                `<div class="w-64 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
+            html += `
+                <div class="w-64 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
                     <div class="p-3 flex items-center bg-white rounded-t-lg border-t-4 border-primary">
                         <h2 class="phase-title text-primary">${displayPhaseName}</h2>
                         <span class="text-sm font-semibold text-gray-500 bg-gray-200 rounded-md px-2 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
@@ -464,8 +424,8 @@
                 else if (card.sla == 2) { slaBg = 'bg-yellow-100'; slaText = 'Em Alerta'; }
                 else { slaBg = 'bg-green-100'; slaText = 'No Prazo'; }
                 const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
-                html += 
-                    `<tr class="table-list-item data-item border-b hover:bg-gray-50 cursor-pointer ${slaBg}" ${buildDataAttributes(card)}>
+                html += `
+                    <tr class="table-list-item data-item border-b hover:bg-gray-50 cursor-pointer ${slaBg}" ${buildDataAttributes(card)}>
                         <td class="px-6 py-2 font-bold text-gray-900 card-placa">${card.placa}</td>
                         <td class="px-6 py-2 card-driver">${card.nomeDriver}</td>
                         <td class="px-6 py-2 card-chofer">${card.chofer}</td>
@@ -511,6 +471,42 @@
             ${custoKmHTML}
             <div><p class="text-sm text-gray-500">Data de Criação</p><p class="font-semibold">${data.criacao}</p></div>`;
     }
+    
+    // Função para tornar o modal arrastável
+    function makeDraggable(modal, header) {
+      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+      header.onmousedown = dragMouseDown;
+
+      function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // Pega a posição do cursor do mouse na inicialização
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        // Chama a função sempre que o cursor se move
+        document.onmousemove = elementDrag;
+      }
+
+      function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // Calcula a nova posição do cursor
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        // Define a nova posição do elemento
+        modal.style.top = (modal.offsetTop - pos2) + "px";
+        modal.style.left = (modal.offsetLeft - pos1) + "px";
+      }
+
+      function closeDragElement() {
+        // Para de mover quando o botão do mouse é solto
+        document.onmouseup = null;
+        document.onmousemove = null;
+      }
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
       // Atualiza as informações do usuário no cabeçalho
@@ -535,23 +531,27 @@
       const openCalculatorBtn = document.getElementById('openCalculatorBtn');
       const calculatorModal = document.getElementById('calculatorModal');
       const closeCalculatorBtn = document.getElementById('closeCalculator');
-      const calculatorContainer = document.getElementById('calculatorContainer');
       const calculatorIframe = document.getElementById('calculatorIframe');
+      const calculatorContainer = document.getElementById('calculatorContainer');
+      const calculatorHeader = document.querySelector('.calculator-header');
+      
+      // Torna o modal arrastável
+      makeDraggable(calculatorContainer, calculatorHeader);
 
       // Adiciona o event listener para os cards e botões de formulário
       mainContent.addEventListener('click', function(event) {
         const target = event.target;
         const formButton = target.closest('.open-form-btn');
         if (formButton) {
-            event.stopPropagation();
-            const cardElement = formButton.closest('.data-item');
-            const formUrl = cardElement.dataset.formUrl;
-            if (formUrl) openCardModal(cardElement);
-            return;
+          event.stopPropagation();
+          const cardElement = formButton.closest('.data-item');
+          const formUrl = cardElement.dataset.formUrl;
+          if (formUrl) openCardModal(cardElement);
+          return;
         }
         const cardElement = target.closest('.data-item');
         if (cardElement) {
-            openCardModal(cardElement);
+          openCardModal(cardElement);
         }
       });
 
@@ -600,6 +600,7 @@
 
       function openCardModal(itemElement) {
         const data = itemElement.dataset;
+        document.getElementById('modalPlaca').textContent = data.placa;
         document.getElementById('modal-content').innerHTML = buildModalContent(data);
         
         // Carregar o formulário no iframe
@@ -652,51 +653,49 @@
       closeCalculatorBtn.addEventListener('click', closeCalculator);
       
       function onDataRefreshed(responseData) {
-        console.log("Dados completos recebidos:", responseData);
-        
-        buildUI(responseData.cards);
-        console.log("Dados atualizados em: " + responseData.lastUpdate);
-        
-        // CORREÇÃO: Usar permissionType em vez de userPermission
-        const userPermission = responseData.permissionType?.toString().toLowerCase().trim();
-        console.log("Permissão do usuário:", userPermission);
-        
-        if (userPermission && ['kovi', 'onsystem'].includes(userPermission)) {
-            console.log("Mostrando botão da calculadora");
-            openCalculatorBtn.classList.remove('hidden');
-        } else {
-            console.log("Ocultando botão da calculadora. Permissão:", userPermission);
-            openCalculatorBtn.classList.add('hidden');
-        }
+          console.log("Dados completos recebidos:", responseData);
+          
+          buildUI(responseData.cards);
+          console.log("Dados atualizados em: " + responseData.lastUpdate);
+          
+          const userPermission = responseData.permissionType?.toString().toLowerCase().trim();
+          console.log("Permissão do usuário:", userPermission);
+          
+          if (userPermission && ['kovi', 'onsystem'].includes(userPermission)) {
+              console.log("Mostrando botão da calculadora");
+              openCalculatorBtn.classList.remove('hidden');
+          } else {
+              console.log("Ocultando botão da calculadora. Permissão:", userPermission);
+              openCalculatorBtn.classList.add('hidden');
+          }
       }
       
       function fetchData() {
-          // Adiciona o e-mail do usuário como um parâmetro na URL
           const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${new Date().getTime()}`;
           console.log("Buscando dados da URL:", url);
           
           fetch(url)
-              .then(response => {
-                  console.log("Resposta recebida. Status:", response.status);
-                  if (!response.ok) {
-                      throw new Error(`HTTP error! status: ${response.status}`);
-                  }
-                  return response.json();
-              })
-              .then(data => {
-                  console.log("Dados recebidos:", data);
-                  if (data.error) {
-                      throw new Error(data.error);
-                  }
-                  loadingIndicator.style.display = 'none';
-                  kanbanView.classList.remove('hidden');
-                  kanbanView.classList.add('flex');
-                  onDataRefreshed(data);
-              })
-              .catch(err => {
-                  console.error("Falha ao carregar dados:", err);
-                  loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha, o URL da API e a configuração de implantação.</p>`;
-              });
+            .then(response => {
+                console.log("Resposta recebida. Status:", response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Dados recebidos:", data);
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                loadingIndicator.style.display = 'none';
+                kanbanView.classList.remove('hidden');
+                kanbanView.classList.add('flex');
+                onDataRefreshed(data);
+            })
+            .catch(err => {
+                console.error("Falha ao carregar dados:", err);
+                loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha, o URL da API e a configuração de implantação.</p>`;
+            });
       }
 
       // Função de Logoff
@@ -712,35 +711,9 @@
 
       fetchData(); // Carregamento inicial
 
-      setInterval(fetchData, 10000); // Atualiza a cada 30 segundos
-      
-      // Tornar o modal da calculadora arrastável
-      interact('#calculatorContainer').draggable({
-        allowFrom: '#calculator-header',
-        inertia: true,
-        modifiers: [
-          interact.modifiers.restrictRect({
-            restriction: 'parent',
-            endOnly: true
-          })
-        ],
-        autoScroll: true,
-        listeners: {
-          move: dragMoveListener
-        }
-      });
-
-      function dragMoveListener (event) {
-        var target = event.target
-        var x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx
-        var y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy
-        target.style.transform = 'translate(' + x + 'px, ' + y + 'px)'
-        target.setAttribute('data-x', x)
-        target.setAttribute('data-y', y)
-      }
-
-      window.dragMoveListener = dragMoveListener;
+      setInterval(fetchData, 30000); // Atualiza a cada 30 segundos
     });
   </script>
+
 </body>
 </html>
