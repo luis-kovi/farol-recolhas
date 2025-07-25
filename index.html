@@ -184,6 +184,13 @@
     #openCalculatorBtn:hover {
       background-color: var(--primary-color-darker);
     }
+    #calculatorModal {
+    pointer-events: none !important;
+  }
+  
+  #calculatorContainer {
+    pointer-events: auto !important;
+  }
   </style>
 </head>
 <body class="text-gray-800">
@@ -642,12 +649,7 @@
         calculatorIframe.src = "about:blank";
       }
 
-      // Fechar ao clicar fora do modal
-      calculatorModal.addEventListener('click', (e) => {
-        if (e.target === calculatorModal) {
-          closeCalculator();
-        }
-      });
+      ;
 
       // Configurar evento de fechar
       closeCalculatorBtn.addEventListener('click', closeCalculator);
