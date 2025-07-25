@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Recolhas - Kovi</title>
   <link rel="icon" type="image/png" href="https://i.ibb.co/ksMQSMQ2/web-app-manifest-192x192.png">
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Poppins e Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -24,129 +22,39 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
-    .bg-primary {
-      background-color: var(--primary-color);
-    }
-    .control-btn.active {
-      background-color: var(--primary-color);
-      color: white;
-    }
-    .btn-primary {
-      background-color: var(--primary-color);
-      color: white;
-      transition: background-color 0.2s;
-    }
-    .btn-primary:hover {
-      background-color: var(--primary-color-darker);
-    }
-    .text-primary {
-      color: var(--primary-color);
-    }
-    .border-primary {
-      border-color: var(--primary-color);
-    }
-    .focus-primary:focus {
-      border-color: var(--primary-color) !important;
-      box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.4) !important;
-    }
-    
-    /* Estilos aprimorados para barra de rolagem */
-    .scroll-container {
-      overflow: auto;
-      scrollbar-width: thin;
-      scrollbar-color: transparent transparent;
-      transition: scrollbar-color 0.3s ease;
-    }
-    
-    .scroll-container:hover {
-      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-    }
-    
-    /* WebKit (Chrome, Safari) */
-    .scroll-container::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-      background-color: transparent;
-    }
-    
-    .scroll-container::-webkit-scrollbar-track {
-      background: transparent;
-      border-radius: 4px;
-    }
-    
-    .scroll-container::-webkit-scrollbar-thumb {
-      background-color: transparent;
-      border-radius: 4px;
-      border: 2px solid transparent;
-      background-clip: padding-box;
-    }
-    
-    .scroll-container:hover::-webkit-scrollbar-track {
-      background: var(--scrollbar-track);
-    }
-    
-    .scroll-container:hover::-webkit-scrollbar-thumb {
-      background-color: var(--scrollbar-thumb);
-    }
-    
-    .scroll-container::-webkit-scrollbar-thumb:hover {
-      background-color: #a0a0a0;
-    }
-    
-    .kanban-board {
-      scrollbar-gutter: stable;
-    }
-    
-    .modal-overlay {
-      transition: opacity 0.2s ease-in-out;
-    }
-    .modal-panel {
-      transition: transform 0.2s ease-in-out;
-    }
-    .phase-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .table-header-primary th {
-      color: var(--primary-color);
-      font-weight: 700;
-    }
-    .table-border-primary {
-      border-top: 4px solid var(--primary-color);
-    }
-    .compact-table td {
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
-    }
-    .split-modal {
-      display: flex;
-      height: 60vh;
-    }
-    .split-modal-left {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      border-right: 1px solid #e5e7eb;
-    }
-    .split-modal-right {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0;
-    }
-    .split-modal-right iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
+    .bg-primary { background-color: var(--primary-color); }
+    .control-btn.active { background-color: var(--primary-color); color: white; }
+    .btn-primary { background-color: var(--primary-color); color: white; transition: background-color 0.2s; }
+    .btn-primary:hover { background-color: var(--primary-color-darker); }
+    .text-primary { color: var(--primary-color); }
+    .border-primary { border-color: var(--primary-color); }
+    .focus-primary:focus { border-color: var(--primary-color) !important; box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.4) !important; }
+    .scroll-container { overflow: auto; scrollbar-width: thin; scrollbar-color: transparent transparent; transition: scrollbar-color 0.3s ease; }
+    .scroll-container:hover { scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
+    .scroll-container::-webkit-scrollbar { width: 8px; height: 8px; background-color: transparent; }
+    .scroll-container::-webkit-scrollbar-track { background: transparent; border-radius: 4px; }
+    .scroll-container::-webkit-scrollbar-thumb { background-color: transparent; border-radius: 4px; border: 2px solid transparent; background-clip: padding-box; }
+    .scroll-container:hover::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    .scroll-container:hover::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); }
+    .scroll-container::-webkit-scrollbar-thumb:hover { background-color: #a0a0a0; }
+    .kanban-board { scrollbar-gutter: stable; }
+    .modal-overlay { transition: opacity 0.2s ease-in-out; }
+    .modal-panel { transition: transform 0.2s ease-in-out; }
+    .phase-title { font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .table-header-primary th { color: var(--primary-color); font-weight: 700; }
+    .table-border-primary { border-top: 4px solid var(--primary-color); }
+    .compact-table td { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .split-modal { display: flex; height: 60vh; }
+    .split-modal-left { flex: 1; overflow-y: auto; padding: 1rem; border-right: 1px solid #e5e7eb; }
+    .split-modal-right { flex: 1; overflow-y: auto; padding: 0; }
+    .split-modal-right iframe { width: 100%; height: 100%; border: none; }
+    /* Estilo para a calculadora arrastável */
+    #calculatorModalHeader { cursor: move; }
   </style>
 </head>
 <body class="text-gray-800">
 
   <div class="flex flex-col h-screen">
-    <!-- Cabeçalho Principal -->
     <header class="bg-primary text-white flex-shrink-0">
       <div class="flex justify-between items-center px-4 py-3">
         <div class="flex items-center gap-4">
@@ -160,7 +68,6 @@
               <p id="user-name" class="font-bold text-sm">Utilizador Kovi</p>
               <p id="user-email" class="text-xs">A carregar...</p>
           </div>
-          <!-- Botão de Logoff -->
           <button id="logout-btn" class="text-white hover:text-gray-200 ml-2 flex items-center gap-1 text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
               <path d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
@@ -172,18 +79,17 @@
       </div>
     </header>
     
-    <!-- Barra de Controles -->
     <div class="py-3 bg-white border-b border-gray-200 flex-shrink-0">
         <div class="flex justify-between items-center px-4">
             <div class="flex items-center border border-gray-300 rounded-lg p-1 bg-gray-100">
-              <button id="kanban-view-btn" class="control-btn active px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
-                Kanban
-              </button>
-              <button id="list-view-btn" class="control-btn px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
-                Lista
-              </button>
+                <button id="kanban-view-btn" class="control-btn active px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+                    Kanban
+                </button>
+                <button id="list-view-btn" class="control-btn px-3 py-1 text-sm font-medium rounded-md flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                    Lista
+                </button>
             </div>
             <div class="flex items-center gap-4">
                 <select id="slaFilter" class="text-sm border border-gray-300 rounded-md p-2 focus-primary">
@@ -193,17 +99,19 @@
                     <option value="Atrasado">Atrasado</option>
                 </select>
                 <div class="relative">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                  <input type="search" id="searchInput" placeholder="Procurar cards..." class="w-64 p-2 pl-10 text-sm border border-gray-300 rounded-md focus-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="search" id="searchInput" placeholder="Procurar cards..." class="w-64 p-2 pl-10 text-sm border border-gray-300 rounded-md focus-primary">
                 </div>
+                <button id="openCalculatorBtn" class="btn-primary px-3 py-2 text-sm font-medium rounded-md flex items-center gap-2 hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/><path d="M4 2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5zM4.5 9a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5M4.5 11a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5m.5-2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5"/></svg>
+                    Calculadora KM
+                </button>
             </div>
         </div>
     </div>
 
 
-    <!-- Conteúdo Principal -->
     <main class="flex-1 flex overflow-hidden">
-      <!-- Indicador de Carregamento -->
       <div id="loading-indicator" class="flex flex-col items-center justify-center w-full h-full">
         <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -212,14 +120,11 @@
         <p id="loading-text" class="mt-2 text-gray-600">A carregar dados...</p>
       </div>
       
-      <!-- Visualização Kanban (inicialmente oculta) -->
       <div id="kanban-view" class="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-4 hidden scroll-container">
         <div id="kanban-container" class="flex gap-4">
-            <!-- As colunas serão inseridas aqui pelo JavaScript -->
-        </div>
+            </div>
       </div>
       
-      <!-- Visualização em Lista (inicialmente oculta) -->
       <div id="list-view" class="h-full w-full p-4 hidden">
         <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
           <table class="w-full text-sm text-left text-gray-500">
@@ -234,15 +139,13 @@
               </tr>
             </thead>
             <tbody id="list-container" class="bg-white compact-table">
-              <!-- As linhas serão inseridas aqui pelo JavaScript -->
-            </tbody>
+              </tbody>
           </table>
         </div>
       </div>
     </main>
   </div>
 
-  <!-- Modal de Detalhes -->
   <div id="cardModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
     <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-5xl transform scale-95 opacity-0">
       <div class="flex justify-between items-center p-4 border-b">
@@ -263,6 +166,13 @@
     </div>
   </div>
 
+  <div id="calculatorModal" class="fixed top-1/4 left-1/3 bg-white rounded-lg shadow-2xl z-50 hidden" style="width: 400px; height: 600px; resize: both; overflow: hidden;">
+      <div id="calculatorModalHeader" class="h-8 bg-primary rounded-t-lg flex justify-end items-center pr-2">
+          <button id="closeCalculatorModal" class="text-white font-bold text-xl leading-none hover:text-gray-300">&times;</button>
+      </div>
+      <iframe id="calculatorIframe" src="about:blank" class="w-full border-0" style="height: calc(100% - 32px);"></iframe>
+  </div>
+
   <script>
     // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; 
@@ -270,7 +180,6 @@
     // VERIFICAÇÃO DE LOGIN
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user) {
-      // Se não houver usuário, redireciona para a página de login
       window.location.href = 'login.html';
     }
 
@@ -283,7 +192,6 @@
       'Confirmação de Entrega no Pátio'
     ];
 
-    // Mapeamento de fases para exibição
     const phaseDisplayNames = {
       'Fila de Recolha': 'Fila de Recolha',
       'Tentativa 1 de Recolha': 'Tentativa 1',
@@ -362,12 +270,10 @@
         if (!container) return;
         let html = '';
         
-        // Filtrar apenas as fases desejadas
         const filteredCards = cards.filter(card => 
             fixedPhaseOrder.includes(card.faseAtual)
         );
         
-        // Ordenar por SLA decrescente
         filteredCards.sort((a, b) => b.sla - a.sla);
         
         if (filteredCards.length > 0) {
@@ -431,6 +337,7 @@
       document.getElementById('user-email').textContent = user.email;
       document.getElementById('user-avatar').src = user.photoURL;
 
+      // Elementos DOM
       const searchInput = document.getElementById('searchInput');
       const slaFilter = document.getElementById('slaFilter');
       const kanbanView = document.getElementById('kanban-view');
@@ -438,13 +345,22 @@
       const loadingIndicator = document.getElementById('loading-indicator');
       const kanbanBtn = document.getElementById('kanban-view-btn');
       const listBtn = document.getElementById('list-view-btn');
-      const cardModal = document.getElementById('cardModal');
-      const closeCardModalBtn = document.getElementById('closeCardModal');
-      const modalFormIframe = document.getElementById('modalFormIframe');
       const mainContent = document.querySelector('main');
       const logoutBtn = document.getElementById('logout-btn');
 
-      // Adiciona o event listener para os cards e botões de formulário
+      // Elementos do Modal de Detalhes
+      const cardModal = document.getElementById('cardModal');
+      const closeCardModalBtn = document.getElementById('closeCardModal');
+      const modalFormIframe = document.getElementById('modalFormIframe');
+
+      // Elementos do Modal da Calculadora
+      const openCalculatorBtn = document.getElementById('openCalculatorBtn');
+      const calculatorModal = document.getElementById('calculatorModal');
+      const closeCalculatorModalBtn = document.getElementById('closeCalculatorModal');
+      const calculatorIframe = document.getElementById('calculatorIframe');
+      const calculatorModalHeader = document.getElementById('calculatorModalHeader');
+
+      // Evento de clique unificado para a área principal (cards)
       mainContent.addEventListener('click', function(event) {
         const target = event.target;
         const formButton = target.closest('.open-form-btn');
@@ -473,7 +389,7 @@
           const matchesSla = (currentSlaFilter === 'all') || (slaText === currentSlaFilter);
           const shouldBeVisible = matchesSearch && matchesSla;
           if (item.classList.contains('kanban-card')) {
-            item.style.display = shouldBeVisible ? 'block' : 'none';
+            item.style.display = shouldBeVisible ? 'flex' : 'none'; // 'flex' para manter a estrutura do card
           } else if (item.classList.contains('table-list-item')) {
             item.style.display = shouldBeVisible ? 'table-row' : 'none';
           }
@@ -509,7 +425,6 @@
         document.getElementById('modalPlaca').textContent = data.placa;
         document.getElementById('modal-content').innerHTML = buildModalContent(data);
         
-        // Carregar o formulário no iframe
         if (data.formUrl && data.formUrl !== 'null') {
           modalFormIframe.src = data.formUrl;
         } else {
@@ -540,10 +455,19 @@
       function onDataRefreshed(sheetData) {
         buildUI(sheetData.cards);
         console.log("Dados atualizados em: " + sheetData.lastUpdate);
+
+        // LÓGICA PARA EXIBIR O BOTÃO DA CALCULADORA
+        const permission = sheetData.permissionType.toLowerCase();
+        if (permission === 'kovi' || permission === 'onsystem') {
+            openCalculatorBtn.classList.remove('hidden');
+            openCalculatorBtn.classList.add('flex');
+        } else {
+            openCalculatorBtn.classList.add('hidden');
+            openCalculatorBtn.classList.remove('flex');
+        }
       }
       
       function fetchData() {
-          // Adiciona o e-mail do usuário como um parâmetro na URL
           const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${new Date().getTime()}`;
           fetch(url)
               .then(response => {
@@ -557,13 +481,16 @@
                       throw new Error(data.error);
                   }
                   loadingIndicator.style.display = 'none';
-                  kanbanView.classList.remove('hidden');
-                  kanbanView.classList.add('flex');
-                  onDataRefreshed(data);
+                  // Mostra a view Kanban por padrão se nenhuma estiver visível
+                  if (kanbanView.classList.contains('hidden') && listView.classList.contains('hidden')) {
+                      kanbanView.classList.remove('hidden');
+                      kanbanView.classList.add('flex');
+                  }
+                  onDataRefreshed(data); 
               })
               .catch(err => {
                   console.error("Falha ao carregar dados:", err);
-                  loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha, o URL da API e a configuração de implantação.</p>`;
+                  loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados: ${err.message}. Verifique as permissões, o URL da API e a implantação.</p>`;
               });
       }
 
@@ -577,9 +504,76 @@
       cardModal.addEventListener('click', e => { if (e.target === cardModal) closeCardModal(); });
       logoutBtn.addEventListener('click', logout);
 
-      fetchData(); // Carregamento inicial
 
-      setInterval(fetchData, 10000); // Atualiza a cada 30 segundos
+      // --- LÓGICA PARA O MODAL DA CALCULADORA ---
+
+      // Abrir o modal da calculadora
+      openCalculatorBtn.addEventListener('click', () => {
+          const calculatorUrl = 'https://script.google.com/macros/s/AKfycby2GNQtDNhAuH_e66A4PJxETKIXHiojHseCqfJfJuAycLbw7wZk2GgBAXTUHSUO5g/exec';
+          if (calculatorIframe.src !== calculatorUrl) {
+              calculatorIframe.src = calculatorUrl;
+          }
+          calculatorModal.classList.remove('hidden');
+      });
+      
+      // Função para fechar o modal da calculadora
+      const closeCalculatorModal = () => {
+          calculatorModal.classList.add('hidden');
+          calculatorIframe.src = 'about:blank'; // Libera recursos do iframe
+      };
+      
+      // Evento no botão de fechar (X) do modal da calculadora
+      closeCalculatorModalBtn.addEventListener('click', closeCalculatorModal);
+
+      // Ouvir mensagem do iframe para fechar o modal (quando o botão de fechar de DENTRO da calculadora é clicado)
+      window.addEventListener('message', (event) => {
+          if (event.data && event.data.action === 'fecharModal') {
+              closeCalculatorModal();
+          }
+      });
+      
+      // Função para tornar o modal da calculadora arrastável
+      let isDragging = false;
+      let offsetX, offsetY;
+
+      calculatorModalHeader.addEventListener('mousedown', (e) => {
+          // Ignora se o clique foi no botão de fechar
+          if (e.target.id === 'closeCalculatorModal') return;
+          
+          isDragging = true;
+          offsetX = e.clientX - calculatorModal.offsetLeft;
+          offsetY = e.clientY - calculatorModal.offsetTop;
+          
+          // Previne a seleção de texto indesejada enquanto arrasta
+          document.body.style.userSelect = 'none';
+      });
+
+      document.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          e.preventDefault();
+          
+          let newX = e.clientX - offsetX;
+          let newY = e.clientY - offsetY;
+
+          // Limita o movimento para dentro da janela do navegador
+          const maxX = window.innerWidth - calculatorModal.offsetWidth;
+          const maxY = window.innerHeight - calculatorModal.offsetHeight;
+          
+          newX = Math.max(0, Math.min(newX, maxX));
+          newY = Math.max(0, Math.min(newY, maxY));
+          
+          calculatorModal.style.left = `${newX}px`;
+          calculatorModal.style.top = `${newY}px`;
+      });
+
+      document.addEventListener('mouseup', () => {
+          isDragging = false;
+          document.body.style.userSelect = ''; // Restaura o comportamento padrão
+      });
+
+      // Carregamento inicial dos dados
+      fetchData(); 
+      setInterval(fetchData, 10000); // Atualiza a cada 10 segundos
     });
   </script>
 
