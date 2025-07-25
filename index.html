@@ -331,21 +331,37 @@
 
     const fixedPhaseOrder = [
       'Fila de Recolha',
+      'Aprovar Custo de Recolha',
       'Tentativa 1 de Recolha',
       'Tentativa 2 de Recolha',
       'Tentativa 3 de Recolha',
       'Nova tentativa de recolha',
+      'Desbloquear Veículo',
+      'Solicitar Guincho',
       'Confirmação de Entrega no Pátio'
     ];
 
     // Mapeamento de fases para exibição
     const phaseDisplayNames = {
       'Fila de Recolha': 'Fila de Recolha',
+      'Aprovar Custo de Recolha': 'Aprovar Custo',
       'Tentativa 1 de Recolha': 'Tentativa 1',
       'Tentativa 2 de Recolha': 'Tentativa 2',
       'Tentativa 3 de Recolha': 'Tentativa 3',
       'Nova tentativa de recolha': 'Nova Tentativa',
+      'Desbloquear Veículo': 'Desbloquear Veículo',
+      'Solicitar Guincho': 'Solicitar Guincho',
       'Confirmação de Entrega no Pátio': 'Confirmação de Recolha'
+    };
+
+    // Fases que devem ter cards desabilitados (não clicáveis)
+    const disabledPhases = ['Aprovar Custo de Recolha', 'Desbloquear Veículo', 'Solicitar Guincho'];
+
+    // Mensagens para as fases desabilitadas
+    const disabledPhaseMessages = {
+      'Aprovar Custo de Recolha': 'Aguarde enquanto a Kovi analisa a cotação enviada',
+      'Desbloquear Veículo': 'Aguarde enquanto a Kovi efetua o desbloqueio do veículo',
+      'Solicitar Guincho': 'Aguarde enquanto a Kovi analisa a solicitação de desbloqueio'
     };
 
     function buildUI(cards) {
@@ -368,12 +384,18 @@
             const cardsInPhase = phases[phaseName];
             const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
             const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
+            const isDisabledPhase = disabledPhases.includes(phaseName);
+            
+            // Estilos diferentes para fases desabilitadas
+            const headerBorderClass = isDisabledPhase ? 'border-gray-400' : 'border-primary';
+            const headerTextClass = isDisabledPhase ? 'text-gray-400' : 'text-primary';
+            
             html += `
                 <div class="w-64 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
-                    <div class="p-3 flex items-center bg-white rounded-t-lg border-t-4 border-primary">
-                        <h2 class="phase-title text-primary">${displayPhaseName}</h2>
+                    <div class="p-3 flex items-center bg-white rounded-t-lg border-t-4 ${headerBorderClass}">
+                        <h2 class="phase-title ${headerTextClass}">${displayPhaseName}</h2>
                         <span class="text-sm font-semibold text-gray-500 bg-gray-200 rounded-md px-2 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
-                        ${lateOrAlertCount > 0 ? `<span class="ml-auto flex items-center text-amber-600 font-semibold text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${lateOrAlertCount}</span>` : ''}
+                        ${!isDisabledPhase && lateOrAlertCount > 0 ? `<span class="ml-auto flex items-center text-amber-600 font-semibold text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${lateOrAlertCount}</span>` : ''}
                     </div>
                     <div class="flex-1 p-2 space-y-2 overflow-y-auto scroll-container">
                         ${cardsInPhase.length > 0 ? cardsInPhase.map(card => buildCardHTML(card)).join('') : `<div class="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4"><p class="text-sm font-medium">Não há recolha nesta fase.</p></div>`}
@@ -384,6 +406,38 @@
     }
 
     function buildCardHTML(card) {
+        const isDisabled = disabledPhases.includes(card.faseAtual);
+        
+        if (isDisabled) {
+            // Card desabilitado para fases específicas
+            const message = disabledPhaseMessages[card.faseAtual];
+            return `
+                <div class="kanban-card bg-gray-200 rounded-md shadow-sm border border-gray-300 flex flex-col h-56 opacity-70 cursor-not-allowed">
+                    <div class="p-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs bg-gray-300 text-gray-500 font-medium px-2 py-0.5 rounded-full truncate">${card.origemLocacao}</span>
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-300 text-gray-500">Processando</span>
+                        </div>
+                        <h3 class="font-bold text-gray-500 card-placa truncate">${card.placa}</h3>
+                    </div>
+                    <div class="flex-grow px-3 space-y-1 text-sm">
+                        <p class="text-gray-400 card-driver truncate"><span class="font-semibold text-gray-500">DRIVER:</span> ${card.nomeDriver}</p>
+                        <p class="text-gray-400 truncate"><span class="font-semibold text-gray-500">MODELO:</span> ${card.modeloVeiculo}</p>
+                        ${card.faseAtual !== 'Fila de Recolha' ? `<p class="text-gray-400 card-chofer truncate"><span class="font-semibold text-gray-500">CHOFER:</span> ${card.chofer}</p>` : ''}
+                    </div>
+                    <div class="p-3 flex items-center justify-center border-t border-gray-300">
+                        <div class="flex items-center text-xs text-gray-500 font-medium">
+                            <svg class="animate-spin mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-center">${message}</span>
+                        </div>
+                    </div>
+                </div>`;
+        }
+        
+        // Card normal para outras fases
         let slaColor = '', slaText = '';
         if (card.sla >= 3) { slaColor = 'bg-red-100 text-red-700'; slaText = 'Atrasado'; }
         else if (card.sla == 2) { slaColor = 'bg-yellow-100 text-yellow-700'; slaText = 'Em Alerta'; }
@@ -422,11 +476,16 @@
             fixedPhaseOrder.includes(card.faseAtual)
         );
         
-        // Ordenar por SLA decrescente
-        filteredCards.sort((a, b) => b.sla - a.sla);
+        // Separar cards normais dos desabilitados
+        const normalCards = filteredCards.filter(card => !disabledPhases.includes(card.faseAtual));
+        const disabledCards = filteredCards.filter(card => disabledPhases.includes(card.faseAtual));
+        
+        // Ordenar cards normais por SLA decrescente
+        normalCards.sort((a, b) => b.sla - a.sla);
         
         if (filteredCards.length > 0) {
-            filteredCards.forEach(card => {
+            // Primeiro, renderizar cards normais
+            normalCards.forEach(card => {
                 let slaText = '', slaBg = '';
                 if (card.sla >= 3) { slaBg = 'bg-red-100'; slaText = 'Atrasado'; }
                 else if (card.sla == 2) { slaBg = 'bg-yellow-100'; slaText = 'Em Alerta'; }
@@ -440,6 +499,29 @@
                         <td class="px-6 py-2">${displayPhase}</td>
                         <td class="px-6 py-2">${card.dataCriacao}</td>
                         <td class="px-6 py-2 text-center font-bold text-lg">${card.sla}</td>
+                    </tr>`;
+            });
+            
+            // Depois, renderizar cards desabilitados (sempre no final)
+            disabledCards.forEach(card => {
+                const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
+                const message = disabledPhaseMessages[card.faseAtual];
+                html += `
+                    <tr class="table-list-item border-b bg-gray-100 opacity-70 cursor-not-allowed">
+                        <td class="px-6 py-2 font-bold text-gray-500 card-placa">${card.placa}</td>
+                        <td class="px-6 py-2 text-gray-500 card-driver">${card.nomeDriver}</td>
+                        <td class="px-6 py-2 text-gray-500 card-chofer">${card.chofer}</td>
+                        <td class="px-6 py-2 text-gray-500">${displayPhase}</td>
+                        <td class="px-6 py-2 text-gray-500">${card.dataCriacao}</td>
+                        <td class="px-6 py-2 text-center">
+                            <div class="flex items-center justify-center">
+                                <svg class="animate-spin h-4 w-4 text-gray-500 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span class="text-xs text-gray-500">Processando</span>
+                            </div>
+                        </td>
                     </tr>`;
             });
         }
@@ -556,6 +638,15 @@
       // Adiciona o event listener para os cards e botões de formulário
       mainContent.addEventListener('click', function(event) {
         const target = event.target;
+        
+        // Verifica se o clique foi em um card desabilitado
+        const clickedElement = target.closest('.kanban-card, .table-list-item');
+        if (clickedElement && clickedElement.classList.contains('cursor-not-allowed')) {
+          event.preventDefault();
+          event.stopPropagation();
+          return; // Não faz nada se o card estiver desabilitado
+        }
+        
         const formButton = target.closest('.open-form-btn');
         if (formButton) {
           event.stopPropagation();
@@ -573,6 +664,8 @@
       function filterAndSearch() {
         const searchTerm = searchInput.value.toLowerCase();
         const currentSlaFilter = slaFilter.value;
+        
+        // Filtrar cards normais (com data-item)
         document.querySelectorAll('.data-item').forEach(item => {
           const placa = item.dataset.placa.toLowerCase();
           const driver = item.dataset.driver.toLowerCase();
@@ -587,6 +680,21 @@
             item.style.display = shouldBeVisible ? 'table-row' : 'none';
           }
         });
+        
+        // Filtrar cards desabilitados (sem data-item) apenas por busca de texto
+        document.querySelectorAll('.kanban-card:not(.data-item), .table-list-item:not(.data-item)').forEach(item => {
+          const textContent = item.textContent.toLowerCase();
+          const matchesSearch = textContent.includes(searchTerm);
+          // Cards desabilitados não têm SLA, então sempre passam no filtro de SLA
+          const shouldBeVisible = matchesSearch;
+          if (item.classList.contains('kanban-card')) {
+            item.style.display = shouldBeVisible ? 'block' : 'none';
+          } else if (item.classList.contains('table-list-item')) {
+            item.style.display = shouldBeVisible ? 'table-row' : 'none';
+          }
+        });
+        
+        // Atualizar contadores das colunas
         document.querySelectorAll('#kanban-view .w-64').forEach(column => {
           const visibleCards = column.querySelectorAll('.kanban-card:not([style*="display: none"])').length;
           const countElement = column.querySelector('.card-count');
