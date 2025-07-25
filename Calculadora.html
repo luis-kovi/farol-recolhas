@@ -1,45 +1,131 @@
-<div id="calculator-modal-content" class="w-full max-w-sm bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col">
-    
-    <div id="calculator-modal-header" class="flex justify-between items-center p-3 bg-gray-50 border-b border-gray-200 rounded-t-xl" style="cursor: move;">
-        <h3 class="text-base font-bold text-gray-700">Calculadora de Distância</h3>
-        <button id="close-calculator-btn" title="Fechar Calculadora" class="text-gray-400 hover:text-red-600 text-2xl font-bold">&times;</button>
-    </div>
+/**
+ * @OnlyCurrentDoc
+ */
 
-    <div class="p-4">
-        <div class="logo text-center mb-3">
-          <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="mx-auto h-8">
-        </div>
-        
-        <div>
-            <label for="origem" class="block text-sm font-medium text-gray-700 mb-1">Coordenadas de Origem</label>
-            <input type="text" id="origem" placeholder="-23.188186-46.894350" class="w-full p-2 border border-gray-300 rounded-md focus-primary" />
-            <div id="enderecoOrigem" class="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded-md" style="display: none;"></div>
-        </div>
+/**
+ * Lida com as requisições GET da sua aplicação.
+ * AGORA INCLUI VALIDAÇÃO DE USUÁRIO E FILTROS POR PERMISSÃO.
+ * @param {Object} e O objeto de evento da requisição.
+ * @returns {ContentService.TextOutput} Os dados dos cards ou um erro de autorização.
+ */
+function doGet(e) {
+  e = e || { parameter: {} };
+  e.parameter = e.parameter || {};
 
-        <div class="mt-3">
-            <label for="destino" class="block text-sm font-medium text-gray-700 mb-1">Unidade de Destino</label>
-            <select id="destino" class="w-full p-2 border border-gray-300 rounded-md focus-primary">
-              <option value="">Selecione...</option>
-              <option value="-23.6713803,-46.706649">Kovi São Paulo (Jurubatuba)</option>
-              <option value="-29.9879565,-51.1660061">Kovi Porto Alegre</option>
-              <option value="-22.9310024,-47.081593">Kovi Campinas</option>
-              <option value="-23.9774346,-46.3120985">Kovi Santos</option>
-              <option value="-15.8313137,-48.0379609">Kovi Brasília</option>
-              <option value="-3.7946021,-38.4821463">Kovi Fortaleza</option>
-              <option value="-8.1290838,-34.9037255">Kovi Recife</option>
-              <option value="-27.5984641,-48.6214476">Kovi Florianópolis</option>
-            </select>
-        </div>
+  if (e.parameter.action === 'calcular') {
+    return handleCalculatorRequest(e);
+  }
 
-        <button id="calculate-btn" class="w-full btn-primary text-white font-bold py-2 px-4 rounded-md transition duration-300 mt-4">Calcular</button>
+  const userEmail = e.parameter.email;
+  const userPermission = checkUserPermission(userEmail);
 
-        <div id="loading-calculator" class="text-center mt-3" style="display: none;">
-            <svg class="animate-spin h-6 w-6 text-primary mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-        </div>
+  if (!userPermission.authorized) {
+    const errorData = {
+      error: "Acesso não autorizado. Verifique se o seu e-mail está na lista de permissões da planilha.",
+      cards: []
+    };
+    return ContentService.createTextOutput(JSON.stringify(errorData))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 
-        <div id="result-calculator" class="mt-3 p-3 bg-gray-50 border-l-4 border-primary text-sm" style="display: none; word-wrap: break-word;"></div>
-    </div>
-</div>
+  const data = getGoogleSheetData(userPermission.permissionType);
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Lida com as requisições da calculadora
+ */
+function handleCalculatorRequest(e) {
+  const origem = e.parameter.origem;
+  const destino = e.parameter.destino;
+  const resultado = calcularDistanciaEEndereco(origem, destino);
+  return ContentService.createTextOutput(resultado)
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Busca e processa os dados da planilha "Cards" com filtro por permissão.
+ */
+function getGoogleSheetData(permissionType) {
+  const spreadsheetId = '1MO_MqQgyoxpaqgwmLjXttxAa3_YckweKTj1CGlBouA8';
+  const sheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName('Cards');
+  if (!sheet) throw new Error('Aba "Cards" não encontrada');
+
+  const values = sheet.getDataRange().getValues();
+  const headers = values.shift();
+  const mapIdx = headers.reduce((m,h,i)=>{m[h.trim()]=i;return m;},{ });
+  const hoje = new Date();
+
+  const cards = values.map(row=>{
+    const dataCri = row[mapIdx['Data Criação']];
+    const sla = dataCri instanceof Date ? Math.floor((hoje - dataCri)/(1000*60*60*24)) : 0;
+    return { /* ...outros campos...*/ sla };
+  }).filter(c=> permissionType.toLowerCase()==='kovi' || c.empresaResponsavel===permissionType.toLowerCase());
+
+  return { cards, lastUpdate: Utilities.formatDate(hoje,'America/Sao_Paulo','dd/MM/yyyy HH:mm:ss') };
+}
+
+/**
+ * Verifica permissão de usuário
+ */
+function checkUserPermission(email) {
+  if (!email) return { authorized:false, permissionType:null };
+  try {
+    const rows = SpreadsheetApp.openById('1MO_MqQgyoxpaqgwmLjXttxAa3_YckweKTj1CGlBouA8')
+      .getSheetByName('Usuarios')
+      .getRange(2,1,SpreadsheetApp.getActive().getLastRow()-1,2)
+      .getValues();
+    for (const [e,perm] of rows) if (e && e.toLowerCase().trim()===email.toLowerCase()) return {authorized:true,permissionType:perm||'ativa'};
+  } catch(e){}
+  return { authorized:false, permissionType:null };
+}
+
+/**
+ * Calcula distância e busca endereço
+ */
+function calcularDistanciaEEndereco(orig, dest) {
+  const [latO,lonO]=orig.split(',').map(Number);
+  const [latD,lonD]=dest.split(',').map(Number);
+  const routeToken=PropertiesService.getScriptProperties().getProperty('OPEN_ROUTE_TOKEN');
+  const cageToken=PropertiesService.getScriptProperties().getProperty('OPEN_CAGE_TOKEN');
+  if(!routeToken||!cageToken) return JSON.stringify({error:'Tokens não configurados.'});
+
+  let res={endereco:'',distanciaHtml:'',error:''};
+  try{
+    const geo=JSON.parse(UrlFetchApp.fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latO}+${lonO}&key=${cageToken}`).getContentText());
+    res.endereco=geo.results[0]?.formatted||'Não encontrado';
+  }catch(e){res.endereco='Erro geocodificação'}
+  try{
+    const obj=JSON.parse(UrlFetchApp.fetch('https://api.openrouteservice.org/v2/directions/driving-car',{
+      method:'post',contentType:'application/json',payload:JSON.stringify({coordinates:[[lonO,latO],[lonD,latD]]}),
+      headers:{Authorization:routeToken}
+    }).getContentText());
+    const km=obj.routes[0].summary.distance/1000;const tot=km*2;const exc=Math.max(0,tot-40);
+    res.distanciaHtml=`📍 Ida: <b>${km.toFixed(2)} km</b><br>🔄 Total: <b>${tot.toFixed(2)} km</b><br>🎯 Exc: <b>${exc.toFixed(2)} km</b><br>💰 R$ ${(exc*2).toFixed(2)}`;
+  }catch(e){res.error='Erro rota'}
+  return JSON.stringify(res);
+}
+
+/**
+ * Adiciona menu ao abrir
+ */
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu('📏 KM adicional')
+    .addItem('Abrir calculadora','abrirCalculadora')
+    .addToUi();
+}
+
+/**
+ * Abre o modal da calculadora com tratamento de erro
+ */
+function abrirCalculadora() {
+  try {
+    const html = HtmlService.createHtmlOutputFromFile('Calculadora')
+      .setWidth(480)
+      .setHeight(580);
+    SpreadsheetApp.getUi().showModalDialog(html, 'Calculadora KM');
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Não foi possível abrir a calculadora: ' + err.message);
+  }
+}
