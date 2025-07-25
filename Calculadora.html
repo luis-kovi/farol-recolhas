@@ -60,7 +60,7 @@ function getGoogleSheetData(permissionType) {
   const cards = values.map(row=>{
     const dataCri = row[mapIdx['Data Criação']];
     const sla = dataCri instanceof Date ? Math.floor((hoje - dataCri)/(1000*60*60*24)) : 0;
-    return { /* ...outros campos...*/ sla };
+    return { sla, empresaResponsavel: (row[mapIdx['Empresa Responsável']]||'').toString().toLowerCase().trim() };
   }).filter(c=> permissionType.toLowerCase()==='kovi' || c.empresaResponsavel===permissionType.toLowerCase());
 
   return { cards, lastUpdate: Utilities.formatDate(hoje,'America/Sao_Paulo','dd/MM/yyyy HH:mm:ss') };
@@ -72,12 +72,18 @@ function getGoogleSheetData(permissionType) {
 function checkUserPermission(email) {
   if (!email) return { authorized:false, permissionType:null };
   try {
-    const rows = SpreadsheetApp.openById('1MO_MqQgyoxpaqgwmLjXttxAa3_YckweKTj1CGlBouA8')
-      .getSheetByName('Usuarios')
-      .getRange(2,1,SpreadsheetApp.getActive().getLastRow()-1,2)
-      .getValues();
-    for (const [e,perm] of rows) if (e && e.toLowerCase().trim()===email.toLowerCase()) return {authorized:true,permissionType:perm||'ativa'};
-  } catch(e){}
+    const ss = SpreadsheetApp.openById('1MO_MqQgyoxpaqgwmLjXttxAa3_YckweKTj1CGlBouA8');
+    const sheet = ss.getSheetByName('Usuarios');
+    if (!sheet) throw new Error('Aba "Usuarios" não encontrada');
+    const rows = sheet.getRange(2,1,sheet.getLastRow()-1,2).getValues();
+    for (const [e,perm] of rows) {
+      if (e && e.toString().toLowerCase().trim()===email.toLowerCase()) {
+        return { authorized:true, permissionType: perm ? perm.toString().trim() : 'ativa' };
+      }
+    }
+  } catch (err) {
+    Logger.log('Erro ao verificar permissão: ' + err.toString());
+  }
   return { authorized:false, permissionType:null };
 }
 
@@ -85,25 +91,44 @@ function checkUserPermission(email) {
  * Calcula distância e busca endereço
  */
 function calcularDistanciaEEndereco(orig, dest) {
-  const [latO,lonO]=orig.split(',').map(Number);
-  const [latD,lonD]=dest.split(',').map(Number);
-  const routeToken=PropertiesService.getScriptProperties().getProperty('OPEN_ROUTE_TOKEN');
-  const cageToken=PropertiesService.getScriptProperties().getProperty('OPEN_CAGE_TOKEN');
-  if(!routeToken||!cageToken) return JSON.stringify({error:'Tokens não configurados.'});
+  const [latO,lonO] = orig.split(',').map(Number);
+  const [latD,lonD] = dest.split(',').map(Number);
+  const routeToken = PropertiesService.getScriptProperties().getProperty('OPEN_ROUTE_TOKEN');
+  const cageToken = PropertiesService.getScriptProperties().getProperty('OPEN_CAGE_TOKEN');
+  if (!routeToken || !cageToken) return JSON.stringify({ error:'Tokens não configurados.' });
 
-  let res={endereco:'',distanciaHtml:'',error:''};
-  try{
-    const geo=JSON.parse(UrlFetchApp.fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latO}+${lonO}&key=${cageToken}`).getContentText());
-    res.endereco=geo.results[0]?.formatted||'Não encontrado';
-  }catch(e){res.endereco='Erro geocodificação'}
-  try{
-    const obj=JSON.parse(UrlFetchApp.fetch('https://api.openrouteservice.org/v2/directions/driving-car',{
-      method:'post',contentType:'application/json',payload:JSON.stringify({coordinates:[[lonO,latO],[lonD,latD]]}),
-      headers:{Authorization:routeToken}
-    }).getContentText());
-    const km=obj.routes[0].summary.distance/1000;const tot=km*2;const exc=Math.max(0,tot-40);
-    res.distanciaHtml=`📍 Ida: <b>${km.toFixed(2)} km</b><br>🔄 Total: <b>${tot.toFixed(2)} km</b><br>🎯 Exc: <b>${exc.toFixed(2)} km</b><br>💰 R$ ${(exc*2).toFixed(2)}`;
-  }catch(e){res.error='Erro rota'}
+  let res = { endereco:'', distanciaHtml:'', error:'' };
+  try {
+    const geoRes = UrlFetchApp.fetch(
+      `https://api.opencagedata.com/geocode/v1/json?q=${latO}+${lonO}&key=${cageToken}&language=pt-br`
+    );
+    const geo = JSON.parse(geoRes.getContentText());
+    res.endereco = geo.results[0]?.formatted || 'Não encontrado';
+  } catch (err) {
+    res.endereco = 'Erro geocodificação: ' + err.toString();
+  }
+  try {
+    const directionRes = UrlFetchApp.fetch(
+      'https://api.openrouteservice.org/v2/directions/driving-car', {
+        method: 'post',
+        contentType: 'application/json',
+        payload: JSON.stringify({ coordinates:[[lonO,latO],[lonD,latD]] }),
+        headers: { Authorization: routeToken }
+      }
+    );
+    const obj = JSON.parse(directionRes.getContentText());
+    const km = obj.routes[0].summary.distance / 1000;
+    const tot = km * 2;
+    const exc = Math.max(0, tot - 40);
+    const custo = exc * 2.0;
+    res.distanciaHtml =
+      `📍 Ida: <b>${km.toFixed(2)} km</b><br>` +
+      `🔄 Total: <b>${tot.toFixed(2)} km</b><br>` +
+      `🎯 Exc: <b>${exc.toFixed(2)} km</b><br>` +
+      `💰 R$ ${custo.toFixed(2)}`;
+  } catch (err) {
+    res.error = 'Erro rota: ' + err.toString();
+  }
   return JSON.stringify(res);
 }
 
@@ -111,8 +136,9 @@ function calcularDistanciaEEndereco(orig, dest) {
  * Adiciona menu ao abrir
  */
 function onOpen() {
-  SpreadsheetApp.getUi().createMenu('📏 KM adicional')
-    .addItem('Abrir calculadora','abrirCalculadora')
+  SpreadsheetApp.getUi()
+    .createMenu('📏 KM adicional')
+    .addItem('Abrir calculadora', 'abrirCalculadora')
     .addToUi();
 }
 
@@ -120,12 +146,13 @@ function onOpen() {
  * Abre o modal da calculadora com tratamento de erro
  */
 function abrirCalculadora() {
+  const ui = SpreadsheetApp.getUi();
   try {
     const html = HtmlService.createHtmlOutputFromFile('Calculadora')
       .setWidth(480)
       .setHeight(580);
-    SpreadsheetApp.getUi().showModalDialog(html, 'Calculadora KM');
+    ui.showModalDialog(html, 'Calculadora KM');
   } catch (err) {
-    SpreadsheetApp.getUi().alert('Não foi possível abrir a calculadora: ' + err.message);
+    ui.alert('Não foi possível abrir a calculadora:\n' + err.toString());
   }
 }
