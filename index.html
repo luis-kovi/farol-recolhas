@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Recolhas - Kovi</title>
   <link rel="icon" type="image/png" href="https://i.ibb.co/ksMQSMQ2/web-app-manifest-192x192.png">
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Poppins e Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -47,42 +49,54 @@
       border-color: var(--primary-color) !important;
       box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.4) !important;
     }
+    
+    /* Estilos aprimorados para barra de rolagem */
     .scroll-container {
       overflow: auto;
       scrollbar-width: thin;
       scrollbar-color: transparent transparent;
       transition: scrollbar-color 0.3s ease;
     }
+    
     .scroll-container:hover {
       scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
     }
+    
+    /* WebKit (Chrome, Safari) */
     .scroll-container::-webkit-scrollbar {
       width: 8px;
       height: 8px;
       background-color: transparent;
     }
+    
     .scroll-container::-webkit-scrollbar-track {
       background: transparent;
       border-radius: 4px;
     }
+    
     .scroll-container::-webkit-scrollbar-thumb {
       background-color: transparent;
       border-radius: 4px;
       border: 2px solid transparent;
       background-clip: padding-box;
     }
+    
     .scroll-container:hover::-webkit-scrollbar-track {
       background: var(--scrollbar-track);
     }
+    
     .scroll-container:hover::-webkit-scrollbar-thumb {
       background-color: var(--scrollbar-thumb);
     }
+    
     .scroll-container::-webkit-scrollbar-thumb:hover {
       background-color: #a0a0a0;
     }
+    
     .kanban-board {
       scrollbar-gutter: stable;
     }
+    
     .modal-overlay {
       transition: opacity 0.2s ease-in-out;
     }
@@ -132,6 +146,7 @@
 <body class="text-gray-800">
 
   <div class="flex flex-col h-screen">
+    <!-- Cabeçalho Principal -->
     <header class="bg-primary text-white flex-shrink-0">
       <div class="flex justify-between items-center px-4 py-3">
         <div class="flex items-center gap-4">
@@ -139,25 +154,25 @@
           <span class="text-white opacity-50">/</span>
           <h1 class="text-lg font-semibold" style="font-family: 'Poppins', sans-serif; font-weight: 800;">Gestão de Recolhas</h1>
         </div>
-        <div class="flex items-center gap-4">
-          <button id="open-calculator-btn" title="Abrir Calculadora de Distância" class="hidden bg-white text-primary px-3 py-1.5 rounded-md text-sm font-semibold hover:bg-gray-100 transition flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8zM4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4z"/><path d="M4 2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-2zm0 4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-4z"/></svg>
-            Calculadora
-          </button>
-          
+        <div class="flex items-center gap-3">
           <img id="user-avatar" src="https://placehold.co/40x40/FFFFFF/FF355A?text=K" alt="Foto do Perfil" class="h-10 w-10 rounded-full">
           <div>
               <p id="user-name" class="font-bold text-sm">Utilizador Kovi</p>
               <p id="user-email" class="text-xs">A carregar...</p>
           </div>
+          <!-- Botão de Logoff -->
           <button id="logout-btn" class="text-white hover:text-gray-200 ml-2 flex items-center gap-1 text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/><path d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+              <path d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+            </svg>
             Sair
           </button>
         </div>
       </div>
     </header>
     
+    <!-- Barra de Controles -->
     <div class="py-3 bg-white border-b border-gray-200 flex-shrink-0">
         <div class="flex justify-between items-center px-4">
             <div class="flex items-center border border-gray-300 rounded-lg p-1 bg-gray-100">
@@ -186,7 +201,9 @@
     </div>
 
 
+    <!-- Conteúdo Principal -->
     <main class="flex-1 flex overflow-hidden">
+      <!-- Indicador de Carregamento -->
       <div id="loading-indicator" class="flex flex-col items-center justify-center w-full h-full">
         <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -195,11 +212,14 @@
         <p id="loading-text" class="mt-2 text-gray-600">A carregar dados...</p>
       </div>
       
+      <!-- Visualização Kanban (inicialmente oculta) -->
       <div id="kanban-view" class="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-4 hidden scroll-container">
         <div id="kanban-container" class="flex gap-4">
-            </div>
+            <!-- As colunas serão inseridas aqui pelo JavaScript -->
+        </div>
       </div>
       
+      <!-- Visualização em Lista (inicialmente oculta) -->
       <div id="list-view" class="h-full w-full p-4 hidden">
         <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
           <table class="w-full text-sm text-left text-gray-500">
@@ -214,13 +234,15 @@
               </tr>
             </thead>
             <tbody id="list-container" class="bg-white compact-table">
-              </tbody>
+              <!-- As linhas serão inseridas aqui pelo JavaScript -->
+            </tbody>
           </table>
         </div>
       </div>
     </main>
   </div>
 
+  <!-- Modal de Detalhes -->
   <div id="cardModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
     <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-5xl transform scale-95 opacity-0">
       <div class="flex justify-between items-center p-4 border-b">
@@ -242,12 +264,13 @@
   </div>
 
   <script>
-    // IMPORTANTE: Substitua pela URL da sua NOVA implantação do Apps Script
+    // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; 
 
     // VERIFICAÇÃO DE LOGIN
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user) {
+      // Se não houver usuário, redireciona para a página de login
       window.location.href = 'login.html';
     }
 
@@ -260,6 +283,7 @@
       'Confirmação de Entrega no Pátio'
     ];
 
+    // Mapeamento de fases para exibição
     const phaseDisplayNames = {
       'Fila de Recolha': 'Fila de Recolha',
       'Tentativa 1 de Recolha': 'Tentativa 1',
@@ -289,7 +313,8 @@
             const cardsInPhase = phases[phaseName];
             const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
             const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
-            html += `<div class="w-64 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
+            html += `
+                <div class="w-64 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
                     <div class="p-3 flex items-center bg-white rounded-t-lg border-t-4 border-primary">
                         <h2 class="phase-title text-primary">${displayPhaseName}</h2>
                         <span class="text-sm font-semibold text-gray-500 bg-gray-200 rounded-md px-2 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
@@ -308,7 +333,8 @@
         if (card.sla >= 3) { slaColor = 'bg-red-100 text-red-700'; slaText = 'Atrasado'; }
         else if (card.sla == 2) { slaColor = 'bg-yellow-100 text-yellow-700'; slaText = 'Em Alerta'; }
         else { slaColor = 'bg-green-100 text-green-700'; slaText = 'No Prazo'; }
-        return `<div class="kanban-card data-item bg-white rounded-md shadow-sm border border-gray-200 flex flex-col h-56 cursor-pointer hover:border-primary transition-all" ${buildDataAttributes(card)}>
+        return `
+            <div class="kanban-card data-item bg-white rounded-md shadow-sm border border-gray-200 flex flex-col h-56 cursor-pointer hover:border-primary transition-all" ${buildDataAttributes(card)}>
                 <div class="p-3">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-xs bg-gray-200 text-gray-600 font-medium px-2 py-0.5 rounded-full truncate">${card.origemLocacao}</span>
@@ -336,10 +362,12 @@
         if (!container) return;
         let html = '';
         
+        // Filtrar apenas as fases desejadas
         const filteredCards = cards.filter(card => 
             fixedPhaseOrder.includes(card.faseAtual)
         );
         
+        // Ordenar por SLA decrescente
         filteredCards.sort((a, b) => b.sla - a.sla);
         
         if (filteredCards.length > 0) {
@@ -349,7 +377,8 @@
                 else if (card.sla == 2) { slaBg = 'bg-yellow-100'; slaText = 'Em Alerta'; }
                 else { slaBg = 'bg-green-100'; slaText = 'No Prazo'; }
                 const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
-                html += `<tr class="table-list-item data-item border-b hover:bg-gray-50 cursor-pointer ${slaBg}" ${buildDataAttributes(card)}>
+                html += `
+                    <tr class="table-list-item data-item border-b hover:bg-gray-50 cursor-pointer ${slaBg}" ${buildDataAttributes(card)}>
                         <td class="px-6 py-2 font-bold text-gray-900 card-placa">${card.placa}</td>
                         <td class="px-6 py-2 card-driver">${card.nomeDriver}</td>
                         <td class="px-6 py-2 card-chofer">${card.chofer}</td>
@@ -381,7 +410,8 @@
         if (!isFila && data.custoKm && data.custoKm !== 'N/A' && data.custoKm !== 'null') {
             custoKmHTML = `<div><p class="text-sm text-gray-500">Custo KM Adicional</p><p class="font-semibold">R$ ${data.custoKm}</p></div>`;
         }
-        return `<div class="grid grid-cols-2 gap-4"><div><p class="text-sm text-gray-500">SLA</p><p class="font-semibold text-lg">${data.slaDias} dias</p></div><div><p class="text-sm text-gray-500">Fase Atual</p><p class="font-semibold">${displayPhase}</p></div></div>
+        return `
+            <div class="grid grid-cols-2 gap-4"><div><p class="text-sm text-gray-500">SLA</p><p class="font-semibold text-lg">${data.slaDias} dias</p></div><div><p class="text-sm text-gray-500">Fase Atual</p><p class="font-semibold">${displayPhase}</p></div></div>
             <div><p class="text-sm text-gray-500">Modelo do Veículo</p><p class="font-semibold">${data.modeloVeiculo}</p></div>
             <div><p class="text-sm text-gray-500">Driver</p><p class="font-semibold">${data.driver}</p></div>
             ${!isFila ? `<div><p class="text-sm text-gray-500">Chofer</p><p class="font-semibold">${data.chofer}</p></div>` : ''}
@@ -413,7 +443,6 @@
       const modalFormIframe = document.getElementById('modalFormIframe');
       const mainContent = document.querySelector('main');
       const logoutBtn = document.getElementById('logout-btn');
-      const openCalculatorBtn = document.getElementById('open-calculator-btn');
 
       // Adiciona o event listener para os cards e botões de formulário
       mainContent.addEventListener('click', function(event) {
@@ -444,13 +473,13 @@
           const matchesSla = (currentSlaFilter === 'all') || (slaText === currentSlaFilter);
           const shouldBeVisible = matchesSearch && matchesSla;
           if (item.classList.contains('kanban-card')) {
-            item.style.display = shouldBeVisible ? 'flex' : 'none';
+            item.style.display = shouldBeVisible ? 'block' : 'none';
           } else if (item.classList.contains('table-list-item')) {
             item.style.display = shouldBeVisible ? 'table-row' : 'none';
           }
         });
         document.querySelectorAll('#kanban-view .w-64').forEach(column => {
-          const visibleCards = Array.from(column.querySelectorAll('.kanban-card')).filter(card => card.style.display !== 'none').length;
+          const visibleCards = column.querySelectorAll('.kanban-card:not([style*="display: none"])').length;
           const countElement = column.querySelector('.card-count');
           if(countElement) { countElement.textContent = visibleCards; }
         });
@@ -480,6 +509,7 @@
         document.getElementById('modalPlaca').textContent = data.placa;
         document.getElementById('modal-content').innerHTML = buildModalContent(data);
         
+        // Carregar o formulário no iframe
         if (data.formUrl && data.formUrl !== 'null') {
           modalFormIframe.src = data.formUrl;
         } else {
@@ -510,10 +540,10 @@
       function onDataRefreshed(sheetData) {
         buildUI(sheetData.cards);
         console.log("Dados atualizados em: " + sheetData.lastUpdate);
-        filterAndSearch();
       }
       
       function fetchData() {
+          // Adiciona o e-mail do usuário como um parâmetro na URL
           const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${new Date().getTime()}`;
           fetch(url)
               .then(response => {
@@ -529,12 +559,6 @@
                   loadingIndicator.style.display = 'none';
                   kanbanView.classList.remove('hidden');
                   kanbanView.classList.add('flex');
-                  
-                  const perm = data.permissionType ? data.permissionType.toLowerCase() : '';
-                  if (perm === 'kovi' || perm === 'onsystem') {
-                    openCalculatorBtn.classList.remove('hidden');
-                  }
-
                   onDataRefreshed(data);
               })
               .catch(err => {
@@ -543,104 +567,7 @@
               });
       }
 
-      // --- LÓGICA DO MODAL DA CALCULADORA ---
-      
-      openCalculatorBtn.addEventListener('click', async () => {
-        if (document.getElementById('calculator-modal-container')) return;
-
-        const modalContainer = document.createElement('div');
-        modalContainer.id = 'calculator-modal-container';
-        modalContainer.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-[60]';
-        
-        try {
-            const response = await fetch('calculadora.html');
-            if (!response.ok) throw new Error('Não foi possível carregar calculadora.html');
-            modalContainer.innerHTML = await response.text();
-            document.body.appendChild(modalContainer);
-            
-            setupCalculatorModal(modalContainer);
-        } catch(error) {
-            console.error("Erro ao carregar o modal da calculadora:", error);
-            alert("Não foi possível abrir a calculadora.");
-        }
-      });
-
-      function setupCalculatorModal(modalContainer) {
-        const header = modalContainer.querySelector('#calculator-modal-header');
-        const closeBtn = modalContainer.querySelector('#close-calculator-btn');
-        const calcBtn = modalContainer.querySelector('#calculate-btn');
-
-        closeBtn.addEventListener('click', () => modalContainer.remove());
-
-        const performCalculation = () => {
-          const origem = modalContainer.querySelector("#origem").value;
-          const destino = modalContainer.querySelector("#destino").value;
-          const resultDiv = modalContainer.querySelector("#result-calculator");
-          const enderecoDiv = modalContainer.querySelector("#enderecoOrigem");
-          const loading = modalContainer.querySelector("#loading-calculator");
-
-          loading.style.display = 'block';
-          resultDiv.style.display = 'none';
-          enderecoDiv.style.display = 'none';
-
-          const payload = { action: 'calcularDistancia', data: { origemStr: origem, destinoStr: destino }};
-
-          fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload),
-            headers: { 'Content-Type': 'application/json' },
-            mode: 'cors' // Habilita o CORS
-          })
-          .then(res => {
-            if (!res.ok) {
-              throw new Error(`Erro na resposta da API: ${res.statusText}`);
-            }
-            return res.json();
-          })
-          .then(data => {
-            loading.style.display = 'none';
-            resultDiv.style.display = 'block';
-
-            if (data.endereco) {
-              enderecoDiv.innerHTML = `📍 <b>Origem:</b> ${data.endereco}`;
-              enderecoDiv.style.display = 'block';
-            }
-            if (data.error) {
-              resultDiv.innerHTML = data.error;
-            } else {
-              resultDiv.innerHTML = data.distanciaHtml;
-            }
-          })
-          .catch(err => {
-            loading.style.display = 'none';
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = "❌ Ocorreu um erro de comunicação com o servidor.";
-            console.error(err);
-          });
-        };
-
-        calcBtn.addEventListener('click', performCalculation);
-        modalContainer.querySelector('#origem').addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') performCalculation();
-        });
-
-
-        let isDragging = false, offset = { x: 0, y: 0 };
-        header.addEventListener('mousedown', (e) => {
-          isDragging = true;
-          offset = { x: e.clientX - modalContainer.offsetLeft, y: e.clientY - modalContainer.offsetTop };
-        });
-        document.addEventListener('mouseup', () => { isDragging = false; });
-        document.addEventListener('mousemove', (e) => {
-          if (!isDragging) return;
-          modalContainer.style.left = `${e.clientX - offset.x}px`;
-          modalContainer.style.top = `${e.clientY - offset.y}px`;
-          modalContainer.style.transform = 'none';
-        });
-      }
-      
-      // --- FIM DA LÓGICA DO MODAL DA CALCULADORA ---
-
+      // Função de Logoff
       function logout() {
         localStorage.removeItem('user');
         window.location.href = 'login.html';
@@ -652,7 +579,7 @@
 
       fetchData(); // Carregamento inicial
 
-      setInterval(fetchData, 30000); // Atualiza a cada 30 segundos
+      setInterval(fetchData, 10000); // Atualiza a cada 30 segundos
     });
   </script>
 
