@@ -655,22 +655,58 @@
       // Configurar evento de fechar
       closeCalculatorBtn.addEventListener('click', closeCalculator);
       
+      function checkCalculatorPermission(responseData) {
+          // Verifica múltiplas fontes de permissão
+          let userPermission = null;
+          
+          // Primeira tentativa: permissionType da resposta
+          if (responseData && responseData.permissionType) {
+              userPermission = responseData.permissionType.toString().toLowerCase().trim();
+          }
+          
+          // Segunda tentativa: verificar no objeto user do localStorage
+          if (!userPermission && user) {
+              if (user.permission) {
+                  userPermission = user.permission.toString().toLowerCase().trim();
+              } else if (user.role) {
+                  userPermission = user.role.toString().toLowerCase().trim();
+              } else if (user.permissionType) {
+                  userPermission = user.permissionType.toString().toLowerCase().trim();
+              }
+          }
+          
+          // Terceira tentativa: verificar email específico (fallback)
+          if (!userPermission && user && user.email) {
+              const email = user.email.toLowerCase();
+              if (email.includes('kovi') || email.includes('onsystem') || 
+                  email.endsWith('@kovi.com.br') || email.endsWith('@onsystem.com.br')) {
+                  userPermission = 'kovi';
+              }
+          }
+          
+          console.log("Permissão do usuário detectada:", userPermission);
+          console.log("Email do usuário:", user?.email);
+          console.log("Objeto user completo:", user);
+          console.log("ResponseData recebido:", responseData);
+          
+          // Verifica se o usuário tem permissão para ver a calculadora
+          if (userPermission && ['kovi', 'onsystem'].includes(userPermission)) {
+              console.log("✅ Mostrando botão da calculadora - Permissão autorizada:", userPermission);
+              openCalculatorBtn.classList.remove('hidden');
+          } else {
+              console.log("❌ Ocultando botão da calculadora - Permissão negada:", userPermission);
+              openCalculatorBtn.classList.add('hidden');
+          }
+      }
+
       function onDataRefreshed(responseData) {
           console.log("Dados completos recebidos:", responseData);
           
           buildUI(responseData.cards);
           console.log("Dados atualizados em: " + responseData.lastUpdate);
           
-          const userPermission = responseData.permissionType?.toString().toLowerCase().trim();
-          console.log("Permissão do usuário:", userPermission);
-          
-          if (userPermission && ['kovi', 'onsystem'].includes(userPermission)) {
-              console.log("Mostrando botão da calculadora");
-              openCalculatorBtn.classList.remove('hidden');
-          } else {
-              console.log("Ocultando botão da calculadora. Permissão:", userPermission);
-              openCalculatorBtn.classList.add('hidden');
-          }
+          // Verifica permissões para a calculadora
+          checkCalculatorPermission(responseData);
       }
       
       function fetchData() {
@@ -711,6 +747,9 @@
       cardModal.addEventListener('click', e => { if (e.target === cardModal) closeCardModal(); });
       openCalculatorBtn.addEventListener('click', openCalculator);
       logoutBtn.addEventListener('click', logout);
+
+      // Verificação inicial das permissões (antes de carregar os dados)
+      checkCalculatorPermission(null);
 
       fetchData(); // Carregamento inicial
 
