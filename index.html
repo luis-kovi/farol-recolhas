@@ -368,10 +368,15 @@
       'Solicitar Guincho': 'em análise da Kovi'
     };
 
-    // Função para formatar nomes (primeira letra de cada palavra maiúscula)
-    function formatName(name) {
+    // Função para formatar apenas nomes específicos (Driver, Modelo, Chofer)
+    function formatPersonName(name) {
       if (!name || name === 'N/A') return name;
       return name.toLowerCase().replace(/\b[\wÀ-ÿ]/g, l => l.toUpperCase());
+    }
+
+    // Função para manter formatação original (outros campos)
+    function keepOriginalFormat(text) {
+      return text || 'N/A';
     }
 
     // Função para formatar data
@@ -448,27 +453,22 @@
             const message = disabledPhaseMessages[card.faseAtual];
             return `
                 <div class="kanban-card bg-gray-200 rounded-md shadow-sm border border-gray-300 flex flex-col h-48 opacity-70 cursor-not-allowed">
-                    <div class="p-2 flex justify-between">
-                        <div class="flex-1 pr-2">
-                            <h3 class="font-bold text-gray-500 card-placa truncate text-sm mb-1">${card.placa}</h3>
-                        </div>
-                        <div class="flex flex-col space-y-1">
-                            <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-gray-300 text-gray-500 text-center">Processando</span>
-                            <span class="text-xs bg-gray-300 text-gray-500 font-medium px-1.5 py-0.5 rounded-full truncate text-center max-w-20">${formatName(card.origemLocacao)}</span>
-                        </div>
+                    <div class="p-2 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-500 card-placa truncate text-sm">${card.placa}</h3>
+                        <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-gray-300 text-gray-500">Processando</span>
                     </div>
                     <div class="px-2 space-y-1 text-xs flex-1">
-                        <div class="text-gray-400 card-driver">
-                            <div class="font-bold text-gray-500" style="font-size: 10px;">👤 DRIVER</div>
-                            <div class="truncate">${formatName(card.nomeDriver)}</div>
-                        </div>
                         <div class="text-gray-400">
                             <div class="font-bold text-gray-500" style="font-size: 10px;">🚗 MODELO</div>
-                            <div class="truncate">${formatName(card.modeloVeiculo)}</div>
+                            <div class="truncate">${formatPersonName(card.modeloVeiculo)}</div>
+                        </div>
+                        <div class="text-gray-400 card-driver">
+                            <div class="font-bold text-gray-500" style="font-size: 10px;">👤 DRIVER</div>
+                            <div class="truncate">${formatPersonName(card.nomeDriver)}</div>
                         </div>
                         <div class="text-gray-400 card-chofer">
                             <div class="font-bold text-gray-500" style="font-size: 10px;">🚛 CHOFER</div>
-                            <div class="truncate">${formatName(card.chofer)}</div>
+                            <div class="truncate">${formatPersonName(card.chofer)}</div>
                         </div>
                     </div>
                     <div class="p-2 flex items-center justify-center border-t border-gray-300">
@@ -493,27 +493,22 @@
         
         return `
             <div class="kanban-card data-item bg-white rounded-md shadow-sm border border-gray-200 flex flex-col h-48 cursor-pointer hover:border-primary transition-all" ${buildDataAttributes(card)}>
-                <div class="p-2 flex justify-between">
-                    <div class="flex-1 pr-2">
-                        <h3 class="font-bold text-gray-800 card-placa truncate text-sm mb-1">${card.placa}</h3>
-                    </div>
-                    <div class="flex flex-col space-y-1">
-                        <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full ${slaColor} text-center">${slaText}</span>
-                        <span class="text-xs bg-gray-200 text-gray-600 font-medium px-1.5 py-0.5 rounded-full truncate text-center max-w-20">${formatName(card.origemLocacao)}</span>
-                    </div>
+                <div class="p-2 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800 card-placa truncate text-sm">${card.placa}</h3>
+                    <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full ${slaColor}">${slaText}</span>
                 </div>
                 <div class="px-2 space-y-1 text-xs flex-1">
-                    <div class="text-gray-500 card-driver">
-                        <div class="font-bold text-gray-600" style="font-size: 10px;">👤 DRIVER</div>
-                        <div class="truncate">${formatName(card.nomeDriver)}</div>
-                    </div>
                     <div class="text-gray-500">
                         <div class="font-bold text-gray-600" style="font-size: 10px;">🚗 MODELO</div>
-                        <div class="truncate">${formatName(card.modeloVeiculo)}</div>
+                        <div class="truncate">${formatPersonName(card.modeloVeiculo)}</div>
+                    </div>
+                    <div class="text-gray-500 card-driver">
+                        <div class="font-bold text-gray-600" style="font-size: 10px;">👤 DRIVER</div>
+                        <div class="truncate">${formatPersonName(card.nomeDriver)}</div>
                     </div>
                     <div class="text-gray-500 card-chofer">
                         <div class="font-bold text-gray-600" style="font-size: 10px;">🚛 CHOFER</div>
-                        <div class="truncate">${card.faseAtual !== 'Fila de Recolha' ? formatName(card.chofer) : '-'}</div>
+                        <div class="truncate">${card.faseAtual !== 'Fila de Recolha' ? formatPersonName(card.chofer) : '-'}</div>
                     </div>
                 </div>
                 <div class="p-2 flex items-center justify-between border-t border-gray-100">
@@ -555,8 +550,8 @@
                 html += `
                     <tr class="table-list-item data-item border-b hover:bg-gray-50 cursor-pointer ${slaBg}" ${buildDataAttributes(card)}>
                         <td class="px-6 py-2 font-bold text-gray-900 card-placa">${card.placa}</td>
-                        <td class="px-6 py-2 card-driver">${formatName(card.nomeDriver)}</td>
-                        <td class="px-6 py-2 card-chofer">${formatName(card.chofer)}</td>
+                        <td class="px-6 py-2 card-driver">${formatPersonName(card.nomeDriver)}</td>
+                        <td class="px-6 py-2 card-chofer">${formatPersonName(card.chofer)}</td>
                         <td class="px-6 py-2">${displayPhase}</td>
                         <td class="px-6 py-2">${formattedDate}</td>
                         <td class="px-6 py-2 text-center font-bold text-lg">${card.sla}</td>
@@ -571,8 +566,8 @@
                 html += `
                     <tr class="table-list-item border-b bg-gray-100 opacity-70 cursor-not-allowed">
                         <td class="px-6 py-2 font-bold text-gray-500 card-placa">${card.placa}</td>
-                        <td class="px-6 py-2 text-gray-500 card-driver">${formatName(card.nomeDriver)}</td>
-                        <td class="px-6 py-2 text-gray-500 card-chofer">${formatName(card.chofer)}</td>
+                        <td class="px-6 py-2 text-gray-500 card-driver">${formatPersonName(card.nomeDriver)}</td>
+                        <td class="px-6 py-2 text-gray-500 card-chofer">${formatPersonName(card.chofer)}</td>
                         <td class="px-6 py-2 text-gray-500">${displayPhase}</td>
                         <td class="px-6 py-2 text-gray-500">${formattedDate}</td>
                         <td class="px-6 py-2 text-center">
@@ -596,7 +591,7 @@
         else if (card.sla == 2) { slaText = 'Em Alerta'; }
         else { slaText = 'No Prazo'; }
         const formattedDate = formatDate(card.dataCriacao);
-        return `data-placa="${card.placa}" data-driver="${formatName(card.nomeDriver)}" data-chofer="${formatName(card.chofer)}" data-origem="${formatName(card.origemLocacao)}" data-fase="${card.faseAtual}" data-criacao="${formattedDate}" data-sla-dias="${card.sla}" data-mapa-url="${card.enderecoRecolhaUrl}" data-form-url="${card.urlPublica}" data-sla-text="${slaText}" data-valor-recolha="${card.valorRecolha}" data-custo-km="${card.custoKmAdicional}" data-modelo-veiculo="${formatName(card.modeloVeiculo)}" data-telefone-contato="${card.telefoneContato}" data-telefone-opcional="${card.telefoneOpcional}" data-endereco-cadastro="${card.enderecoCadastro}" data-endereco-veiculo="${card.enderecoVeiculo}"`;
+        return `data-placa="${card.placa}" data-driver="${formatPersonName(card.nomeDriver)}" data-chofer="${formatPersonName(card.chofer)}" data-origem="${keepOriginalFormat(card.origemLocacao)}" data-fase="${card.faseAtual}" data-criacao="${formattedDate}" data-sla-dias="${card.sla}" data-mapa-url="${card.enderecoRecolhaUrl}" data-form-url="${card.urlPublica}" data-sla-text="${slaText}" data-valor-recolha="${card.valorRecolha}" data-custo-km="${card.custoKmAdicional}" data-modelo-veiculo="${formatPersonName(card.modeloVeiculo)}" data-telefone-contato="${card.telefoneContato}" data-telefone-opcional="${card.telefoneOpcional}" data-endereco-cadastro="${card.enderecoCadastro}" data-endereco-veiculo="${card.enderecoVeiculo}"`;
     }
     
     function buildModalContent(data) {
@@ -658,14 +653,14 @@
                             <span class="text-gray-600 mr-3 mt-1">🏷️</span>
                             <div>
                                 <p class="text-sm text-gray-500">Modelo do Veículo</p>
-                                <p class="font-semibold text-gray-800">${data.modeloVeiculo}</p>
+                                <p class="font-semibold text-gray-800">${formatPersonName(data.modeloVeiculo)}</p>
                             </div>
                         </div>
                         <div class="flex items-start">
                             <span class="text-gray-600 mr-3 mt-1">🏢</span>
                             <div>
                                 <p class="text-sm text-gray-500">Origem da Locação</p>
-                                <p class="font-semibold text-gray-800">${data.origem}</p>
+                                <p class="font-semibold text-gray-800">${keepOriginalFormat(data.origem)}</p>
                             </div>
                         </div>
                     </div>
@@ -682,7 +677,7 @@
                             <span class="text-gray-600 mr-3 mt-1">👤</span>
                             <div>
                                 <p class="text-sm text-gray-500">Driver</p>
-                                <p class="font-semibold text-gray-800">${data.driver}</p>
+                                <p class="font-semibold text-gray-800">${formatPersonName(data.driver)}</p>
                             </div>
                         </div>
                         ${!isFila ? `
@@ -690,7 +685,7 @@
                             <span class="text-gray-600 mr-3 mt-1">🚛</span>
                             <div>
                                 <p class="text-sm text-gray-500">Chofer</p>
-                                <p class="font-semibold text-gray-800">${data.chofer}</p>
+                                <p class="font-semibold text-gray-800">${formatPersonName(data.chofer)}</p>
                             </div>
                         </div>` : ''}
                     </div>
