@@ -388,6 +388,11 @@
   </div>
 
   <script>
+      // Variáveis globais para filtros
+      let currentSearchTerm = '';
+      let currentSlaFilter = 'all';
+      let hideEmptyPhases = false;
+    
     // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; 
 
@@ -1010,11 +1015,6 @@
           openCardModal(cardElement);
         }
       });
-
-      // Variáveis globais para filtros
-      let currentSearchTerm = '';
-      let currentSlaFilter = 'all';
-      let hideEmptyPhases = false;
 
       searchInput.addEventListener('input', () => {
         currentSearchTerm = searchInput.value;
