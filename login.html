@@ -54,6 +54,53 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
+    // Função para detectar dispositivo móvel
+    function isMobileDevice() {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      
+      // Verificar se é um dispositivo móvel
+      if (/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase())) {
+        return true;
+      }
+      
+      // Verificar largura da tela
+      if (window.innerWidth <= 768) {
+        return true;
+      }
+      
+      // Verificar se tem touch screen
+      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        return true;
+      }
+      
+      return false;
+    }
+
+    // Função para redirecionar baseado no dispositivo
+    function redirectBasedOnDevice() {
+      const isMobile = isMobileDevice();
+      const targetPage = isMobile ? 'mobile.html' : 'index.html';
+      
+      console.log(`Dispositivo detectado: ${isMobile ? 'Mobile' : 'Desktop'}`);
+      console.log(`Redirecionando para: ${targetPage}`);
+      
+      window.location.href = targetPage;
+    }
+
+    // Verificar se já está logado ao carregar a página
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        localStorage.setItem('user', JSON.stringify({
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+          uid: user.uid
+        }));
+        
+        redirectBasedOnDevice();
+      }
+    });
+
     document.getElementById('login-btn').addEventListener('click', async () => {
       try {
         const result = await signInWithPopup(auth, provider);
@@ -66,7 +113,7 @@
           uid: user.uid
         }));
 
-        window.location.href = 'index.html';
+        redirectBasedOnDevice();
       } catch (error) {
         console.error("Erro de autenticação:", error);
 
