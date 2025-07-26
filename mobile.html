@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
   <title>Gestão de Recolhas - Kovi Mobile</title>
   <link rel="icon" type="image/png" href="https://i.ibb.co/ksMQSMQ2/web-app-manifest-192x192.png">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -146,6 +146,36 @@
     .phase-header:active {
       background-color: rgba(255, 53, 90, 0.1);
     }
+    
+    /* Botão toggle para fases vazias */
+    .toggle-active {
+      background-color: var(--primary-color) !important;
+      color: white !important;
+    }
+    
+    /* Scroll principal da página */
+    #mobile-content {
+      scrollbar-width: thin;
+      scrollbar-color: #c1c1c1 #f1f1f1;
+    }
+    
+    #mobile-content::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    #mobile-content::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+    
+    #mobile-content::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+    }
+    
+    #mobile-content::-webkit-scrollbar-thumb:hover {
+      background: #a0a0a0;
+    }
   </style>
 </head>
 <body class="text-gray-800">
@@ -190,9 +220,17 @@
             </svg>
           </button>
         </div>
-        <div class="relative">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="search" id="searchInput" placeholder="Procurar recolhas..." class="w-full p-2 pl-10 text-sm border border-gray-300 rounded-lg focus-primary">
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="searchInput" placeholder="Procurar recolhas..." class="w-full p-2 pl-10 text-sm border border-gray-300 rounded-lg focus-primary">
+          </div>
+          <button id="toggleEmptyPhasesBtn" class="bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors" title="Ocultar fases vazias">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
@@ -331,6 +369,10 @@
       const container = document.getElementById('phases-container');
       if (!container) return;
       
+      // Salvar posição do scroll antes da atualização
+      const mobileContent = document.getElementById('mobile-content');
+      const scrollPosition = mobileContent.scrollTop;
+      
       // Salvar estado das fases expandidas antes da atualização
       const expandedPhases = {};
       container.querySelectorAll('.phase-content').forEach(content => {
@@ -355,7 +397,7 @@
         const wasExpanded = expandedPhases[phaseName];
         
         html += `
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden" data-phase-container="${phaseName}">
             <div class="phase-header p-4 cursor-pointer ${isDisabledPhase ? 'bg-gray-100' : 'bg-white'}" data-phase="${phaseName}">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -386,6 +428,12 @@
       });
       
       container.innerHTML = html;
+      
+      // Restaurar posição do scroll após a atualização
+      setTimeout(() => {
+        mobileContent.scrollTop = scrollPosition;
+      }, 0);
+      
       setupPhaseToggles();
     }
 
@@ -698,6 +746,8 @@
       const closeMobileModalBtn = document.getElementById('closeMobileModal');
       const logoutBtn = document.getElementById('logout-btn');
 
+      let hideEmptyPhases = false;
+      
       function filterAndSearch() {
         const searchTerm = searchInput.value.toLowerCase();
         const currentSlaFilter = slaFilter.value;
@@ -725,20 +775,47 @@
         });
         
         // Mostrar/ocultar fases baseado na visibilidade dos cards
-        document.querySelectorAll('[data-phase]').forEach(phaseHeader => {
-          const phaseName = phaseHeader.dataset.phase;
-          const phaseContent = document.querySelector(`[data-phase-content="${phaseName}"]`);
+        document.querySelectorAll('[data-phase-container]').forEach(phaseContainer => {
+          const phaseName = phaseContainer.dataset.phaseContainer;
+          const phaseContent = phaseContainer.querySelector('[data-phase-content]');
           const visibleCards = phaseContent.querySelectorAll('.mobile-card:not([style*="display: none"])').length;
+          const totalCards = phaseContent.querySelectorAll('.mobile-card').length;
           
-          const phaseContainer = phaseHeader.closest('.bg-white.rounded-lg');
-          if (phaseContainer) {
-            phaseContainer.style.display = visibleCards > 0 || searchTerm === '' ? 'block' : 'none';
+          let shouldShowPhase = true;
+          
+          // Se não há busca ativa, aplicar apenas filtro de fases vazias
+          if (searchTerm === '' && currentSlaFilter === 'all') {
+            shouldShowPhase = !hideEmptyPhases || totalCards > 0;
+          } else {
+            // Se há busca ou filtro ativo, mostrar se há cards visíveis
+            shouldShowPhase = visibleCards > 0;
           }
+          
+          phaseContainer.style.display = shouldShowPhase ? 'block' : 'none';
         });
+      }
+      
+      function toggleEmptyPhases() {
+        hideEmptyPhases = !hideEmptyPhases;
+        const toggleBtn = document.getElementById('toggleEmptyPhasesBtn');
+        
+        if (hideEmptyPhases) {
+          toggleBtn.classList.add('toggle-active');
+          toggleBtn.title = 'Mostrar fases vazias';
+        } else {
+          toggleBtn.classList.remove('toggle-active');
+          toggleBtn.title = 'Ocultar fases vazias';
+        }
+        
+        filterAndSearch();
       }
 
       searchInput.addEventListener('input', filterAndSearch);
       slaFilter.addEventListener('change', filterAndSearch);
+      
+      // Event listener para o botão de toggle de fases vazias
+      const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
+      toggleEmptyPhasesBtn.addEventListener('click', toggleEmptyPhases);
 
       function openMobileModal(itemElement) {
         const data = itemElement.dataset;
