@@ -223,8 +223,8 @@
     .toggle-switch {
       display: inline-block;
       position: relative;
-      width: 40px;
-      height: 24px;
+      width: 36px;
+      height: 20px;
       background: #fff;
       border: 1.5px solid #e5e7eb;
       border-radius: 9999px;
@@ -238,8 +238,8 @@
       position: absolute;
       top: -1px;
       left: -1px;
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
       background: #e5e7eb;
       border-radius: 50%;
       transition: transform 0.2s, background 0.2s;
@@ -252,9 +252,17 @@
     /* CSS fixo para faixa inferior do card */
     .kanban-card .p-2.flex.items-center.justify-between.border-t,
     .kanban-card .p-2.flex.items-center.justify-center.border-t {
-      min-height: 38px;
-      padding-top: 8px;
-      padding-bottom: 8px;
+      min-height: 38px !important;
+      height: 38px !important;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
+    
+    /* Garantir que todos os footers dos cards tenham altura fixa */
+    .kanban-card > div:last-child {
+      min-height: 38px !important;
+      height: 38px !important;
+      flex-shrink: 0 !important;
     }
   </style>
 </head>
@@ -299,9 +307,9 @@
             </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
-                  <span class="text-sm text-gray-700">ocultar fases vazias</span>
-                  <button id="toggleEmptyPhasesBtn" class="toggle-switch relative w-10 h-6 bg-white border border-gray-300 rounded-full transition-colors duration-200 focus:outline-none">
-                    <span class="toggle-slider absolute left-0 top-0 w-6 h-6 bg-gray-300 rounded-full shadow transition-transform duration-200"></span>
+                  <span class="text-xs text-gray-700">ocultar fases vazias</span>
+                  <button id="toggleEmptyPhasesBtn" class="toggle-switch relative w-9 h-5 bg-white border border-gray-300 rounded-full transition-colors duration-200 focus:outline-none">
+                    <span class="toggle-slider absolute left-0 top-0 w-5 h-5 bg-gray-300 rounded-full shadow transition-transform duration-200"></span>
                   </button>
                 </div>
                 <select id="slaFilter" class="text-sm border border-gray-300 rounded-md p-2 focus-primary">
@@ -338,8 +346,8 @@
             </div>
       </div>
       
-      <div id="list-view" class="h-full w-full p-4 hidden">
-        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
+      <div id="list-view" class="flex-1 p-4 hidden">
+        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto table-border-primary scroll-container">
           <table class="w-full text-sm text-left text-gray-500">
             <thead class="text-xs uppercase bg-gray-50 sticky top-0 z-10 table-header-primary">
               <tr>
@@ -397,6 +405,11 @@
       // Se não houver usuário, redireciona para a página de login
       window.location.href = 'login.html';
     }
+
+    // Variáveis globais para filtros - movidas para fora do DOMContentLoaded
+    let currentSearchTerm = '';
+    let currentSlaFilter = 'all';
+    let hideEmptyPhases = false;
 
     const fixedPhaseOrder = [
       'Fila de Recolha',
@@ -548,18 +561,9 @@
                 }
             });
         }, 0);
-        // Salvar estado dos filtros
-        const savedSearch = currentSearchTerm;
-        const savedSla = currentSlaFilter;
-        const savedToggle = hideEmptyPhases;
+        
+        // Aplicar filtros após reconstruir a UI
         setTimeout(() => {
-            console.log('[Kanban] Restaurando filtros:', { savedSearch, savedSla, savedToggle });
-            currentSearchTerm = savedSearch;
-            currentSlaFilter = savedSla;
-            hideEmptyPhases = savedToggle;
-            searchInput.value = currentSearchTerm;
-            slaFilter.value = currentSlaFilter;
-            toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
             filterAndSearch();
         }, 0);
     }
@@ -590,7 +594,7 @@
                             <div class="truncate">${formatPersonName(card.chofer)}</div>
                         </div>
                     </div>
-                    <div class="p-2 flex items-center justify-center border-t border-gray-300">
+                    <div class="p-2 flex items-center justify-center border-t border-gray-300" style="min-height: 38px; height: 38px;">
                         <div class="flex items-center text-xs text-gray-500 font-medium">
                             <svg class="animate-spin mr-1 h-3 w-3 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -630,7 +634,7 @@
                         <div class="truncate">${card.faseAtual !== 'Fila de Recolha' ? formatPersonName(card.chofer) : '-'}</div>
                     </div>
                 </div>
-                <div class="p-2 flex items-center justify-between border-t border-gray-100">
+                <div class="p-2 flex items-center justify-between border-t border-gray-100" style="min-height: 38px; height: 38px;">
                     <div class="flex items-center text-xs text-red-600 font-semibold">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                         SLA: ${card.sla}d
@@ -1011,11 +1015,6 @@
         }
       });
 
-      // Variáveis globais para filtros
-      let currentSearchTerm = '';
-      let currentSlaFilter = 'all';
-      let hideEmptyPhases = false;
-
       searchInput.addEventListener('input', () => {
         currentSearchTerm = searchInput.value;
         filterAndSearch();
@@ -1032,9 +1031,13 @@
       });
 
       function restoreFilterState() {
-        searchInput.value = currentSearchTerm;
-        slaFilter.value = currentSlaFilter;
-        toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
+        const searchInput = document.getElementById('searchInput');
+        const slaFilter = document.getElementById('slaFilter');
+        const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
+        
+        if (searchInput) searchInput.value = currentSearchTerm;
+        if (slaFilter) slaFilter.value = currentSlaFilter;
+        if (toggleEmptyPhasesBtn) toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
       }
 
       function filterAndSearch() {
@@ -1222,10 +1225,19 @@
           buildUI(responseData.cards);
           console.log("Dados atualizados em: " + responseData.lastUpdate);
           
+          // Restaurar estado dos filtros após atualização
+          setTimeout(() => {
+              restoreFilterState();
+              filterAndSearch();
+          }, 100);
+          
           // Força ocultação antes de verificar permissões
-          openCalculatorBtn.classList.add('hidden');
-          openCalculatorBtn.style.display = 'none';
-          console.log("🔒 Botão forçadamente oculto antes da verificação de permissões");
+          const openCalculatorBtn = document.getElementById('openCalculatorBtn');
+          if (openCalculatorBtn) {
+              openCalculatorBtn.classList.add('hidden');
+              openCalculatorBtn.style.display = 'none';
+              console.log("🔒 Botão forçadamente oculto antes da verificação de permissões");
+          }
           
           // Verifica permissões para a calculadora
           checkCalculatorPermission(responseData);
