@@ -205,6 +205,29 @@
     .blink {
       animation: blink 1s linear infinite;
     }
+    
+    /* Efeitos de hover para cards */
+    .kanban-card:not(.cursor-not-allowed):hover {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 4px 12px rgba(255, 53, 90, 0.15) !important;
+      transform: translateY(-2px);
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .table-list-item:not(.cursor-not-allowed):hover {
+      border-left: 4px solid var(--primary-color) !important;
+      box-shadow: 0 2px 8px rgba(255, 53, 90, 0.1) !important;
+      transition: all 0.2s ease-in-out;
+    }
+    
+    /* Transições suaves para todos os cards */
+    .kanban-card {
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .table-list-item {
+      transition: all 0.2s ease-in-out;
+    }
   </style>
 </head>
 <body class="text-gray-800">
