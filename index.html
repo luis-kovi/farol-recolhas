@@ -249,10 +249,12 @@
       background: #fff;
       transform: translateX(16px);
     }
-    /* CSS para faixa inferior do card - altura adaptável */
+    /* CSS para faixa inferior do card - altura mínima consistente */
     .kanban-card .p-2.flex.items-center.justify-between.border-t,
     .kanban-card .p-2.flex.items-center.justify-center.border-t {
       padding: 8px;
+      min-height: 36px;
+      align-items: center;
     }
   </style>
 </head>
@@ -336,7 +338,7 @@
             </div>
       </div>
       
-      <div id="list-view" class="absolute inset-0 p-4 hidden">
+      <div id="list-view" class="flex-1 p-4 hidden">
         <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto table-border-primary scroll-container">
           <table class="w-full text-sm text-left text-gray-500">
             <thead class="text-xs uppercase bg-gray-50 sticky top-0 z-10 table-header-primary">
@@ -504,24 +506,9 @@
         // Salvar dados globalmente
         window.lastCardsData = cards;
         
-        // Reconstrói apenas a visualização ativa para reduzir "piscada"
-        const kanbanView = document.getElementById('kanban-view');
-        const listView = document.getElementById('list-view');
-        
-        if (kanbanView && !kanbanView.classList.contains('hidden')) {
-          buildKanbanView(cards);
-        }
-        
-        if (listView && !listView.classList.contains('hidden')) {
-          buildListView(cards);
-        }
-        
-        // Se nenhuma view estiver visível, constrói ambas
-        if (kanbanView && kanbanView.classList.contains('hidden') && 
-            listView && listView.classList.contains('hidden')) {
-          buildKanbanView(cards);
-          buildListView(cards);
-        }
+        // Sempre constrói ambas as visualizações
+        buildKanbanView(cards);
+        buildListView(cards);
     }
     
     function buildKanbanView(cards) {
@@ -534,6 +521,9 @@
             scrollPositions[index] = scrollContainer.scrollTop;
         });
         
+        // Verificar se há filtros ativos
+        const hasActiveFilters = currentSearchTerm !== '' || currentSlaFilter !== 'all' || hideEmptyPhases;
+        
         const phases = {};
         fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
         cards.forEach(card => {
@@ -541,6 +531,7 @@
                 phases[card.faseAtual].push(card);
             }
         });
+        
         let html = '';
         fixedPhaseOrder.forEach(phaseName => {
             const cardsInPhase = phases[phaseName];
@@ -573,8 +564,10 @@
             }
         });
         
-        // Aplicar filtros imediatamente para evitar "piscada"
-        filterAndSearch();
+        // Aplicar filtros apenas após a reconstrução estar completa
+        setTimeout(() => {
+            filterAndSearch();
+        }, 0);
     }
 
     function buildCardHTML(card) {
@@ -1024,36 +1017,39 @@
         }
       });
 
+      // Configurar event listeners para filtros - seguindo padrão mobile.html
       searchInput.addEventListener('input', () => {
-        currentSearchTerm = searchInput.value;
+        console.log('Campo de busca alterado');
         filterAndSearch();
       });
+      
       slaFilter.addEventListener('change', () => {
-        currentSlaFilter = slaFilter.value;
+        console.log('Filtro de SLA alterado');
         filterAndSearch();
       });
+      
+      // Event listener para o botão de toggle de fases vazias
       const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
       toggleEmptyPhasesBtn.addEventListener('click', () => {
         hideEmptyPhases = !hideEmptyPhases;
         toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
+        console.log('Toggle de fases vazias alterado:', hideEmptyPhases);
         filterAndSearch();
       });
 
-      function restoreFilterState() {
-        const searchInput = document.getElementById('searchInput');
-        const slaFilter = document.getElementById('slaFilter');
-        const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
-        
-        if (searchInput) searchInput.value = currentSearchTerm;
-        if (slaFilter) slaFilter.value = currentSlaFilter;
-        if (toggleEmptyPhasesBtn) toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
-      }
+
 
       function filterAndSearch() {
-        const searchTerm = currentSearchTerm.toLowerCase();
-        const currentSla = currentSlaFilter;
+        const searchInput = document.getElementById('searchInput');
+        const slaFilter = document.getElementById('slaFilter');
         
-        // Aplicar filtros de forma mais otimizada para reduzir "piscada"
+        if (!searchInput || !slaFilter) return;
+        
+        const searchTerm = searchInput.value.toLowerCase();
+        currentSearchTerm = searchTerm;
+        currentSlaFilter = slaFilter.value;
+        
+        console.log('Aplicando filtros:', { searchTerm, currentSlaFilter, hideEmptyPhases });
         
         // Filtrar cards normais (com data-item)
         document.querySelectorAll('.data-item').forEach(item => {
@@ -1062,7 +1058,7 @@
           const chofer = item.dataset.chofer.toLowerCase();
           const slaText = item.dataset.slaText;
           const matchesSearch = placa.includes(searchTerm) || driver.includes(searchTerm) || chofer.includes(searchTerm);
-          const matchesSla = (currentSla === 'all') || (slaText === currentSla);
+          const matchesSla = (currentSlaFilter === 'all') || (slaText === currentSlaFilter);
           const shouldBeVisible = matchesSearch && matchesSla;
           if (item.classList.contains('kanban-card')) {
             item.style.display = shouldBeVisible ? 'block' : 'none';
@@ -1102,46 +1098,24 @@
           const countElement = column.querySelector('.card-count');
           if(countElement) { countElement.textContent = visibleCards; }
         });
+        
+        console.log('Filtros aplicados com sucesso');
       }
 
       kanbanBtn.addEventListener('click', () => {
-        // Esconder lista
-        listView.classList.add('hidden');
-        
-        // Mostrar kanban
         kanbanView.classList.remove('hidden');
         kanbanView.classList.add('flex');
-        
-        // Atualizar botões ativos
+        listView.classList.add('hidden');
         kanbanBtn.classList.add('active');
         listBtn.classList.remove('active');
-        
-        // Garantir que o kanban tenha os dados mais recentes
-        if (window.lastCardsData) {
-          buildKanbanView(window.lastCardsData);
-          // Aplicar filtros no kanban imediatamente
-          filterAndSearch();
-        }
       });
 
       listBtn.addEventListener('click', () => {
-        // Esconder kanban
         kanbanView.classList.add('hidden');
         kanbanView.classList.remove('flex');
-        
-        // Mostrar lista e reconstruir se necessário
         listView.classList.remove('hidden');
-        
-        // Atualizar botões ativos
         listBtn.classList.add('active');
         kanbanBtn.classList.remove('active');
-        
-        // Garantir que a lista tenha os dados mais recentes
-        if (window.lastCardsData) {
-          buildListView(window.lastCardsData);
-          // Aplicar filtros na lista imediatamente
-          filterAndSearch();
-        }
       });
 
       function openCardModal(itemElement) {
@@ -1258,9 +1232,6 @@
           
           buildUI(responseData.cards);
           console.log("Dados atualizados em: " + responseData.lastUpdate);
-          
-          // Restaurar estado dos filtros imediatamente
-          restoreFilterState();
           
           // Força ocultação antes de verificar permissões
           const openCalculatorBtn = document.getElementById('openCalculatorBtn');
