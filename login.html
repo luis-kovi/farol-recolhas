@@ -76,17 +76,10 @@
         const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${Date.now()}`;
         const response = await fetch(url);
         const data = await response.json();
-        // Busca permissão em vários campos possíveis
-        let permission = '';
-        if (data.permissionType) permission = data.permissionType;
-        else if (data.userPermission) permission = data.userPermission;
-        else if (data.permission) permission = data.permission;
-        else if (data.user && data.user.permission) permission = data.user.permission;
-        else if (data.user && data.user.permissionType) permission = data.user.permissionType;
-        else if (data.user && data.user.userPermission) permission = data.user.userPermission;
-        if (permission) permission = permission.toString().toLowerCase().trim();
-        // Permissão válida: 'kovi' ou 'onsystem'
-        return permission === 'kovi' || permission === 'onsystem';
+        // Só considera permissionType
+        if (!data.permissionType) return false;
+        const perm = data.permissionType.toString().toLowerCase().trim();
+        return perm === 'kovi' || perm === 'onsystem' || perm === 'ativa';
       } catch (e) {
         return false;
       }
