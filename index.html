@@ -541,6 +541,8 @@
                 }
             });
         }, 0);
+        restoreFilterState();
+        filterAndSearch();
     }
 
     function buildCardHTML(card) {
@@ -990,17 +992,34 @@
         }
       });
 
+      // Variáveis globais para filtros
+      let currentSearchTerm = '';
+      let currentSlaFilter = 'all';
       let hideEmptyPhases = false;
-      const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
+
+      searchInput.addEventListener('input', () => {
+        currentSearchTerm = searchInput.value;
+        filterAndSearch();
+      });
+      slaFilter.addEventListener('change', () => {
+        currentSlaFilter = slaFilter.value;
+        filterAndSearch();
+      });
       toggleEmptyPhasesBtn.addEventListener('click', () => {
         hideEmptyPhases = !hideEmptyPhases;
         toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
         filterAndSearch();
       });
 
+      function restoreFilterState() {
+        searchInput.value = currentSearchTerm;
+        slaFilter.value = currentSlaFilter;
+        toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
+      }
+
       function filterAndSearch() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const currentSlaFilter = slaFilter.value;
+        const searchTerm = currentSearchTerm.toLowerCase();
+        const currentSla = currentSlaFilter;
         
         // Filtrar cards normais (com data-item)
         document.querySelectorAll('.data-item').forEach(item => {
@@ -1009,7 +1028,7 @@
           const chofer = item.dataset.chofer.toLowerCase();
           const slaText = item.dataset.slaText;
           const matchesSearch = placa.includes(searchTerm) || driver.includes(searchTerm) || chofer.includes(searchTerm);
-          const matchesSla = (currentSlaFilter === 'all') || (slaText === currentSlaFilter);
+          const matchesSla = (currentSla === 'all') || (slaText === currentSla);
           const shouldBeVisible = matchesSearch && matchesSla;
           if (item.classList.contains('kanban-card')) {
             item.style.display = shouldBeVisible ? 'block' : 'none';
@@ -1051,9 +1070,6 @@
         });
       }
 
-      searchInput.addEventListener('input', filterAndSearch);
-      slaFilter.addEventListener('change', filterAndSearch);
-      
       kanbanBtn.addEventListener('click', () => {
         kanbanView.classList.remove('hidden');
         kanbanView.classList.add('flex');
