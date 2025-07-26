@@ -525,6 +525,14 @@
         }
       });
       
+      // Criar um elemento temporário para construir o HTML sem afetar o DOM
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.visibility = 'hidden';
+      tempContainer.style.height = '0';
+      tempContainer.style.overflow = 'hidden';
+      document.body.appendChild(tempContainer);
+      
       let html = '';
       fixedPhaseOrder.forEach(phaseName => {
         const cardsInPhase = phases[phaseName];
@@ -598,11 +606,18 @@
           </div>`;
       });
       
+      // Atualizar o container de uma vez só para minimizar reflows
       container.innerHTML = html;
       
-      // Restaurar posição do scroll principal após a atualização
-      setTimeout(() => {
-        mobileContent.scrollTop = scrollPosition;
+      // Remover o container temporário
+      document.body.removeChild(tempContainer);
+      
+      // Usar requestAnimationFrame para restaurar scroll no momento ideal
+      requestAnimationFrame(() => {
+        // Restaurar posições de scroll imediatamente
+        if (mobileContent) {
+          mobileContent.scrollTop = scrollPosition;
+        }
         
         // Restaurar posições de scroll interno das fases
         container.querySelectorAll('.phase-content .max-h-96').forEach(scrollContainer => {
@@ -611,10 +626,10 @@
             scrollContainer.scrollTop = phaseScrollPositions[phaseName];
           }
         });
-      }, 0);
-      
-      setupPhaseToggles();
-      restoreFilterState();
+        
+        setupPhaseToggles();
+        restoreFilterState();
+      });
     }
 
     function buildMobileCardHTML(card) {
