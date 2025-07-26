@@ -514,6 +514,9 @@
         expandedPhases[phaseName] = content.classList.contains('expanded');
       });
       
+      // Verificar se há filtros ativos
+      const hasActiveFilters = currentSearchTerm !== '' || currentSlaFilter !== 'all' || hideEmptyPhases;
+      
       const phases = {};
       fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
       cards.forEach(card => {
@@ -525,10 +528,44 @@
       let html = '';
       fixedPhaseOrder.forEach(phaseName => {
         const cardsInPhase = phases[phaseName];
-        const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
         const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
         const isDisabledPhase = disabledPhases.includes(phaseName);
         const wasExpanded = expandedPhases[phaseName];
+        
+        // Filtrar cards durante a renderização se há filtros ativos
+        let filteredCards = cardsInPhase;
+        let visibleCardsCount = cardsInPhase.length;
+        
+        if (hasActiveFilters) {
+          filteredCards = cardsInPhase.filter(card => {
+            const placa = card.placa.toLowerCase();
+            const driver = card.nomeDriver.toLowerCase();
+            const chofer = card.chofer ? card.chofer.toLowerCase() : '';
+            const slaText = card.sla >= 3 ? 'Atrasado' : card.sla == 2 ? 'Em Alerta' : 'No Prazo';
+            
+            const matchesSearch = !currentSearchTerm || 
+              placa.includes(currentSearchTerm.toLowerCase()) || 
+              driver.includes(currentSearchTerm.toLowerCase()) || 
+              chofer.includes(currentSearchTerm.toLowerCase());
+            
+            const matchesSla = currentSlaFilter === 'all' || slaText === currentSlaFilter;
+            
+            return matchesSearch && matchesSla;
+          });
+          visibleCardsCount = filteredCards.length;
+        }
+        
+        // Verificar se deve mostrar a fase
+        let shouldShowPhase = true;
+        if (hasActiveFilters) {
+          shouldShowPhase = visibleCardsCount > 0;
+        } else if (hideEmptyPhases) {
+          shouldShowPhase = cardsInPhase.length > 0;
+        }
+        
+        if (!shouldShowPhase) return; // Pular esta fase se não deve ser mostrada
+        
+        const lateOrAlertCount = filteredCards.filter(c => c.sla >= 2).length;
         
         html += `
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden" data-phase-container="${phaseName}">
@@ -536,7 +573,7 @@
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                   <h3 class="font-semibold text-gray-800">${displayPhaseName}</h3>
-                  <span class="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">${cardsInPhase.length}</span>
+                  <span class="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">${visibleCardsCount}</span>
                   ${!isDisabledPhase && lateOrAlertCount > 0 ? 
                     `<span class="bg-amber-100 text-amber-700 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
@@ -549,9 +586,9 @@
               </div>
             </div>
             <div class="phase-content ${wasExpanded ? 'expanded' : ''}" data-phase-content="${phaseName}">
-              ${cardsInPhase.length > 0 ? 
+              ${filteredCards.length > 0 ? 
                 `<div class="p-4 pt-0 space-y-3 max-h-96 overflow-y-auto">
-                  ${cardsInPhase.map(card => buildMobileCardHTML(card)).join('')}
+                  ${filteredCards.map(card => buildMobileCardHTML(card)).join('')}
                 </div>` : 
                 `<div class="p-4 pt-0 text-center text-gray-500">
                   <p class="text-sm">Não há recolha nesta fase.</p>
@@ -578,17 +615,6 @@
       
       setupPhaseToggles();
       restoreFilterState();
-      
-      // Aplicar filtros após a atualização (com delay para garantir renderização)
-      setTimeout(() => {
-        console.log('Verificando se precisa aplicar filtros após atualização');
-        if (currentSearchTerm !== '' || currentSlaFilter !== 'all' || hideEmptyPhases) {
-          console.log('Aplicando filtros após atualização');
-          filterAndSearch();
-        } else {
-          console.log('Nenhum filtro ativo, não aplicando');
-        }
-      }, 100);
     }
 
     function buildMobileCardHTML(card) {
