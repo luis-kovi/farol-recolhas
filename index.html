@@ -388,65 +388,6 @@
   </div>
 
   <script>
-    // Variáveis globais para filtros
-let currentSearchTerm = '';
-let currentSlaFilter = 'all';
-let hideEmptyPhases = false;
-
-// Função de filtro global (deve vir antes de qualquer uso)
-function filterAndSearch() {
-  console.log('[Kanban] Aplicando filtros:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
-  const searchTerm = currentSearchTerm.toLowerCase();
-  const currentSla = currentSlaFilter;
-
-  // Filtrar cards normais (com data-item)
-  document.querySelectorAll('.data-item').forEach(item => {
-    const placa = item.dataset.placa.toLowerCase();
-    const driver = item.dataset.driver.toLowerCase();
-    const chofer = item.dataset.chofer.toLowerCase();
-    const slaText = item.dataset.slaText;
-    const matchesSearch = placa.includes(searchTerm) || driver.includes(searchTerm) || chofer.includes(searchTerm);
-    const matchesSla = (currentSla === 'all') || (slaText === currentSla);
-    const shouldBeVisible = matchesSearch && matchesSla;
-    if (item.classList.contains('kanban-card')) {
-      item.style.display = shouldBeVisible ? 'block' : 'none';
-    } else if (item.classList.contains('table-list-item')) {
-      item.style.display = shouldBeVisible ? 'table-row' : 'none';
-    }
-  });
-
-  // Filtrar cards desabilitados (sem data-item) apenas por busca de texto
-  document.querySelectorAll('.kanban-card:not(.data-item), .table-list-item:not(.data-item)').forEach(item => {
-    const textContent = item.textContent.toLowerCase();
-    const matchesSearch = textContent.includes(searchTerm);
-    const shouldBeVisible = matchesSearch;
-    if (item.classList.contains('kanban-card')) {
-      item.style.display = shouldBeVisible ? 'block' : 'none';
-    } else if (item.classList.contains('table-list-item')) {
-      item.style.display = shouldBeVisible ? 'table-row' : 'none';
-    }
-  });
-
-  // Kanban: ocultar fases vazias se o toggle estiver ativo
-  if (document.getElementById('kanban-view').classList.contains('flex')) {
-    document.querySelectorAll('#kanban-container > .w-52.bg-gray-100.rounded-lg.flex.flex-col.flex-shrink-0').forEach(col => {
-      const visibleCards = col.querySelectorAll('.kanban-card:not([style*="display: none"])').length;
-      if (hideEmptyPhases && visibleCards === 0) {
-        col.style.display = 'none';
-      } else {
-        col.style.display = '';
-      }
-    });
-  }
-
-  // Atualizar contadores das colunas
-  document.querySelectorAll('#kanban-view .w-52').forEach(column => {
-    const visibleCards = column.querySelectorAll('.kanban-card:not([style*="display: none"])').length;
-    const countElement = column.querySelector('.card-count');
-    if(countElement) { countElement.textContent = visibleCards; }
-  });
-}
-    
     // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; 
 
@@ -1070,6 +1011,11 @@ function filterAndSearch() {
         }
       });
 
+      // Variáveis globais para filtros
+      let currentSearchTerm = '';
+      let currentSlaFilter = 'all';
+      let hideEmptyPhases = false;
+
       searchInput.addEventListener('input', () => {
         currentSearchTerm = searchInput.value;
         filterAndSearch();
@@ -1091,7 +1037,26 @@ function filterAndSearch() {
         toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
       }
 
-         });
+      function filterAndSearch() {
+        console.log('[Kanban] Aplicando filtros:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
+        const searchTerm = currentSearchTerm.toLowerCase();
+        const currentSla = currentSlaFilter;
+        
+        // Filtrar cards normais (com data-item)
+        document.querySelectorAll('.data-item').forEach(item => {
+          const placa = item.dataset.placa.toLowerCase();
+          const driver = item.dataset.driver.toLowerCase();
+          const chofer = item.dataset.chofer.toLowerCase();
+          const slaText = item.dataset.slaText;
+          const matchesSearch = placa.includes(searchTerm) || driver.includes(searchTerm) || chofer.includes(searchTerm);
+          const matchesSla = (currentSla === 'all') || (slaText === currentSla);
+          const shouldBeVisible = matchesSearch && matchesSla;
+          if (item.classList.contains('kanban-card')) {
+            item.style.display = shouldBeVisible ? 'block' : 'none';
+          } else if (item.classList.contains('table-list-item')) {
+            item.style.display = shouldBeVisible ? 'table-row' : 'none';
+          }
+        });
         
         // Filtrar cards desabilitados (sem data-item) apenas por busca de texto
         document.querySelectorAll('.kanban-card:not(.data-item), .table-list-item:not(.data-item)').forEach(item => {
