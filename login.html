@@ -19,15 +19,15 @@
   </style>
 </head>
 <body class="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#FF355A]/10 to-[#FF355A]/30">
-  <div id="login-card" class="bg-white/90 rounded-2xl shadow-2xl p-8 md:p-12 w-full max-w-md text-center space-y-8 border border-gray-100 backdrop-blur-md">
+  <div id="login-card" class="bg-[#FF355A] rounded-2xl shadow-2xl p-8 md:p-12 w-full max-w-md text-center space-y-8 border border-gray-100 backdrop-blur-md">
     <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-14 mx-auto drop-shadow-lg" />
-    <h1 class="text-3xl md:text-4xl poppins-extrabold text-[#FF355A]">Gestão de Recolhas</h1>
-    <div id="login-message" class="text-gray-700 text-base md:text-lg"></div>
-    <button id="login-btn" class="flex items-center justify-center gap-3 bg-[#FF355A] hover:bg-[#E02E4D] transition text-white px-6 py-3 rounded-full font-semibold shadow-lg mx-auto w-full max-w-xs text-base md:text-lg focus:outline-none focus:ring-2 focus:ring-[#FF355A]/40">
+    <h1 class="text-3xl md:text-4xl poppins-extrabold text-white">Gestão de Recolhas</h1>
+    <div id="login-message" class="text-white text-base md:text-lg"></div>
+    <button id="login-btn" class="flex items-center justify-center gap-3 bg-white border border-gray-200 hover:shadow-lg transition text-gray-700 px-6 py-3 rounded-full font-semibold shadow mx-auto w-full max-w-xs text-base md:text-lg focus:outline-none focus:ring-2 focus:ring-[#FF355A]/40">
       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="h-5 w-5" />
-      Entrar com Google
+      <span class="font-medium">Entrar com Google</span>
     </button>
-    <div id="error-message" class="text-red-600 text-sm hidden"></div>
+    <div id="error-message" class="text-yellow-100 text-sm hidden"></div>
   </div>
 
   <script type="module">
@@ -71,17 +71,22 @@
 
     // Checagem de permissão após login
     async function checkUserPermission(user) {
-      // Exemplo: checa permissão via API já usada no index/mobile
       try {
         const SCRIPT_URL = window.SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbw6Qw1QwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQw/exec';
         const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${Date.now()}`;
         const response = await fetch(url);
         const data = await response.json();
-        // Permissão válida: 'kovi' ou 'onsystem' (ajuste conforme sua regra)
-        let permission = (data.permissionType || data.userPermission || data.permission || '').toString().toLowerCase();
-        if (!permission && data.user && data.user.permission) permission = data.user.permission.toString().toLowerCase();
-        if (permission === 'kovi' || permission === 'onsystem') return true;
-        return false;
+        // Busca permissão em vários campos possíveis
+        let permission = '';
+        if (data.permissionType) permission = data.permissionType;
+        else if (data.userPermission) permission = data.userPermission;
+        else if (data.permission) permission = data.permission;
+        else if (data.user && data.user.permission) permission = data.user.permission;
+        else if (data.user && data.user.permissionType) permission = data.user.permissionType;
+        else if (data.user && data.user.userPermission) permission = data.user.userPermission;
+        if (permission) permission = permission.toString().toLowerCase().trim();
+        // Permissão válida: 'kovi' ou 'onsystem'
+        return permission === 'kovi' || permission === 'onsystem';
       } catch (e) {
         return false;
       }
@@ -127,12 +132,10 @@
     // Não redireciona automaticamente se já está logado, só mostra botão
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // Não faz login automático, só ao clicar
         document.getElementById('login-message').textContent = 'Você já está autenticado. Clique no botão abaixo para acessar.';
       }
     });
 
-    // Permite trocar de conta ao deslogar
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('login-btn').disabled = false;
       document.getElementById('login-btn').classList.remove('opacity-60','cursor-not-allowed');
