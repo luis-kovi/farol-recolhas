@@ -18,19 +18,16 @@
     }
   </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
-  <div class="bg-[#FF355A] rounded-2xl shadow-2xl p-10 md:p-12 w-full max-w-md text-center space-y-6">
-    <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-12 mx-auto" />
-    
-    <h1 class="text-3xl poppins-extrabold text-white">Gestão de Recolhas</h1>
-    <p class="text-white text-opacity-80">Por favor, faça login para continuar.</p>
-
-    <button id="login-btn" class="flex items-center justify-center gap-3 bg-white border border-gray-200 hover:shadow-md transition px-6 py-3 rounded-full text-gray-700 font-medium mx-auto w-full max-w-xs">
+<body class="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#FF355A]/10 to-[#FF355A]/30">
+  <div id="login-card" class="bg-white/90 rounded-2xl shadow-2xl p-8 md:p-12 w-full max-w-md text-center space-y-8 border border-gray-100 backdrop-blur-md">
+    <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-14 mx-auto drop-shadow-lg" />
+    <h1 class="text-3xl md:text-4xl poppins-extrabold text-[#FF355A]">Gestão de Recolhas</h1>
+    <div id="login-message" class="text-gray-700 text-base md:text-lg"></div>
+    <button id="login-btn" class="flex items-center justify-center gap-3 bg-[#FF355A] hover:bg-[#E02E4D] transition text-white px-6 py-3 rounded-full font-semibold shadow-lg mx-auto w-full max-w-xs text-base md:text-lg focus:outline-none focus:ring-2 focus:ring-[#FF355A]/40">
       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="h-5 w-5" />
       Entrar com Google
     </button>
-
-    <div id="error-message" class="text-yellow-100 text-sm hidden"></div>
+    <div id="error-message" class="text-red-600 text-sm hidden"></div>
   </div>
 
   <script type="module">
@@ -38,7 +35,8 @@
     import {
       getAuth,
       GoogleAuthProvider,
-      signInWithPopup
+      signInWithPopup,
+      signOut
     } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -49,82 +47,95 @@
       messagingSenderId: "906043397693",
       appId: "1:906043397693:web:a33ba5450933da51ba7c54"
     };
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // Função para detectar dispositivo móvel
+    // Detecta mobile/desktop
     function isMobileDevice() {
       const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-      
-      // Verificar se é um dispositivo móvel
-      if (/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase())) {
-        return true;
-      }
-      
-      // Verificar largura da tela
-      if (window.innerWidth <= 768) {
-        return true;
-      }
-      
-      // Verificar se tem touch screen
-      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-        return true;
-      }
-      
+      if (/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase())) return true;
+      if (window.innerWidth <= 768) return true;
+      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return true;
       return false;
     }
-
-    // Função para redirecionar baseado no dispositivo
-    function redirectBasedOnDevice() {
-      const isMobile = isMobileDevice();
-      const targetPage = isMobile ? 'mobile.html' : 'index.html';
-      
-      console.log(`Dispositivo detectado: ${isMobile ? 'Mobile' : 'Desktop'}`);
-      console.log(`Redirecionando para: ${targetPage}`);
-      
-      window.location.href = targetPage;
+    function getTargetPage() {
+      return isMobileDevice() ? 'mobile.html' : 'index.html';
     }
 
-    // Verificar se já está logado ao carregar a página
-    auth.onAuthStateChanged((user) => {
-      if (user) {
+    // Mensagem de logout amigável
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('loggedout')) {
+      document.getElementById('login-message').textContent = 'Sua conta foi deslogada, clique no botão abaixo para acessar novamente';
+    }
+
+    // Checagem de permissão após login
+    async function checkUserPermission(user) {
+      // Exemplo: checa permissão via API já usada no index/mobile
+      try {
+        const SCRIPT_URL = window.SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbw6Qw1QwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQw/exec';
+        const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${Date.now()}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        // Permissão válida: 'kovi' ou 'onsystem' (ajuste conforme sua regra)
+        let permission = (data.permissionType || data.userPermission || data.permission || '').toString().toLowerCase();
+        if (!permission && data.user && data.user.permission) permission = data.user.permission.toString().toLowerCase();
+        if (permission === 'kovi' || permission === 'onsystem') return true;
+        return false;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // Fluxo de login
+    async function handleLogin(user) {
+      document.getElementById('login-btn').disabled = true;
+      document.getElementById('login-btn').classList.add('opacity-60','cursor-not-allowed');
+      document.getElementById('login-message').textContent = 'Verificando permissões...';
+      const hasPermission = await checkUserPermission(user);
+      if (hasPermission) {
         localStorage.setItem('user', JSON.stringify({
           displayName: user.displayName,
           email: user.email,
           photoURL: user.photoURL,
           uid: user.uid
         }));
-        
-        redirectBasedOnDevice();
+        window.location.href = getTargetPage();
+      } else {
+        document.getElementById('login-message').textContent = '';
+        document.getElementById('error-message').textContent = 'Acesso negado: Contate o administrador do sistema';
+        document.getElementById('error-message').classList.remove('hidden');
+        document.getElementById('login-btn').disabled = false;
+        document.getElementById('login-btn').classList.remove('opacity-60','cursor-not-allowed');
       }
-    });
+    }
 
+    // Não faz login automático, só ao clicar no botão
     document.getElementById('login-btn').addEventListener('click', async () => {
       try {
         const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-
-        localStorage.setItem('user', JSON.stringify({
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-          uid: user.uid
-        }));
-
-        redirectBasedOnDevice();
+        await handleLogin(result.user);
       } catch (error) {
-        console.error("Erro de autenticação:", error);
-
-        const errorMessage = document.getElementById('error-message');
-        errorMessage.textContent = `Erro ao fazer login: ${error.message}`;
-        errorMessage.classList.remove('hidden');
-
+        document.getElementById('error-message').textContent = `Erro ao fazer login: ${error.message}`;
+        document.getElementById('error-message').classList.remove('hidden');
         setTimeout(() => {
-          errorMessage.classList.add('hidden');
+          document.getElementById('error-message').classList.add('hidden');
         }, 5000);
       }
+    });
+
+    // Não redireciona automaticamente se já está logado, só mostra botão
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // Não faz login automático, só ao clicar
+        document.getElementById('login-message').textContent = 'Você já está autenticado. Clique no botão abaixo para acessar.';
+      }
+    });
+
+    // Permite trocar de conta ao deslogar
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('login-btn').disabled = false;
+      document.getElementById('login-btn').classList.remove('opacity-60','cursor-not-allowed');
     });
   </script>
 </body>
