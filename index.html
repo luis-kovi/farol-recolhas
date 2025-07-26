@@ -255,6 +255,12 @@
       min-height: 38px;
       padding-top: 8px;
       padding-bottom: 8px;
+      height: 38px;
+      box-sizing: border-box;
+    }
+    #list-view > div {
+      width: 100% !important;
+      margin-left: 0 !important;
     }
   </style>
 </head>
@@ -299,9 +305,9 @@
             </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
-                  <span class="text-sm text-gray-700">ocultar fases vazias</span>
-                  <button id="toggleEmptyPhasesBtn" class="toggle-switch relative w-10 h-6 bg-white border border-gray-300 rounded-full transition-colors duration-200 focus:outline-none">
-                    <span class="toggle-slider absolute left-0 top-0 w-6 h-6 bg-gray-300 rounded-full shadow transition-transform duration-200"></span>
+                  <span class="text-xs text-gray-700 leading-tight block text-center" style="font-size: 11px; margin-bottom: 2px;">ocultar fases vazias</span>
+                  <button id="toggleEmptyPhasesBtn" class="toggle-switch relative w-8 h-5 bg-white border border-gray-300 rounded-full transition-colors duration-200 focus:outline-none" style="margin-top: 0;">
+                    <span class="toggle-slider absolute left-0 top-0 w-5 h-5 bg-gray-300 rounded-full shadow transition-transform duration-200"></span>
                   </button>
                 </div>
                 <select id="slaFilter" class="text-sm border border-gray-300 rounded-md p-2 focus-primary">
@@ -945,6 +951,14 @@
       resetInactivityTimer();
     }
 
+    // Variáveis globais para filtros (antes de qualquer função)
+    let currentSearchTerm = '';
+    let currentSlaFilter = 'all';
+    let hideEmptyPhases = false;
+
+    // Elementos globais
+    let searchInput, slaFilter, toggleEmptyPhasesBtn;
+
     document.addEventListener('DOMContentLoaded', function() {
       // Configurar monitoramento de inatividade
       setupInactivityMonitoring();
@@ -954,8 +968,9 @@
       document.getElementById('user-email').textContent = user.email;
       document.getElementById('user-avatar').src = user.photoURL;
 
-      const searchInput = document.getElementById('searchInput');
-      const slaFilter = document.getElementById('slaFilter');
+      searchInput = document.getElementById('searchInput');
+      slaFilter = document.getElementById('slaFilter');
+      toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
       const kanbanView = document.getElementById('kanban-view');
       const listView = document.getElementById('list-view');
       const loadingIndicator = document.getElementById('loading-indicator');
@@ -1011,11 +1026,6 @@
         }
       });
 
-      // Variáveis globais para filtros
-      let currentSearchTerm = '';
-      let currentSlaFilter = 'all';
-      let hideEmptyPhases = false;
-
       searchInput.addEventListener('input', () => {
         currentSearchTerm = searchInput.value;
         filterAndSearch();
@@ -1024,7 +1034,6 @@
         currentSlaFilter = slaFilter.value;
         filterAndSearch();
       });
-      const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
       toggleEmptyPhasesBtn.addEventListener('click', () => {
         hideEmptyPhases = !hideEmptyPhases;
         toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
@@ -1105,6 +1114,8 @@
         listView.classList.remove('hidden');
         listBtn.classList.add('active');
         kanbanBtn.classList.remove('active');
+        // Recriar a lista ao exibir
+        if (window.lastCardsData) buildListView(window.lastCardsData);
       });
 
       function openCardModal(itemElement) {
@@ -1229,6 +1240,7 @@
           
           // Verifica permissões para a calculadora
           checkCalculatorPermission(responseData);
+          window.lastCardsData = responseData.cards;
       }
       
       function fetchData() {
