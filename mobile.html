@@ -997,7 +997,14 @@
 
       function logout() {
         localStorage.removeItem('user');
-        window.location.href = 'login.html';
+        import('https://www.gstatic.com/firebasejs/10.12.1/firebase-auth.js').then(({ getAuth, signOut }) => {
+          const auth = getAuth();
+          signOut(auth).finally(() => {
+            window.location.href = 'login.html?loggedout=1';
+          });
+        }).catch(() => {
+          window.location.href = 'login.html?loggedout=1';
+        });
       }
 
       logoutBtn.addEventListener('click', logout);
