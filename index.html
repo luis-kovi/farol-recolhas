@@ -249,10 +249,12 @@
       background: #fff;
       transform: translateX(16px);
     }
-    /* CSS para faixa inferior do card - altura adaptável */
+    /* CSS fixo para faixa inferior do card */
     .kanban-card .p-2.flex.items-center.justify-between.border-t,
     .kanban-card .p-2.flex.items-center.justify-center.border-t {
-      padding: 8px;
+      height: 38px; /* altura fixa para evitar "salto" visual durante filtros */
+      padding-top: 8px;
+      padding-bottom: 8px;
     }
   </style>
 </head>
@@ -336,8 +338,8 @@
             </div>
       </div>
       
-      <div id="list-view" class="absolute inset-0 p-4 hidden">
-        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto table-border-primary scroll-container">
+      <div id="list-view" class="h-full w-full p-4 hidden">
+        <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
           <table class="w-full text-sm text-left text-gray-500">
             <thead class="text-xs uppercase bg-gray-50 sticky top-0 z-10 table-header-primary">
               <tr>
@@ -396,14 +398,6 @@
       window.location.href = 'login.html';
     }
 
-    // Variáveis globais para filtros - movidas para fora do DOMContentLoaded
-    let currentSearchTerm = '';
-    let currentSlaFilter = 'all';
-    let hideEmptyPhases = false;
-    
-    // Variável global para armazenar os últimos dados
-    window.lastCardsData = [];
-
     const fixedPhaseOrder = [
       'Fila de Recolha',
       'Aprovar Custo de Recolha',
@@ -435,8 +429,8 @@
     // Mensagens para as fases desabilitadas
     const disabledPhaseMessages = {
       'Aprovar Custo de Recolha': 'em análise da Kovi',
-      'Desbloquear Veículo': 'em tratativa da Kovi',
-      'Solicitar Guincho': 'em tratativa da Kovi'
+      'Desbloquear Veículo': 'em processo de desbloqueio',
+      'Solicitar Guincho': 'em análise da Kovi'
     };
 
     // Função para formatar apenas nomes específicos (Driver, Modelo, Chofer)
@@ -500,28 +494,8 @@
         cards.forEach(card => {
           card.sla = calcularSLA(card.dataCriacao);
         });
-        
-        // Salvar dados globalmente
-        window.lastCardsData = cards;
-        
-        // Reconstrói apenas a visualização ativa para reduzir "piscada"
-        const kanbanView = document.getElementById('kanban-view');
-        const listView = document.getElementById('list-view');
-        
-        if (kanbanView && !kanbanView.classList.contains('hidden')) {
-          buildKanbanView(cards);
-        }
-        
-        if (listView && !listView.classList.contains('hidden')) {
-          buildListView(cards);
-        }
-        
-        // Se nenhuma view estiver visível, constrói ambas
-        if (kanbanView && kanbanView.classList.contains('hidden') && 
-            listView && listView.classList.contains('hidden')) {
-          buildKanbanView(cards);
-          buildListView(cards);
-        }
+        buildKanbanView(cards);
+        buildListView(cards);
     }
     
     function buildKanbanView(cards) {
@@ -566,15 +540,28 @@
         });
         container.innerHTML = html;
         
-        // Restaurar posições de scroll imediatamente
-        container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
-            if (scrollPositions[index] !== undefined) {
-                scrollContainer.scrollTop = scrollPositions[index];
-            }
-        });
-        
-        // Aplicar filtros imediatamente para evitar "piscada"
-        filterAndSearch();
+        // Restaurar posições de scroll após a atualização
+        setTimeout(() => {
+            container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
+                if (scrollPositions[index] !== undefined) {
+                    scrollContainer.scrollTop = scrollPositions[index];
+                }
+            });
+        }, 0);
+        // Salvar estado dos filtros
+        const savedSearch = currentSearchTerm;
+        const savedSla = currentSlaFilter;
+        const savedToggle = hideEmptyPhases;
+        setTimeout(() => {
+            console.log('[Kanban] Restaurando filtros:', { savedSearch, savedSla, savedToggle });
+            currentSearchTerm = savedSearch;
+            currentSlaFilter = savedSla;
+            hideEmptyPhases = savedToggle;
+            searchInput.value = currentSearchTerm;
+            slaFilter.value = currentSlaFilter;
+            toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
+            filterAndSearch();
+        }, 0);
     }
 
     function buildCardHTML(card) {
@@ -1024,36 +1011,36 @@
         }
       });
 
+      // Estado dos filtros (armazenado no objeto global `window` para acesso em todo o script)
+      window.currentSearchTerm = window.currentSearchTerm || '';
+      window.currentSlaFilter  = window.currentSlaFilter  || 'all';
+      window.hideEmptyPhases   = window.hideEmptyPhases   || false;
+
       searchInput.addEventListener('input', () => {
-        currentSearchTerm = searchInput.value;
+        window.currentSearchTerm = searchInput.value;
         filterAndSearch();
       });
       slaFilter.addEventListener('change', () => {
-        currentSlaFilter = slaFilter.value;
+        window.currentSlaFilter = slaFilter.value;
         filterAndSearch();
       });
       const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
       toggleEmptyPhasesBtn.addEventListener('click', () => {
-        hideEmptyPhases = !hideEmptyPhases;
-        toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
+        window.hideEmptyPhases = !window.hideEmptyPhases;
+        toggleEmptyPhasesBtn.classList.toggle('active', window.hideEmptyPhases);
         filterAndSearch();
       });
 
       function restoreFilterState() {
-        const searchInput = document.getElementById('searchInput');
-        const slaFilter = document.getElementById('slaFilter');
-        const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
-        
-        if (searchInput) searchInput.value = currentSearchTerm;
-        if (slaFilter) slaFilter.value = currentSlaFilter;
-        if (toggleEmptyPhasesBtn) toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
+        searchInput.value = window.currentSearchTerm;
+        slaFilter.value = window.currentSlaFilter;
+        toggleEmptyPhasesBtn.classList.toggle('active', window.hideEmptyPhases);
       }
 
       function filterAndSearch() {
-        const searchTerm = currentSearchTerm.toLowerCase();
-        const currentSla = currentSlaFilter;
-        
-        // Aplicar filtros de forma mais otimizada para reduzir "piscada"
+        console.log('[Kanban] Aplicando filtros:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
+        const searchTerm = window.currentSearchTerm.toLowerCase();
+        const currentSla = window.currentSlaFilter;
         
         // Filtrar cards normais (com data-item)
         document.querySelectorAll('.data-item').forEach(item => {
@@ -1088,7 +1075,7 @@
         if (document.getElementById('kanban-view').classList.contains('flex')) {
           document.querySelectorAll('#kanban-container > .w-52.bg-gray-100.rounded-lg.flex.flex-col.flex-shrink-0').forEach(col => {
             const visibleCards = col.querySelectorAll('.kanban-card:not([style*="display: none"])').length;
-            if (hideEmptyPhases && visibleCards === 0) {
+            if (window.hideEmptyPhases && visibleCards === 0) {
               col.style.display = 'none';
             } else {
               col.style.display = '';
@@ -1105,43 +1092,19 @@
       }
 
       kanbanBtn.addEventListener('click', () => {
-        // Esconder lista
-        listView.classList.add('hidden');
-        
-        // Mostrar kanban
         kanbanView.classList.remove('hidden');
         kanbanView.classList.add('flex');
-        
-        // Atualizar botões ativos
+        listView.classList.add('hidden');
         kanbanBtn.classList.add('active');
         listBtn.classList.remove('active');
-        
-        // Garantir que o kanban tenha os dados mais recentes
-        if (window.lastCardsData) {
-          buildKanbanView(window.lastCardsData);
-          // Aplicar filtros no kanban imediatamente
-          filterAndSearch();
-        }
       });
 
       listBtn.addEventListener('click', () => {
-        // Esconder kanban
         kanbanView.classList.add('hidden');
         kanbanView.classList.remove('flex');
-        
-        // Mostrar lista e reconstruir se necessário
         listView.classList.remove('hidden');
-        
-        // Atualizar botões ativos
         listBtn.classList.add('active');
         kanbanBtn.classList.remove('active');
-        
-        // Garantir que a lista tenha os dados mais recentes
-        if (window.lastCardsData) {
-          buildListView(window.lastCardsData);
-          // Aplicar filtros na lista imediatamente
-          filterAndSearch();
-        }
       });
 
       function openCardModal(itemElement) {
@@ -1259,16 +1222,10 @@
           buildUI(responseData.cards);
           console.log("Dados atualizados em: " + responseData.lastUpdate);
           
-          // Restaurar estado dos filtros imediatamente
-          restoreFilterState();
-          
           // Força ocultação antes de verificar permissões
-          const openCalculatorBtn = document.getElementById('openCalculatorBtn');
-          if (openCalculatorBtn) {
-              openCalculatorBtn.classList.add('hidden');
-              openCalculatorBtn.style.display = 'none';
-              console.log("🔒 Botão forçadamente oculto antes da verificação de permissões");
-          }
+          openCalculatorBtn.classList.add('hidden');
+          openCalculatorBtn.style.display = 'none';
+          console.log("🔒 Botão forçadamente oculto antes da verificação de permissões");
           
           // Verifica permissões para a calculadora
           checkCalculatorPermission(responseData);
@@ -1369,6 +1326,11 @@
           attributeFilter: ['class', 'style'] 
         });
       }
+
+      // Torna os elementos acessíveis globalmente
+      window.searchInput = searchInput;
+      window.slaFilter   = slaFilter;
+      window.toggleEmptyPhasesBtn = toggleEmptyPhasesBtn;
     });
   </script>
 
