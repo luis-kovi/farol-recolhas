@@ -249,20 +249,10 @@
       background: #fff;
       transform: translateX(16px);
     }
-    /* CSS fixo para faixa inferior do card */
+    /* CSS para faixa inferior do card - altura adaptável */
     .kanban-card .p-2.flex.items-center.justify-between.border-t,
     .kanban-card .p-2.flex.items-center.justify-center.border-t {
-      min-height: 38px !important;
-      height: 38px !important;
-      padding-top: 8px !important;
-      padding-bottom: 8px !important;
-    }
-    
-    /* Garantir que todos os footers dos cards tenham altura fixa */
-    .kanban-card > div:last-child {
-      min-height: 38px !important;
-      height: 38px !important;
-      flex-shrink: 0 !important;
+      padding: 8px;
     }
   </style>
 </head>
@@ -346,7 +336,7 @@
             </div>
       </div>
       
-      <div id="list-view" class="flex-1 p-4 hidden">
+      <div id="list-view" class="absolute inset-0 p-4 hidden">
         <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto table-border-primary scroll-container">
           <table class="w-full text-sm text-left text-gray-500">
             <thead class="text-xs uppercase bg-gray-50 sticky top-0 z-10 table-header-primary">
@@ -410,6 +400,9 @@
     let currentSearchTerm = '';
     let currentSlaFilter = 'all';
     let hideEmptyPhases = false;
+    
+    // Variável global para armazenar os últimos dados
+    window.lastCardsData = [];
 
     const fixedPhaseOrder = [
       'Fila de Recolha',
@@ -442,8 +435,8 @@
     // Mensagens para as fases desabilitadas
     const disabledPhaseMessages = {
       'Aprovar Custo de Recolha': 'em análise da Kovi',
-      'Desbloquear Veículo': 'em processo de desbloqueio',
-      'Solicitar Guincho': 'em análise da Kovi'
+      'Desbloquear Veículo': 'em tratativa da Kovi',
+      'Solicitar Guincho': 'em tratativa da Kovi'
     };
 
     // Função para formatar apenas nomes específicos (Driver, Modelo, Chofer)
@@ -507,8 +500,28 @@
         cards.forEach(card => {
           card.sla = calcularSLA(card.dataCriacao);
         });
-        buildKanbanView(cards);
-        buildListView(cards);
+        
+        // Salvar dados globalmente
+        window.lastCardsData = cards;
+        
+        // Reconstrói apenas a visualização ativa para reduzir "piscada"
+        const kanbanView = document.getElementById('kanban-view');
+        const listView = document.getElementById('list-view');
+        
+        if (kanbanView && !kanbanView.classList.contains('hidden')) {
+          buildKanbanView(cards);
+        }
+        
+        if (listView && !listView.classList.contains('hidden')) {
+          buildListView(cards);
+        }
+        
+        // Se nenhuma view estiver visível, constrói ambas
+        if (kanbanView && kanbanView.classList.contains('hidden') && 
+            listView && listView.classList.contains('hidden')) {
+          buildKanbanView(cards);
+          buildListView(cards);
+        }
     }
     
     function buildKanbanView(cards) {
@@ -553,19 +566,15 @@
         });
         container.innerHTML = html;
         
-        // Restaurar posições de scroll após a atualização
-        setTimeout(() => {
-            container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
-                if (scrollPositions[index] !== undefined) {
-                    scrollContainer.scrollTop = scrollPositions[index];
-                }
-            });
-        }, 0);
+        // Restaurar posições de scroll imediatamente
+        container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
+            if (scrollPositions[index] !== undefined) {
+                scrollContainer.scrollTop = scrollPositions[index];
+            }
+        });
         
-        // Aplicar filtros após reconstruir a UI
-        setTimeout(() => {
-            filterAndSearch();
-        }, 0);
+        // Aplicar filtros imediatamente para evitar "piscada"
+        filterAndSearch();
     }
 
     function buildCardHTML(card) {
@@ -594,7 +603,7 @@
                             <div class="truncate">${formatPersonName(card.chofer)}</div>
                         </div>
                     </div>
-                    <div class="p-2 flex items-center justify-center border-t border-gray-300" style="min-height: 38px; height: 38px;">
+                    <div class="p-2 flex items-center justify-center border-t border-gray-300">
                         <div class="flex items-center text-xs text-gray-500 font-medium">
                             <svg class="animate-spin mr-1 h-3 w-3 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -634,7 +643,7 @@
                         <div class="truncate">${card.faseAtual !== 'Fila de Recolha' ? formatPersonName(card.chofer) : '-'}</div>
                     </div>
                 </div>
-                <div class="p-2 flex items-center justify-between border-t border-gray-100" style="min-height: 38px; height: 38px;">
+                <div class="p-2 flex items-center justify-between border-t border-gray-100">
                     <div class="flex items-center text-xs text-red-600 font-semibold">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                         SLA: ${card.sla}d
@@ -1041,9 +1050,10 @@
       }
 
       function filterAndSearch() {
-        console.log('[Kanban] Aplicando filtros:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
         const searchTerm = currentSearchTerm.toLowerCase();
         const currentSla = currentSlaFilter;
+        
+        // Aplicar filtros de forma mais otimizada para reduzir "piscada"
         
         // Filtrar cards normais (com data-item)
         document.querySelectorAll('.data-item').forEach(item => {
@@ -1095,19 +1105,43 @@
       }
 
       kanbanBtn.addEventListener('click', () => {
+        // Esconder lista
+        listView.classList.add('hidden');
+        
+        // Mostrar kanban
         kanbanView.classList.remove('hidden');
         kanbanView.classList.add('flex');
-        listView.classList.add('hidden');
+        
+        // Atualizar botões ativos
         kanbanBtn.classList.add('active');
         listBtn.classList.remove('active');
+        
+        // Garantir que o kanban tenha os dados mais recentes
+        if (window.lastCardsData) {
+          buildKanbanView(window.lastCardsData);
+          // Aplicar filtros no kanban imediatamente
+          filterAndSearch();
+        }
       });
 
       listBtn.addEventListener('click', () => {
+        // Esconder kanban
         kanbanView.classList.add('hidden');
         kanbanView.classList.remove('flex');
+        
+        // Mostrar lista e reconstruir se necessário
         listView.classList.remove('hidden');
+        
+        // Atualizar botões ativos
         listBtn.classList.add('active');
         kanbanBtn.classList.remove('active');
+        
+        // Garantir que a lista tenha os dados mais recentes
+        if (window.lastCardsData) {
+          buildListView(window.lastCardsData);
+          // Aplicar filtros na lista imediatamente
+          filterAndSearch();
+        }
       });
 
       function openCardModal(itemElement) {
@@ -1225,11 +1259,8 @@
           buildUI(responseData.cards);
           console.log("Dados atualizados em: " + responseData.lastUpdate);
           
-          // Restaurar estado dos filtros após atualização
-          setTimeout(() => {
-              restoreFilterState();
-              filterAndSearch();
-          }, 100);
+          // Restaurar estado dos filtros imediatamente
+          restoreFilterState();
           
           // Força ocultação antes de verificar permissões
           const openCalculatorBtn = document.getElementById('openCalculatorBtn');
