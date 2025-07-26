@@ -334,6 +334,85 @@
       'Solicitar Guincho': 'em análise da Kovi'
     };
 
+    // Variáveis globais para estado dos filtros
+    let hideEmptyPhases = false;
+    let currentSlaFilter = 'all';
+    let currentSearchTerm = '';
+
+    // Função global para aplicar filtros
+    function filterAndSearch() {
+      const searchInput = document.getElementById('searchInput');
+      const slaFilter = document.getElementById('slaFilter');
+      
+      if (!searchInput || !slaFilter) return;
+      
+      const searchTerm = searchInput.value.toLowerCase();
+      currentSearchTerm = searchTerm;
+      currentSlaFilter = slaFilter.value;
+      
+      console.log('Aplicando filtros:', { searchTerm, currentSlaFilter, hideEmptyPhases });
+      
+      // Filtrar cards normais (com data-item)
+      document.querySelectorAll('.mobile-card.data-item').forEach(card => {
+        const placa = card.dataset.placa.toLowerCase();
+        const driver = card.dataset.driver.toLowerCase();
+        const chofer = card.dataset.chofer.toLowerCase();
+        const slaText = card.dataset.slaText;
+        const matchesSearch = placa.includes(searchTerm) || driver.includes(searchTerm) || chofer.includes(searchTerm);
+        const matchesSla = (currentSlaFilter === 'all') || (slaText === currentSlaFilter);
+        const shouldBeVisible = matchesSearch && matchesSla;
+        
+        card.style.display = shouldBeVisible ? 'block' : 'none';
+      });
+      
+      // Filtrar cards desabilitados (sem data-item) apenas por busca de texto
+      document.querySelectorAll('.mobile-card:not(.data-item)').forEach(card => {
+        const textContent = card.textContent.toLowerCase();
+        const matchesSearch = textContent.includes(searchTerm);
+        // Cards desabilitados não têm SLA, então sempre passam no filtro de SLA
+        const shouldBeVisible = matchesSearch;
+        card.style.display = shouldBeVisible ? 'block' : 'none';
+      });
+      
+      // Mostrar/ocultar fases baseado na visibilidade dos cards
+      document.querySelectorAll('[data-phase-container]').forEach(phaseContainer => {
+        const phaseName = phaseContainer.dataset.phaseContainer;
+        const phaseContent = phaseContainer.querySelector('[data-phase-content]');
+        const visibleCards = phaseContent.querySelectorAll('.mobile-card:not([style*="display: none"])').length;
+        const totalCards = phaseContent.querySelectorAll('.mobile-card').length;
+        
+        let shouldShowPhase = true;
+        
+        // Se não há busca ativa e não há filtro de SLA, aplicar apenas filtro de fases vazias
+        if (searchTerm === '' && currentSlaFilter === 'all') {
+          shouldShowPhase = !hideEmptyPhases || totalCards > 0;
+        } else {
+          // Se há busca ou filtro ativo, mostrar se há cards visíveis
+          shouldShowPhase = visibleCards > 0;
+        }
+        
+        phaseContainer.style.display = shouldShowPhase ? 'block' : 'none';
+      });
+      
+      console.log('Filtros aplicados com sucesso');
+    }
+
+    // Função global para toggle de fases vazias
+    function toggleEmptyPhases() {
+      hideEmptyPhases = !hideEmptyPhases;
+      const toggleBtn = document.getElementById('toggleEmptyPhasesBtn');
+      
+      if (hideEmptyPhases) {
+        toggleBtn.classList.add('active');
+        toggleBtn.title = 'Mostrar fases vazias';
+      } else {
+        toggleBtn.classList.remove('active');
+        toggleBtn.title = 'Ocultar fases vazias';
+      }
+      
+      filterAndSearch();
+    }
+
     function formatPersonName(name) {
       if (!name || name === 'N/A') return name;
       return name.toLowerCase().replace(/\b[\wÀ-ÿ]/g, l => l.toUpperCase());
@@ -380,6 +459,30 @@
         temp.setDate(temp.getDate() + 1);
       }
       return dias;
+    }
+
+    // Função para restaurar estado dos filtros após atualizações
+    function restoreFilterState() {
+      console.log('Restaurando estado dos filtros:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
+      
+      // Restaurar campo de busca
+      const searchInput = document.getElementById('searchInput');
+      const slaFilter = document.getElementById('slaFilter');
+      
+      if (searchInput) searchInput.value = currentSearchTerm;
+      if (slaFilter) slaFilter.value = currentSlaFilter;
+      
+      // Restaurar toggle de fases vazias
+      const toggleBtn = document.getElementById('toggleEmptyPhasesBtn');
+      if (toggleBtn) {
+        if (hideEmptyPhases) {
+          toggleBtn.classList.add('active');
+        } else {
+          toggleBtn.classList.remove('active');
+        }
+      }
+      
+      console.log('Estado dos filtros restaurado');
     }
 
     function buildMobileUI(cards) {
@@ -796,76 +899,10 @@
       const closeMobileModalBtn = document.getElementById('closeMobileModal');
       const logoutBtn = document.getElementById('logout-btn');
 
-      let hideEmptyPhases = false;
-      let currentSlaFilter = 'all';
-      let currentSearchTerm = '';
+
+
       
-      function filterAndSearch() {
-        const searchTerm = searchInput.value.toLowerCase();
-        currentSearchTerm = searchTerm;
-        currentSlaFilter = slaFilter.value;
-        
-        console.log('Aplicando filtros:', { searchTerm, currentSlaFilter, hideEmptyPhases });
-        
-        // Filtrar cards normais (com data-item)
-        document.querySelectorAll('.mobile-card.data-item').forEach(card => {
-          const placa = card.dataset.placa.toLowerCase();
-          const driver = card.dataset.driver.toLowerCase();
-          const chofer = card.dataset.chofer.toLowerCase();
-          const slaText = card.dataset.slaText;
-          const matchesSearch = placa.includes(searchTerm) || driver.includes(searchTerm) || chofer.includes(searchTerm);
-          const matchesSla = (currentSlaFilter === 'all') || (slaText === currentSlaFilter);
-          const shouldBeVisible = matchesSearch && matchesSla;
-          
-          card.style.display = shouldBeVisible ? 'block' : 'none';
-        });
-        
-        // Filtrar cards desabilitados (sem data-item) apenas por busca de texto
-        document.querySelectorAll('.mobile-card:not(.data-item)').forEach(card => {
-          const textContent = card.textContent.toLowerCase();
-          const matchesSearch = textContent.includes(searchTerm);
-          // Cards desabilitados não têm SLA, então sempre passam no filtro de SLA
-          const shouldBeVisible = matchesSearch;
-          card.style.display = shouldBeVisible ? 'block' : 'none';
-        });
-        
-        // Mostrar/ocultar fases baseado na visibilidade dos cards
-        document.querySelectorAll('[data-phase-container]').forEach(phaseContainer => {
-          const phaseName = phaseContainer.dataset.phaseContainer;
-          const phaseContent = phaseContainer.querySelector('[data-phase-content]');
-          const visibleCards = phaseContent.querySelectorAll('.mobile-card:not([style*="display: none"])').length;
-          const totalCards = phaseContent.querySelectorAll('.mobile-card').length;
-          
-          let shouldShowPhase = true;
-          
-          // Se não há busca ativa e não há filtro de SLA, aplicar apenas filtro de fases vazias
-          if (searchTerm === '' && currentSlaFilter === 'all') {
-            shouldShowPhase = !hideEmptyPhases || totalCards > 0;
-          } else {
-            // Se há busca ou filtro ativo, mostrar se há cards visíveis
-            shouldShowPhase = visibleCards > 0;
-          }
-          
-          phaseContainer.style.display = shouldShowPhase ? 'block' : 'none';
-        });
-        
-        console.log('Filtros aplicados com sucesso');
-      }
-      
-      function toggleEmptyPhases() {
-        hideEmptyPhases = !hideEmptyPhases;
-        const toggleBtn = document.getElementById('toggleEmptyPhasesBtn');
-        
-        if (hideEmptyPhases) {
-          toggleBtn.classList.add('active');
-          toggleBtn.title = 'Mostrar fases vazias';
-        } else {
-          toggleBtn.classList.remove('active');
-          toggleBtn.title = 'Ocultar fases vazias';
-        }
-        
-        filterAndSearch();
-      }
+
 
       // Configurar event listeners para filtros
       searchInput.addEventListener('input', () => {
@@ -882,26 +919,7 @@
       const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
       toggleEmptyPhasesBtn.addEventListener('click', toggleEmptyPhases);
       
-      // Função para restaurar estado dos filtros após atualizações
-      function restoreFilterState() {
-        console.log('Restaurando estado dos filtros:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
-        
-        // Restaurar campo de busca
-        searchInput.value = currentSearchTerm;
-        
-        // Restaurar filtro de SLA
-        slaFilter.value = currentSlaFilter;
-        
-        // Restaurar toggle de fases vazias
-        const toggleBtn = document.getElementById('toggleEmptyPhasesBtn');
-        if (hideEmptyPhases) {
-          toggleBtn.classList.add('active');
-        } else {
-          toggleBtn.classList.remove('active');
-        }
-        
-        console.log('Estado dos filtros restaurado');
-      }
+
 
       function openMobileModal(itemElement) {
         const data = itemElement.dataset;
