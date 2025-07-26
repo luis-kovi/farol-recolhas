@@ -1168,9 +1168,14 @@
       }
 
       // Função de Logoff
-      function logout() {
+      async function logout() {
         localStorage.removeItem('user');
-        window.location.href = 'login.html';
+        try {
+          const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/10.12.1/firebase-auth.js');
+          const auth = getAuth();
+          await signOut(auth);
+        } catch (e) { /* ignora erro de signOut */ }
+        window.location.href = 'login.html?loggedout=1';
       }
 
       closeCardModalBtn.addEventListener('click', closeCardModal);
