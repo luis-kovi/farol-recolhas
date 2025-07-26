@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Recolhas - Kovi Mobile</title>
+  <link rel="icon" type="image/png" href="https://i.ibb.co/ksMQSMQ2/web-app-manifest-192x192.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #FF355A;
+      --primary-color-darker: #E02E4D;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7f9fa;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .bg-primary {
+      background-color: var(--primary-color);
+    }
+    .text-primary {
+      color: var(--primary-color);
+    }
+    .border-primary {
+      border-color: var(--primary-color);
+    }
+    .focus-primary:focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.4) !important;
+    }
+    
+    /* Efeito visual para tag "Atrasado" piscar */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+    .blink {
+      animation: blink 1s linear infinite;
+    }
+    
+    /* Efeito de destaque ao tocar cards */
+    .mobile-card:not(.disabled):active {
+      background-color: rgba(255, 53, 90, 0.1);
+      transform: scale(0.98);
+      transition: all 0.1s ease-in-out;
+    }
+    
+    /* Modal mobile otimizado */
+    .mobile-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: flex;
+      align-items: flex-end;
+      transform: translateY(100%);
+      transition: transform 0.3s ease-out;
+    }
+    
+    .mobile-modal.active {
+      transform: translateY(0);
+    }
+    
+    .mobile-modal-content {
+      background: white;
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    
+    .mobile-modal-header {
+      position: sticky;
+      top: 0;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      padding: 1rem;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .mobile-modal-body {
+      padding: 1rem;
+    }
+    
+    /* Pull to refresh indicator */
+    .pull-indicator {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-color);
+      font-size: 14px;
+    }
+    
+    /* Fase expandida/collapsada */
+    .phase-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    
+    .phase-content.expanded {
+      max-height: 1000px;
+    }
+    
+    .phase-header {
+      transition: background-color 0.2s ease;
+    }
+    
+    .phase-header:active {
+      background-color: rgba(255, 53, 90, 0.1);
+    }
+  </style>
+</head>
+<body class="text-gray-800">
+
+  <div class="flex flex-col h-screen">
+    <!-- Header Mobile -->
+    <header class="bg-primary text-white flex-shrink-0">
+      <div class="flex justify-between items-center px-4 py-3">
+        <div class="flex items-center gap-3">
+          <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-8">
+          <div>
+            <h1 class="text-sm font-semibold" style="font-family: 'Poppins', sans-serif; font-weight: 800;">Gestão de Recolhas</h1>
+            <p class="text-xs opacity-75">Versão Mobile</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <img id="user-avatar" src="https://placehold.co/32x32/FFFFFF/FF355A?text=K" alt="Foto do Perfil" class="h-8 w-8 rounded-full">
+          <button id="logout-btn" class="text-white text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+              <path d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Filtros Mobile -->
+    <div class="bg-white border-b border-gray-200 flex-shrink-0 px-4 py-3">
+      <div class="flex flex-col gap-3">
+        <div class="flex gap-2">
+          <select id="slaFilter" class="flex-1 text-sm border border-gray-300 rounded-lg p-2 focus-primary">
+            <option value="all">Todos os SLAs</option>
+            <option value="No Prazo">No Prazo</option>
+            <option value="Em Alerta">Em Alerta</option>
+            <option value="Atrasado">Atrasado</option>
+          </select>
+          <button id="refreshBtn" class="bg-primary text-white p-2 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="search" id="searchInput" placeholder="Procurar recolhas..." class="w-full p-2 pl-10 text-sm border border-gray-300 rounded-lg focus-primary">
+        </div>
+      </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 overflow-hidden">
+      <div id="loading-indicator" class="flex flex-col items-center justify-center w-full h-full">
+        <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p id="loading-text" class="mt-2 text-gray-600">A carregar dados...</p>
+      </div>
+      
+      <div id="mobile-content" class="h-full overflow-y-auto hidden">
+        <div id="phases-container" class="p-4 space-y-4">
+          <!-- Fases serão inseridas aqui -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Mobile -->
+  <div id="mobileModal" class="mobile-modal">
+    <div class="mobile-modal-content">
+      <div class="mobile-modal-header">
+        <h3 class="text-lg font-bold" id="modalPlaca"></h3>
+        <button id="closeMobileModal" class="text-gray-500 text-2xl">&times;</button>
+      </div>
+      <div class="mobile-modal-body">
+        <div id="mobile-modal-content" class="space-y-4">
+          <!-- Conteúdo do modal será inserido aqui -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; 
+
+    // VERIFICAÇÃO DE LOGIN
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+      window.location.href = 'login.html';
+    }
+
+    const fixedPhaseOrder = [
+      'Fila de Recolha',
+      'Aprovar Custo de Recolha',
+      'Tentativa 1 de Recolha',
+      'Tentativa 2 de Recolha',
+      'Tentativa 3 de Recolha',
+      'Nova tentativa de recolha',
+      'Desbloquear Veículo',
+      'Solicitar Guincho',
+      'Confirmação de Entrega no Pátio'
+    ];
+
+    const phaseDisplayNames = {
+      'Fila de Recolha': 'Fila de Recolha',
+      'Aprovar Custo de Recolha': 'Aprovar Custo',
+      'Tentativa 1 de Recolha': 'Tentativa 1',
+      'Tentativa 2 de Recolha': 'Tentativa 2',
+      'Tentativa 3 de Recolha': 'Tentativa 3',
+      'Nova tentativa de recolha': 'Nova Tentativa',
+      'Desbloquear Veículo': 'Desbloquear Veículo',
+      'Solicitar Guincho': 'Solicitar Guincho',
+      'Confirmação de Entrega no Pátio': 'Confirmação de Recolha'
+    };
+
+    const disabledPhases = ['Aprovar Custo de Recolha', 'Desbloquear Veículo', 'Solicitar Guincho'];
+
+    const disabledPhaseMessages = {
+      'Aprovar Custo de Recolha': 'em análise da Kovi',
+      'Desbloquear Veículo': 'em processo de desbloqueio',
+      'Solicitar Guincho': 'em análise da Kovi'
+    };
+
+    function formatPersonName(name) {
+      if (!name || name === 'N/A') return name;
+      return name.toLowerCase().replace(/\b[\wÀ-ÿ]/g, l => l.toUpperCase());
+    }
+
+    function keepOriginalFormat(text) {
+      return text || 'N/A';
+    }
+
+    function formatDate(dateString) {
+      if (!dateString || dateString === 'N/A') return dateString;
+      
+      try {
+        if (dateString.match(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)) {
+          return dateString;
+        }
+        
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+      } catch (e) {
+        return dateString;
+      }
+    }
+
+    function calcularSLA(dataCriacaoStr) {
+      const tz = 'America/Sao_Paulo';
+      let dataCriacao = new Date(dataCriacaoStr);
+      if (isNaN(dataCriacao.getTime())) return 0;
+      const agora = new Date(new Date().toLocaleString("en-US", {timeZone: tz}));
+      dataCriacao.setHours(0,0,0,0);
+      agora.setHours(0,0,0,0);
+      let dias = 0;
+      let temp = new Date(dataCriacao);
+      while (temp < agora) {
+        if (temp.getDay() !== 0) dias++;
+        temp.setDate(temp.getDate() + 1);
+      }
+      return dias;
+    }
+
+    function buildMobileUI(cards) {
+      cards.forEach(card => {
+        card.sla = calcularSLA(card.dataCriacao);
+      });
+      buildPhasesView(cards);
+    }
+    
+    function buildPhasesView(cards) {
+      const container = document.getElementById('phases-container');
+      if (!container) return;
+      
+      const phases = {};
+      fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
+      cards.forEach(card => {
+        if (phases[card.faseAtual]) {
+          phases[card.faseAtual].push(card);
+        }
+      });
+      
+      let html = '';
+      fixedPhaseOrder.forEach(phaseName => {
+        const cardsInPhase = phases[phaseName];
+        const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
+        const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
+        const isDisabledPhase = disabledPhases.includes(phaseName);
+        
+        html += `
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="phase-header p-4 cursor-pointer ${isDisabledPhase ? 'bg-gray-100' : 'bg-white'}" data-phase="${phaseName}">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <h3 class="font-semibold text-gray-800">${displayPhaseName}</h3>
+                  <span class="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">${cardsInPhase.length}</span>
+                  ${!isDisabledPhase && lateOrAlertCount > 0 ? 
+                    `<span class="bg-amber-100 text-amber-700 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                      ${lateOrAlertCount}
+                    </span>` : ''}
+                </div>
+                <svg class="transform transition-transform duration-200" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6,9 12,15 18,9"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div class="phase-content" data-phase-content="${phaseName}">
+              ${cardsInPhase.length > 0 ? 
+                `<div class="p-4 pt-0 space-y-3">
+                  ${cardsInPhase.map(card => buildMobileCardHTML(card)).join('')}
+                </div>` : 
+                `<div class="p-4 pt-0 text-center text-gray-500">
+                  <p class="text-sm">Não há recolha nesta fase.</p>
+                </div>`
+              }
+            </div>
+          </div>`;
+      });
+      
+      container.innerHTML = html;
+      setupPhaseToggles();
+    }
+
+    function buildMobileCardHTML(card) {
+      const isDisabled = disabledPhases.includes(card.faseAtual);
+      
+      if (isDisabled) {
+        const message = disabledPhaseMessages[card.faseAtual];
+        return `
+          <div class="mobile-card disabled bg-gray-100 rounded-lg p-3 border border-gray-200 opacity-70">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-bold text-gray-500 text-sm">${card.placa}</h4>
+              <span class="text-xs bg-gray-300 text-gray-500 px-2 py-1 rounded-full">Processando</span>
+            </div>
+            <div class="space-y-1 text-xs text-gray-500">
+              <div>🚗 ${formatPersonName(card.modeloVeiculo)}</div>
+              <div>👤 ${formatPersonName(card.nomeDriver)}</div>
+              <div>🚛 ${formatPersonName(card.chofer)}</div>
+            </div>
+            <div class="mt-3 flex items-center justify-center">
+              <svg class="animate-spin h-4 w-4 text-gray-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span class="text-xs text-gray-500">${message}</span>
+            </div>
+          </div>`;
+      }
+      
+      let slaColor = '', slaText = '';
+      if (card.sla >= 3) { slaColor = 'bg-red-100 text-red-700 blink'; slaText = 'Atrasado'; }
+      else if (card.sla == 2) { slaColor = 'bg-yellow-100 text-yellow-700'; slaText = 'Em Alerta'; }
+      else { slaColor = 'bg-green-100 text-green-700'; slaText = 'No Prazo'; }
+      
+      return `
+        <div class="mobile-card data-item bg-white rounded-lg p-3 border border-gray-200 shadow-sm" ${buildDataAttributes(card)}>
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-bold text-gray-800 text-sm">${card.placa}</h4>
+            <span class="text-xs font-semibold px-2 py-1 rounded-full ${slaColor}">${slaText}</span>
+          </div>
+          <div class="space-y-1 text-xs text-gray-600 mb-3">
+            <div>🚗 ${formatPersonName(card.modeloVeiculo)}</div>
+            <div>👤 ${formatPersonName(card.nomeDriver)}</div>
+            <div>🚛 ${card.faseAtual !== 'Fila de Recolha' ? formatPersonName(card.chofer) : '-'}</div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center text-xs text-red-600 font-semibold">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              SLA: ${card.sla}d
+            </div>
+            <span class="text-xs text-gray-500">${keepOriginalFormat(card.origemLocacao)}</span>
+          </div>
+        </div>`;
+    }
+
+    function buildDataAttributes(card) {
+      let slaText = '';
+      if (card.sla >= 3) { slaText = 'Atrasado'; }
+      else if (card.sla == 2) { slaText = 'Em Alerta'; }
+      else { slaText = 'No Prazo'; }
+      const formattedDate = formatDate(card.dataCriacao);
+      return `data-placa="${card.placa}" data-driver="${formatPersonName(card.nomeDriver)}" data-chofer="${formatPersonName(card.chofer)}" data-origem="${keepOriginalFormat(card.origemLocacao)}" data-fase="${card.faseAtual}" data-criacao="${formattedDate}" data-sla-dias="${card.sla}" data-mapa-url="${card.enderecoRecolhaUrl}" data-form-url="${card.urlPublica}" data-sla-text="${slaText}" data-valor-recolha="${card.valorRecolha}" data-custo-km="${card.custoKmAdicional}" data-modelo-veiculo="${formatPersonName(card.modeloVeiculo)}" data-telefone-contato="${card.telefoneContato}" data-telefone-opcional="${card.telefoneOpcional}" data-endereco-cadastro="${card.enderecoCadastro}" data-endereco-veiculo="${card.enderecoVeiculo}"`;
+    }
+
+    function buildMobileModalContent(data) {
+      const isFila = data.fase === 'Fila de Recolha';
+      const displayPhase = phaseDisplayNames[data.fase] || data.fase;
+      
+      let valorHTML = '';
+      if (!isFila && data.valorRecolha && data.valorRecolha !== 'N/A' && data.valorRecolha !== 'null') {
+        valorHTML = `
+          <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+            <div class="flex items-center mb-1">
+              <span class="text-green-600 mr-2">💰</span>
+              <p class="text-sm font-semibold text-green-800">Valor da Recolha</p>
+            </div>
+            <p class="text-lg font-bold text-green-900">R$ ${data.valorRecolha}</p>
+          </div>`;
+      }
+      
+      let custoKmHTML = '';
+      if (!isFila && data.custoKm && data.custoKm !== 'N/A' && data.custoKm !== 'null') {
+        custoKmHTML = `
+          <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <div class="flex items-center mb-1">
+              <span class="text-blue-600 mr-2">🛣️</span>
+              <p class="text-sm font-semibold text-blue-800">Custo KM Adicional</p>
+            </div>
+            <p class="text-lg font-bold text-blue-900">R$ ${data.custoKm}</p>
+          </div>`;
+      }
+      
+      let formButtonHTML = '';
+      if (data.formUrl && data.formUrl !== 'null') {
+        formButtonHTML = `
+          <div class="bg-primary text-white p-3 rounded-lg text-center">
+            <a href="${data.formUrl}" target="_blank" class="flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h1.793L8.5 3.207 5.207 6.5H7a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5h1.793L8.5 6.793 13.293 2H11.5a.5.5 0 0 1 0-1h3z"/>
+              </svg>
+              Abrir Formulário
+            </a>
+          </div>`;
+      }
+      
+      return `
+        <div class="space-y-4">
+          <!-- Status e Fase -->
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="text-center">
+                <div class="flex items-center justify-center mb-1">
+                  <span class="text-red-600 mr-2">⏰</span>
+                  <p class="text-sm font-semibold text-gray-700">SLA</p>
+                </div>
+                <p class="text-xl font-bold text-red-600">${data.slaDias} dias</p>
+              </div>
+              <div class="text-center">
+                <div class="flex items-center justify-center mb-1">
+                  <span class="text-primary mr-2">📋</span>
+                  <p class="text-sm font-semibold text-gray-700">Fase</p>
+                </div>
+                <p class="font-bold text-primary">${displayPhase}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Informações do Veículo -->
+          <div class="bg-white border rounded-lg p-3">
+            <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
+              <span class="mr-2">🚗</span>
+              Veículo
+            </h3>
+            <div class="space-y-2">
+              <div class="flex items-start">
+                <span class="text-gray-600 mr-3 mt-1">🏷️</span>
+                <div>
+                  <p class="text-sm text-gray-500">Modelo</p>
+                  <p class="font-semibold text-gray-800">${formatPersonName(data.modeloVeiculo)}</p>
+                </div>
+              </div>
+              <div class="flex items-start">
+                <span class="text-gray-600 mr-3 mt-1">🏢</span>
+                <div>
+                  <p class="text-sm text-gray-500">Origem</p>
+                  <p class="font-semibold text-gray-800">${keepOriginalFormat(data.origem)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pessoas -->
+          <div class="bg-white border rounded-lg p-3">
+            <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
+              <span class="mr-2">👥</span>
+              Pessoas
+            </h3>
+            <div class="space-y-2">
+              <div class="flex items-start">
+                <span class="text-gray-600 mr-3 mt-1">👤</span>
+                <div>
+                  <p class="text-sm text-gray-500">Driver</p>
+                  <p class="font-semibold text-gray-800">${formatPersonName(data.driver)}</p>
+                </div>
+              </div>
+              ${!isFila ? `
+              <div class="flex items-start">
+                <span class="text-gray-600 mr-3 mt-1">🚛</span>
+                <div>
+                  <p class="text-sm text-gray-500">Chofer</p>
+                  <p class="font-semibold text-gray-800">${formatPersonName(data.chofer)}</p>
+                </div>
+              </div>` : ''}
+            </div>
+          </div>
+
+          <!-- Contatos -->
+          <div class="bg-white border rounded-lg p-3">
+            <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
+              <span class="mr-2">📞</span>
+              Contatos
+            </h3>
+            <div class="space-y-2">
+              <div class="flex items-start">
+                <span class="text-gray-600 mr-3 mt-1">📱</span>
+                <div>
+                  <p class="text-sm text-gray-500">Telefone</p>
+                  <p class="font-semibold text-gray-800">${data.telefoneContato}</p>
+                </div>
+              </div>
+              <div class="flex items-start">
+                <span class="text-gray-600 mr-3 mt-1">📞</span>
+                <div>
+                  <p class="text-sm text-gray-500">Telefone Opcional</p>
+                  <p class="font-semibold text-gray-800">${data.telefoneOpcional}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Endereços -->
+          <div class="bg-white border rounded-lg p-3">
+            <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
+              <span class="mr-2">📍</span>
+              Endereços
+            </h3>
+            <div class="space-y-2">
+              <div class="flex items-start">
+                <span class="text-gray-600 mr-3 mt-1">🏠</span>
+                <div>
+                  <p class="text-sm text-gray-500">Cadastro</p>
+                  <p class="font-semibold text-gray-800">${data.enderecoCadastro}</p>
+                </div>
+              </div>
+              <div class="flex items-start">
+                <span class="text-gray-600 mr-3 mt-1">📍</span>
+                <div class="flex-1">
+                  <p class="text-sm text-gray-500">Veículo</p>
+                  <p class="font-semibold text-gray-800 mb-2">${data.enderecoVeiculo}</p>
+                  ${data.mapaUrl && data.mapaUrl !== 'null' ? `
+                  <a href="${data.mapaUrl}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-md transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                    Google Maps
+                  </a>` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Valores -->
+          ${valorHTML || custoKmHTML ? `
+          <div class="space-y-3">
+            ${valorHTML}
+            ${custoKmHTML}
+          </div>` : ''}
+
+          <!-- Formulário -->
+          ${formButtonHTML}
+
+          <!-- Data -->
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <div class="flex items-center">
+              <span class="text-gray-600 mr-3">📅</span>
+              <div>
+                <p class="text-sm text-gray-500">Data de Criação</p>
+                <p class="font-semibold text-gray-800">${data.criacao}</p>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function setupPhaseToggles() {
+      document.querySelectorAll('.phase-header').forEach(header => {
+        header.addEventListener('click', function() {
+          const phaseName = this.dataset.phase;
+          const content = document.querySelector(`[data-phase-content="${phaseName}"]`);
+          const arrow = this.querySelector('svg');
+          
+          if (content.classList.contains('expanded')) {
+            content.classList.remove('expanded');
+            arrow.style.transform = 'rotate(0deg)';
+          } else {
+            content.classList.add('expanded');
+            arrow.style.transform = 'rotate(180deg)';
+          }
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('user-avatar').src = user.photoURL;
+      
+      const searchInput = document.getElementById('searchInput');
+      const slaFilter = document.getElementById('slaFilter');
+      const refreshBtn = document.getElementById('refreshBtn');
+      const loadingIndicator = document.getElementById('loading-indicator');
+      const mobileContent = document.getElementById('mobile-content');
+      const mobileModal = document.getElementById('mobileModal');
+      const closeMobileModalBtn = document.getElementById('closeMobileModal');
+      const logoutBtn = document.getElementById('logout-btn');
+
+      function filterAndSearch() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const currentSlaFilter = slaFilter.value;
+        
+        document.querySelectorAll('.mobile-card.data-item').forEach(card => {
+          const placa = card.dataset.placa.toLowerCase();
+          const driver = card.dataset.driver.toLowerCase();
+          const chofer = card.dataset.chofer.toLowerCase();
+          const slaText = card.dataset.slaText;
+          const matchesSearch = placa.includes(searchTerm) || driver.includes(searchTerm) || chofer.includes(searchTerm);
+          const matchesSla = (currentSlaFilter === 'all') || (slaText === currentSlaFilter);
+          const shouldBeVisible = matchesSearch && matchesSla;
+          
+          card.style.display = shouldBeVisible ? 'block' : 'none';
+        });
+        
+        document.querySelectorAll('.mobile-card:not(.data-item)').forEach(card => {
+          const textContent = card.textContent.toLowerCase();
+          const matchesSearch = textContent.includes(searchTerm);
+          card.style.display = matchesSearch ? 'block' : 'none';
+        });
+      }
+
+      searchInput.addEventListener('input', filterAndSearch);
+      slaFilter.addEventListener('change', filterAndSearch);
+
+      function openMobileModal(itemElement) {
+        const data = itemElement.dataset;
+        document.getElementById('modalPlaca').textContent = data.placa;
+        document.getElementById('mobile-modal-content').innerHTML = buildMobileModalContent(data);
+        
+        mobileModal.classList.add('active');
+      }
+
+      function closeMobileModal() {
+        mobileModal.classList.remove('active');
+      }
+
+      mobileContent.addEventListener('click', function(event) {
+        const target = event.target;
+        const clickedElement = target.closest('.mobile-card');
+        
+        if (clickedElement && clickedElement.classList.contains('disabled')) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        
+        const cardElement = target.closest('.data-item');
+        if (cardElement) {
+          openMobileModal(cardElement);
+        }
+      });
+
+      closeMobileModalBtn.addEventListener('click', closeMobileModal);
+      mobileModal.addEventListener('click', e => { 
+        if (e.target === mobileModal) closeMobileModal(); 
+      });
+
+      function logout() {
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+      }
+
+      refreshBtn.addEventListener('click', fetchData);
+      logoutBtn.addEventListener('click', logout);
+
+      function fetchData() {
+        const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${new Date().getTime()}`;
+        
+        fetch(url)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            if (data.error) {
+              throw new Error(data.error);
+            }
+            loadingIndicator.style.display = 'none';
+            mobileContent.classList.remove('hidden');
+            buildMobileUI(data.cards);
+          })
+          .catch(err => {
+            console.error("Falha ao carregar dados:", err);
+            loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha, o URL da API e a configuração de implantação.</p>`;
+          });
+      }
+
+      fetchData();
+      setInterval(fetchData, 10000);
+    });
+  </script>
+
+</body>
+</html>
