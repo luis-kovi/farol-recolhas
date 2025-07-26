@@ -291,18 +291,18 @@
               </button>
             </div>
             <div class="flex items-center gap-4">
-                <select id="slaFilter" class="text-sm border border-gray-300 rounded-md p-2 focus-primary">
-                    <option value="all">Filtrar por SLA</option>
-                    <option value="No Prazo">No Prazo</option>
-                    <option value="Em Alerta">Em Alerta</option>
-                    <option value="Atrasado">Atrasado</option>
-                </select>
                 <div class="flex items-center gap-2">
                   <span class="text-sm text-gray-700">Ocultar fases vazias</span>
                   <button id="toggleEmptyPhasesBtn" class="toggle-switch relative w-10 h-6 bg-white border border-gray-300 rounded-full transition-colors duration-200 focus:outline-none">
                     <span class="toggle-slider absolute left-0 top-0 w-6 h-6 bg-gray-300 rounded-full shadow transition-transform duration-200"></span>
                   </button>
                 </div>
+                <select id="slaFilter" class="text-sm border border-gray-300 rounded-md p-2 focus-primary">
+                    <option value="all">Filtrar por SLA</option>
+                    <option value="No Prazo">No Prazo</option>
+                    <option value="Em Alerta">Em Alerta</option>
+                    <option value="Atrasado">Atrasado</option>
+                </select>
                 <div class="relative">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                   <input type="search" id="searchInput" placeholder="Procurar cards..." class="w-64 p-2 pl-10 text-sm border border-gray-300 rounded-md focus-primary">
@@ -1033,7 +1033,7 @@
         
         // Kanban: ocultar fases vazias se o toggle estiver ativo
         if (document.getElementById('kanban-view').classList.contains('flex')) {
-          document.querySelectorAll('.kanban-column').forEach(col => {
+          document.querySelectorAll('#kanban-container > .w-52.bg-gray-100.rounded-lg.flex.flex-col.flex-shrink-0').forEach(col => {
             const visibleCards = col.querySelectorAll('.kanban-card:not([style*="display: none"])').length;
             if (hideEmptyPhases && visibleCards === 0) {
               col.style.display = 'none';
