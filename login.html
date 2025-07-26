@@ -19,11 +19,11 @@
   </style>
 </head>
 <body class="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#FF355A]/10 to-[#FF355A]/30">
-  <div id="login-card" class="bg-[#FF355A] rounded-2xl shadow-2xl p-8 md:p-12 w-full max-w-md text-center space-y-8 border border-gray-100 backdrop-blur-md">
-    <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-14 mx-auto drop-shadow-lg" />
+  <div id="login-card" class="bg-[#FF355A] rounded-2xl p-8 md:p-12 w-full max-w-md text-center space-y-8 border border-gray-100">
+    <img src="https://i.ibb.co/zh6PNsYs/kovi-logo-fundo-rosa.png" alt="Logo Kovi" class="h-14 mx-auto" />
     <h1 class="text-3xl md:text-4xl poppins-extrabold text-white">Gestão de Recolhas</h1>
-    <div id="login-message" class="text-white text-base md:text-lg"></div>
-    <button id="login-btn" class="flex items-center justify-center gap-3 bg-white border border-gray-200 hover:shadow-lg transition text-gray-700 px-6 py-3 rounded-full font-semibold shadow mx-auto w-full max-w-xs text-base md:text-lg focus:outline-none focus:ring-2 focus:ring-[#FF355A]/40">
+    <div id="login-message" class="text-white text-base md:text-lg">Clique no botão abaixo para fazer login</div>
+    <button id="login-btn" class="flex items-center justify-center gap-3 bg-white border border-gray-200 hover:shadow-lg transition text-gray-700 px-6 py-3 rounded-full font-semibold mx-auto w-full max-w-xs text-base md:text-lg focus:outline-none focus:ring-2 focus:ring-[#FF355A]/40">
       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="h-5 w-5" />
       <span class="font-medium">Entrar com Google</span>
     </button>
@@ -72,7 +72,7 @@
     // Checagem de permissão após login
     async function checkUserPermission(user) {
       try {
-        const SCRIPT_URL = window.SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbw6Qw1QwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQwQw/exec';
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec";
         const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${Date.now()}`;
         const response = await fetch(url);
         const data = await response.json();
@@ -125,7 +125,7 @@
     // Não redireciona automaticamente se já está logado, só mostra botão
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        document.getElementById('login-message').textContent = 'Você já está autenticado. Clique no botão abaixo para acessar.';
+        document.getElementById('login-message').textContent = 'Clique no botão abaixo para fazer login';
       }
     });
 
