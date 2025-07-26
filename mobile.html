@@ -115,6 +115,30 @@
       max-height: 1000px;
     }
     
+    /* Scroll interno para cards das fases */
+    .phase-content .max-h-96 {
+      scrollbar-width: thin;
+      scrollbar-color: #c1c1c1 #f1f1f1;
+    }
+    
+    .phase-content .max-h-96::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .phase-content .max-h-96::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+    
+    .phase-content .max-h-96::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+    }
+    
+    .phase-content .max-h-96::-webkit-scrollbar-thumb:hover {
+      background: #a0a0a0;
+    }
+    
     .phase-header {
       transition: background-color 0.2s ease;
     }
@@ -307,6 +331,13 @@
       const container = document.getElementById('phases-container');
       if (!container) return;
       
+      // Salvar estado das fases expandidas antes da atualização
+      const expandedPhases = {};
+      container.querySelectorAll('.phase-content').forEach(content => {
+        const phaseName = content.dataset.phaseContent;
+        expandedPhases[phaseName] = content.classList.contains('expanded');
+      });
+      
       const phases = {};
       fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
       cards.forEach(card => {
@@ -321,6 +352,7 @@
         const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
         const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
         const isDisabledPhase = disabledPhases.includes(phaseName);
+        const wasExpanded = expandedPhases[phaseName];
         
         html += `
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -335,14 +367,14 @@
                       ${lateOrAlertCount}
                     </span>` : ''}
                 </div>
-                <svg class="transform transition-transform duration-200" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="transform transition-transform duration-200 ${wasExpanded ? 'rotate-180' : ''}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="6,9 12,15 18,9"></polyline>
                 </svg>
               </div>
             </div>
-            <div class="phase-content" data-phase-content="${phaseName}">
+            <div class="phase-content ${wasExpanded ? 'expanded' : ''}" data-phase-content="${phaseName}">
               ${cardsInPhase.length > 0 ? 
-                `<div class="p-4 pt-0 space-y-3">
+                `<div class="p-4 pt-0 space-y-3 max-h-96 overflow-y-auto">
                   ${cardsInPhase.map(card => buildMobileCardHTML(card)).join('')}
                 </div>` : 
                 `<div class="p-4 pt-0 text-center text-gray-500">
@@ -452,7 +484,8 @@
           <div class="bg-primary text-white p-3 rounded-lg text-center">
             <a href="${data.formUrl}" target="_blank" class="flex items-center justify-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h1.793L8.5 3.207 5.207 6.5H7a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5h1.793L8.5 6.793 13.293 2H11.5a.5.5 0 0 1 0-1h3z"/>
+                <path d="M5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zM5 8a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1H5z"/>
+                <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
               </svg>
               Abrir Formulário
             </a>
@@ -626,7 +659,34 @@
       });
     }
 
+    // Sistema de logout automático por inatividade (8 horas)
+    let inactivityTimer;
+    const INACTIVITY_TIMEOUT = 8 * 60 * 60 * 1000; // 8 horas em milissegundos
+    
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        alert('Sessão expirada por inatividade. Você será redirecionado para o login.');
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+      }, INACTIVITY_TIMEOUT);
+    }
+    
+    function setupInactivityMonitoring() {
+      // Eventos que resetam o timer
+      const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+      events.forEach(event => {
+        document.addEventListener(event, resetInactivityTimer, true);
+      });
+      
+      // Iniciar o timer
+      resetInactivityTimer();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+      // Configurar monitoramento de inatividade
+      setupInactivityMonitoring();
+      
       document.getElementById('user-avatar').src = user.photoURL;
       
       const searchInput = document.getElementById('searchInput');
@@ -642,6 +702,7 @@
         const searchTerm = searchInput.value.toLowerCase();
         const currentSlaFilter = slaFilter.value;
         
+        // Filtrar cards normais (com data-item)
         document.querySelectorAll('.mobile-card.data-item').forEach(card => {
           const placa = card.dataset.placa.toLowerCase();
           const driver = card.dataset.driver.toLowerCase();
@@ -654,10 +715,25 @@
           card.style.display = shouldBeVisible ? 'block' : 'none';
         });
         
+        // Filtrar cards desabilitados (sem data-item) apenas por busca de texto
         document.querySelectorAll('.mobile-card:not(.data-item)').forEach(card => {
           const textContent = card.textContent.toLowerCase();
           const matchesSearch = textContent.includes(searchTerm);
-          card.style.display = matchesSearch ? 'block' : 'none';
+          // Cards desabilitados não têm SLA, então sempre passam no filtro de SLA
+          const shouldBeVisible = matchesSearch;
+          card.style.display = shouldBeVisible ? 'block' : 'none';
+        });
+        
+        // Mostrar/ocultar fases baseado na visibilidade dos cards
+        document.querySelectorAll('[data-phase]').forEach(phaseHeader => {
+          const phaseName = phaseHeader.dataset.phase;
+          const phaseContent = document.querySelector(`[data-phase-content="${phaseName}"]`);
+          const visibleCards = phaseContent.querySelectorAll('.mobile-card:not([style*="display: none"])').length;
+          
+          const phaseContainer = phaseHeader.closest('.bg-white.rounded-lg');
+          if (phaseContainer) {
+            phaseContainer.style.display = visibleCards > 0 || searchTerm === '' ? 'block' : 'none';
+          }
         });
       }
 
