@@ -552,13 +552,14 @@
         const savedSearch = currentSearchTerm;
         const savedSla = currentSlaFilter;
         const savedToggle = hideEmptyPhases;
-        restoreFilterState();
-        filterAndSearch();
         setTimeout(() => {
+            console.log('[Kanban] Restaurando filtros:', { savedSearch, savedSla, savedToggle });
             currentSearchTerm = savedSearch;
             currentSlaFilter = savedSla;
             hideEmptyPhases = savedToggle;
-            restoreFilterState();
+            searchInput.value = currentSearchTerm;
+            slaFilter.value = currentSlaFilter;
+            toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
             filterAndSearch();
         }, 0);
     }
@@ -1037,6 +1038,7 @@
       }
 
       function filterAndSearch() {
+        console.log('[Kanban] Aplicando filtros:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
         const searchTerm = currentSearchTerm.toLowerCase();
         const currentSla = currentSlaFilter;
         
