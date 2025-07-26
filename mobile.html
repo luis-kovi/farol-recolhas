@@ -147,10 +147,37 @@
       background-color: rgba(255, 53, 90, 0.1);
     }
     
-    /* Botão toggle para fases vazias */
-    .toggle-active {
-      background-color: var(--primary-color) !important;
-      color: white !important;
+    /* Toggle Switch estilo iOS */
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background-color: #e5e7eb;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      padding: 0;
+    }
+    
+    .toggle-switch.active {
+      background-color: var(--primary-color);
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .toggle-switch.active .toggle-slider {
+      transform: translateX(20px);
     }
     
     /* Scroll principal da página */
@@ -206,6 +233,13 @@
     <!-- Filtros Mobile -->
     <div class="bg-white border-b border-gray-200 flex-shrink-0 px-4 py-3">
       <div class="flex flex-col gap-3">
+        <!-- Campo de busca -->
+        <div class="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="search" id="searchInput" placeholder="Procurar recolhas..." class="w-full p-2 pl-10 text-sm border border-gray-300 rounded-lg focus-primary">
+        </div>
+        
+        <!-- Filtros e controles -->
         <div class="flex gap-2">
           <select id="slaFilter" class="flex-1 text-sm border border-gray-300 rounded-lg p-2 focus-primary">
             <option value="all">Todos os SLAs</option>
@@ -213,22 +247,19 @@
             <option value="Em Alerta">Em Alerta</option>
             <option value="Atrasado">Atrasado</option>
           </select>
+          
+          <!-- Toggle Switch para ocultar fases vazias -->
+          <div class="flex items-center gap-2 bg-gray-100 rounded-lg px-3">
+            <span class="text-xs text-gray-600 whitespace-nowrap">Ocultar vazias</span>
+            <button id="toggleEmptyPhasesBtn" class="toggle-switch ${hideEmptyPhases ? 'active' : ''}" title="Ocultar fases vazias">
+              <div class="toggle-slider"></div>
+            </button>
+          </div>
+          
           <button id="refreshBtn" class="bg-primary text-white p-2 rounded-lg">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
               <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
               <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-            </svg>
-          </button>
-        </div>
-        <div class="flex gap-2">
-          <div class="relative flex-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="search" id="searchInput" placeholder="Procurar recolhas..." class="w-full p-2 pl-10 text-sm border border-gray-300 rounded-lg focus-primary">
-          </div>
-          <button id="toggleEmptyPhasesBtn" class="bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors" title="Ocultar fases vazias">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-              <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
             </svg>
           </button>
         </div>
@@ -369,9 +400,16 @@
       const container = document.getElementById('phases-container');
       if (!container) return;
       
-      // Salvar posição do scroll antes da atualização
+      // Salvar posição do scroll principal antes da atualização
       const mobileContent = document.getElementById('mobile-content');
       const scrollPosition = mobileContent.scrollTop;
+      
+      // Salvar posições de scroll interno das fases antes da atualização
+      const phaseScrollPositions = {};
+      container.querySelectorAll('.phase-content .max-h-96').forEach((scrollContainer, index) => {
+        const phaseName = scrollContainer.closest('[data-phase-content]').dataset.phaseContent;
+        phaseScrollPositions[phaseName] = scrollContainer.scrollTop;
+      });
       
       // Salvar estado das fases expandidas antes da atualização
       const expandedPhases = {};
@@ -429,12 +467,21 @@
       
       container.innerHTML = html;
       
-      // Restaurar posição do scroll após a atualização
+      // Restaurar posição do scroll principal após a atualização
       setTimeout(() => {
         mobileContent.scrollTop = scrollPosition;
+        
+        // Restaurar posições de scroll interno das fases
+        container.querySelectorAll('.phase-content .max-h-96').forEach(scrollContainer => {
+          const phaseName = scrollContainer.closest('[data-phase-content]').dataset.phaseContent;
+          if (phaseScrollPositions[phaseName] !== undefined) {
+            scrollContainer.scrollTop = phaseScrollPositions[phaseName];
+          }
+        });
       }, 0);
       
       setupPhaseToggles();
+      restoreFilterState();
     }
 
     function buildMobileCardHTML(card) {
@@ -747,10 +794,11 @@
       const logoutBtn = document.getElementById('logout-btn');
 
       let hideEmptyPhases = false;
+      let currentSlaFilter = 'all';
       
       function filterAndSearch() {
         const searchTerm = searchInput.value.toLowerCase();
-        const currentSlaFilter = slaFilter.value;
+        currentSlaFilter = slaFilter.value;
         
         // Filtrar cards normais (com data-item)
         document.querySelectorAll('.mobile-card.data-item').forEach(card => {
@@ -800,10 +848,10 @@
         const toggleBtn = document.getElementById('toggleEmptyPhasesBtn');
         
         if (hideEmptyPhases) {
-          toggleBtn.classList.add('toggle-active');
+          toggleBtn.classList.add('active');
           toggleBtn.title = 'Mostrar fases vazias';
         } else {
-          toggleBtn.classList.remove('toggle-active');
+          toggleBtn.classList.remove('active');
           toggleBtn.title = 'Ocultar fases vazias';
         }
         
@@ -816,6 +864,20 @@
       // Event listener para o botão de toggle de fases vazias
       const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
       toggleEmptyPhasesBtn.addEventListener('click', toggleEmptyPhases);
+      
+      // Função para restaurar estado dos filtros após atualizações
+      function restoreFilterState() {
+        // Restaurar filtro de SLA
+        slaFilter.value = currentSlaFilter;
+        
+        // Restaurar toggle de fases vazias
+        const toggleBtn = document.getElementById('toggleEmptyPhasesBtn');
+        if (hideEmptyPhases) {
+          toggleBtn.classList.add('active');
+        } else {
+          toggleBtn.classList.remove('active');
+        }
+      }
 
       function openMobileModal(itemElement) {
         const data = itemElement.dataset;
