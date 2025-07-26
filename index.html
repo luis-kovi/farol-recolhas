@@ -120,6 +120,7 @@
     }
     .table-border-primary {
       border-top: 4px solid var(--primary-color);
+      width: 100%;
     }
     .compact-table td {
       padding-top: 0.5rem;
@@ -255,12 +256,6 @@
       min-height: 38px;
       padding-top: 8px;
       padding-bottom: 8px;
-      height: 38px;
-      box-sizing: border-box;
-    }
-    #list-view > div {
-      width: 100% !important;
-      margin-left: 0 !important;
     }
   </style>
 </head>
@@ -305,10 +300,12 @@
             </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
-                  <span class="text-xs text-gray-700 leading-tight block text-center" style="font-size: 11px; margin-bottom: 2px;">ocultar fases vazias</span>
-                  <button id="toggleEmptyPhasesBtn" class="toggle-switch relative w-8 h-5 bg-white border border-gray-300 rounded-full transition-colors duration-200 focus:outline-none" style="margin-top: 0;">
-                    <span class="toggle-slider absolute left-0 top-0 w-5 h-5 bg-gray-300 rounded-full shadow transition-transform duration-200"></span>
-                  </button>
+                  <div class="flex flex-col items-center mr-2">
+                    <span class="text-xs text-gray-700 mb-1" style="font-size: 11px;">ocultar fases vazias</span>
+                    <button id="toggleEmptyPhasesBtn" class="toggle-switch relative w-8 h-5 bg-white border border-gray-300 rounded-full transition-colors duration-200 focus:outline-none" style="min-width:32px; min-height:20px; max-width:32px; max-height:20px;">
+                      <span class="toggle-slider absolute left-0 top-0 w-5 h-5 bg-gray-300 rounded-full shadow transition-transform duration-200"></span>
+                    </button>
+                  </div>
                 </div>
                 <select id="slaFilter" class="text-sm border border-gray-300 rounded-md p-2 focus-primary">
                     <option value="all">Filtrar por SLA</option>
@@ -507,13 +504,11 @@
     function buildKanbanView(cards) {
         const container = document.getElementById('kanban-container');
         if (!container) return;
-        
         // Salvar posições de scroll antes da atualização
         const scrollPositions = {};
         container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
             scrollPositions[index] = scrollContainer.scrollTop;
         });
-        
         const phases = {};
         fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
         cards.forEach(card => {
@@ -527,11 +522,9 @@
             const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
             const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
             const isDisabledPhase = disabledPhases.includes(phaseName);
-            
             // Estilos diferentes para fases desabilitadas
             const headerBorderClass = isDisabledPhase ? 'border-gray-400' : 'border-primary';
             const headerTextClass = isDisabledPhase ? 'text-gray-400' : 'text-primary';
-            
             html += `
                 <div class="w-52 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
                     <div class="p-2 flex items-center bg-white rounded-t-lg border-t-3 ${headerBorderClass}">
@@ -545,7 +538,6 @@
                 </div>`;
         });
         container.innerHTML = html;
-        
         // Restaurar posições de scroll após a atualização
         setTimeout(() => {
             container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
@@ -554,15 +546,8 @@
                 }
             });
         }, 0);
-        // Salvar estado dos filtros
-        const savedSearch = currentSearchTerm;
-        const savedSla = currentSlaFilter;
-        const savedToggle = hideEmptyPhases;
+        // Atualizar inputs e botão conforme estado global
         setTimeout(() => {
-            console.log('[Kanban] Restaurando filtros:', { savedSearch, savedSla, savedToggle });
-            currentSearchTerm = savedSearch;
-            currentSlaFilter = savedSla;
-            hideEmptyPhases = savedToggle;
             searchInput.value = currentSearchTerm;
             slaFilter.value = currentSlaFilter;
             toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
@@ -951,14 +936,6 @@
       resetInactivityTimer();
     }
 
-    // Variáveis globais para filtros (antes de qualquer função)
-    let currentSearchTerm = '';
-    let currentSlaFilter = 'all';
-    let hideEmptyPhases = false;
-
-    // Elementos globais
-    let searchInput, slaFilter, toggleEmptyPhasesBtn;
-
     document.addEventListener('DOMContentLoaded', function() {
       // Configurar monitoramento de inatividade
       setupInactivityMonitoring();
@@ -968,9 +945,8 @@
       document.getElementById('user-email').textContent = user.email;
       document.getElementById('user-avatar').src = user.photoURL;
 
-      searchInput = document.getElementById('searchInput');
-      slaFilter = document.getElementById('slaFilter');
-      toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
+      const searchInput = document.getElementById('searchInput');
+      const slaFilter = document.getElementById('slaFilter');
       const kanbanView = document.getElementById('kanban-view');
       const listView = document.getElementById('list-view');
       const loadingIndicator = document.getElementById('loading-indicator');
@@ -1026,6 +1002,11 @@
         }
       });
 
+      // Variáveis globais para filtros
+      let currentSearchTerm = '';
+      let currentSlaFilter = 'all';
+      let hideEmptyPhases = false;
+
       searchInput.addEventListener('input', () => {
         currentSearchTerm = searchInput.value;
         filterAndSearch();
@@ -1034,6 +1015,7 @@
         currentSlaFilter = slaFilter.value;
         filterAndSearch();
       });
+      const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
       toggleEmptyPhasesBtn.addEventListener('click', () => {
         hideEmptyPhases = !hideEmptyPhases;
         toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
@@ -1114,8 +1096,6 @@
         listView.classList.remove('hidden');
         listBtn.classList.add('active');
         kanbanBtn.classList.remove('active');
-        // Recriar a lista ao exibir
-        if (window.lastCardsData) buildListView(window.lastCardsData);
       });
 
       function openCardModal(itemElement) {
@@ -1240,7 +1220,6 @@
           
           // Verifica permissões para a calculadora
           checkCalculatorPermission(responseData);
-          window.lastCardsData = responseData.cards;
       }
       
       function fetchData() {
