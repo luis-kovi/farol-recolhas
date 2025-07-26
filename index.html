@@ -459,6 +459,13 @@
     function buildKanbanView(cards) {
         const container = document.getElementById('kanban-container');
         if (!container) return;
+        
+        // Salvar posições de scroll antes da atualização
+        const scrollPositions = {};
+        container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
+            scrollPositions[index] = scrollContainer.scrollTop;
+        });
+        
         const phases = {};
         fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
         cards.forEach(card => {
@@ -490,6 +497,15 @@
                 </div>`;
         });
         container.innerHTML = html;
+        
+        // Restaurar posições de scroll após a atualização
+        setTimeout(() => {
+            container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
+                if (scrollPositions[index] !== undefined) {
+                    scrollContainer.scrollTop = scrollPositions[index];
+                }
+            });
+        }, 0);
     }
 
     function buildCardHTML(card) {
@@ -849,7 +865,34 @@
       }
     }
 
+    // Sistema de logout automático por inatividade (8 horas)
+    let inactivityTimer;
+    const INACTIVITY_TIMEOUT = 8 * 60 * 60 * 1000; // 8 horas em milissegundos
+    
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        alert('Sessão expirada por inatividade. Você será redirecionado para o login.');
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+      }, INACTIVITY_TIMEOUT);
+    }
+    
+    function setupInactivityMonitoring() {
+      // Eventos que resetam o timer
+      const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+      events.forEach(event => {
+        document.addEventListener(event, resetInactivityTimer, true);
+      });
+      
+      // Iniciar o timer
+      resetInactivityTimer();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+      // Configurar monitoramento de inatividade
+      setupInactivityMonitoring();
+      
       // Atualiza as informações do usuário no cabeçalho
       document.getElementById('user-name').textContent = user.displayName;
       document.getElementById('user-email').textContent = user.email;
