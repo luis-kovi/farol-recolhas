@@ -249,6 +249,13 @@
       background: #fff;
       transform: translateX(16px);
     }
+    /* CSS fixo para faixa inferior do card */
+    .kanban-card .p-2.flex.items-center.justify-between.border-t,
+    .kanban-card .p-2.flex.items-center.justify-center.border-t {
+      min-height: 38px;
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
   </style>
 </head>
 <body class="text-gray-800">
@@ -541,8 +548,19 @@
                 }
             });
         }, 0);
+        // Salvar estado dos filtros
+        const savedSearch = currentSearchTerm;
+        const savedSla = currentSlaFilter;
+        const savedToggle = hideEmptyPhases;
         restoreFilterState();
         filterAndSearch();
+        setTimeout(() => {
+            currentSearchTerm = savedSearch;
+            currentSlaFilter = savedSla;
+            hideEmptyPhases = savedToggle;
+            restoreFilterState();
+            filterAndSearch();
+        }, 0);
     }
 
     function buildCardHTML(card) {
@@ -1005,6 +1023,7 @@
         currentSlaFilter = slaFilter.value;
         filterAndSearch();
       });
+      const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
       toggleEmptyPhasesBtn.addEventListener('click', () => {
         hideEmptyPhases = !hideEmptyPhases;
         toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
