@@ -249,12 +249,17 @@
       background: #fff;
       transform: translateX(16px);
     }
-    /* CSS para faixa inferior do card - altura mínima consistente */
-    .kanban-card .p-2.flex.items-center.justify-between.border-t,
-    .kanban-card .p-2.flex.items-center.justify-center.border-t {
+    /* CSS para faixa inferior do card - seguindo padrão mobile */
+    .kanban-card .card-footer {
       padding: 8px;
-      min-height: 36px;
-      align-items: center;
+    }
+    
+    /* Garantir que a lista não se desloque */
+    #list-view {
+      position: relative;
+      left: 0;
+      right: 0;
+      width: 100%;
     }
   </style>
 </head>
@@ -557,17 +562,21 @@
         });
         container.innerHTML = html;
         
-        // Restaurar posições de scroll imediatamente
-        container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
-            if (scrollPositions[index] !== undefined) {
-                scrollContainer.scrollTop = scrollPositions[index];
-            }
-        });
-        
-        // Aplicar filtros apenas após a reconstrução estar completa
-        setTimeout(() => {
+        // Usar requestAnimationFrame para restaurar estado no momento ideal (como mobile.html)
+        requestAnimationFrame(() => {
+            // Restaurar posições de scroll imediatamente
+            container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
+                if (scrollPositions[index] !== undefined) {
+                    scrollContainer.scrollTop = scrollPositions[index];
+                }
+            });
+            
+            // Restaurar estado dos filtros
+            restoreFilterState();
+            
+            // Aplicar filtros após restaurar estado
             filterAndSearch();
-        }, 0);
+        });
     }
 
     function buildCardHTML(card) {
@@ -596,7 +605,7 @@
                             <div class="truncate">${formatPersonName(card.chofer)}</div>
                         </div>
                     </div>
-                    <div class="p-2 flex items-center justify-center border-t border-gray-300">
+                    <div class="card-footer flex items-center justify-center border-t border-gray-300">
                         <div class="flex items-center text-xs text-gray-500 font-medium">
                             <svg class="animate-spin mr-1 h-3 w-3 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -636,7 +645,7 @@
                         <div class="truncate">${card.faseAtual !== 'Fila de Recolha' ? formatPersonName(card.chofer) : '-'}</div>
                     </div>
                 </div>
-                <div class="p-2 flex items-center justify-between border-t border-gray-100">
+                <div class="card-footer flex items-center justify-between border-t border-gray-100">
                     <div class="flex items-center text-xs text-red-600 font-semibold">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                         SLA: ${card.sla}d
@@ -708,6 +717,15 @@
             });
         }
         container.innerHTML = html;
+        
+        // Aplicar filtros na lista usando requestAnimationFrame
+        requestAnimationFrame(() => {
+            const listView = document.getElementById('list-view');
+            if (listView && !listView.classList.contains('hidden')) {
+                restoreFilterState();
+                filterAndSearch();
+            }
+        });
     }
 
     function buildDataAttributes(card) {
@@ -1037,7 +1055,29 @@
         filterAndSearch();
       });
 
-
+      // Função para restaurar estado dos filtros após atualizações
+      function restoreFilterState() {
+        console.log('Restaurando estado dos filtros:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
+        
+        // Restaurar campo de busca
+        const searchInput = document.getElementById('searchInput');
+        const slaFilter = document.getElementById('slaFilter');
+        
+        if (searchInput) searchInput.value = currentSearchTerm;
+        if (slaFilter) slaFilter.value = currentSlaFilter;
+        
+        // Restaurar toggle de fases vazias
+        const toggleBtn = document.getElementById('toggleEmptyPhasesBtn');
+        if (toggleBtn) {
+          if (hideEmptyPhases) {
+            toggleBtn.classList.add('active');
+          } else {
+            toggleBtn.classList.remove('active');
+          }
+        }
+        
+        console.log('Estado dos filtros restaurado');
+      }
 
       function filterAndSearch() {
         const searchInput = document.getElementById('searchInput');
@@ -1230,8 +1270,18 @@
       function onDataRefreshed(responseData) {
           console.log("Dados completos recebidos:", responseData);
           
+          // Salvar estado atual dos filtros antes da atualização
+          const currentSearch = currentSearchTerm;
+          const currentSla = currentSlaFilter;
+          const currentHideEmpty = hideEmptyPhases;
+          
           buildUI(responseData.cards);
           console.log("Dados atualizados em: " + responseData.lastUpdate);
+          
+          // Restaurar estado dos filtros após a atualização
+          currentSearchTerm = currentSearch;
+          currentSlaFilter = currentSla;
+          hideEmptyPhases = currentHideEmpty;
           
           // Força ocultação antes de verificar permissões
           const openCalculatorBtn = document.getElementById('openCalculatorBtn');
