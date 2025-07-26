@@ -476,10 +476,16 @@
       setupPhaseToggles();
       restoreFilterState();
       
-      // Aplicar filtros após a atualização
-      if (currentSearchTerm !== '' || currentSlaFilter !== 'all' || hideEmptyPhases) {
-        filterAndSearch();
-      }
+      // Aplicar filtros após a atualização (com delay para garantir renderização)
+      setTimeout(() => {
+        console.log('Verificando se precisa aplicar filtros após atualização');
+        if (currentSearchTerm !== '' || currentSlaFilter !== 'all' || hideEmptyPhases) {
+          console.log('Aplicando filtros após atualização');
+          filterAndSearch();
+        } else {
+          console.log('Nenhum filtro ativo, não aplicando');
+        }
+      }, 100);
     }
 
     function buildMobileCardHTML(card) {
@@ -799,6 +805,8 @@
         currentSearchTerm = searchTerm;
         currentSlaFilter = slaFilter.value;
         
+        console.log('Aplicando filtros:', { searchTerm, currentSlaFilter, hideEmptyPhases });
+        
         // Filtrar cards normais (com data-item)
         document.querySelectorAll('.mobile-card.data-item').forEach(card => {
           const placa = card.dataset.placa.toLowerCase();
@@ -840,6 +848,8 @@
           
           phaseContainer.style.display = shouldShowPhase ? 'block' : 'none';
         });
+        
+        console.log('Filtros aplicados com sucesso');
       }
       
       function toggleEmptyPhases() {
@@ -857,8 +867,16 @@
         filterAndSearch();
       }
 
-      searchInput.addEventListener('input', filterAndSearch);
-      slaFilter.addEventListener('change', filterAndSearch);
+      // Configurar event listeners para filtros
+      searchInput.addEventListener('input', () => {
+        console.log('Campo de busca alterado');
+        filterAndSearch();
+      });
+      
+      slaFilter.addEventListener('change', () => {
+        console.log('Filtro de SLA alterado');
+        filterAndSearch();
+      });
       
       // Event listener para o botão de toggle de fases vazias
       const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
@@ -866,6 +884,8 @@
       
       // Função para restaurar estado dos filtros após atualizações
       function restoreFilterState() {
+        console.log('Restaurando estado dos filtros:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
+        
         // Restaurar campo de busca
         searchInput.value = currentSearchTerm;
         
@@ -879,6 +899,8 @@
         } else {
           toggleBtn.classList.remove('active');
         }
+        
+        console.log('Estado dos filtros restaurado');
       }
 
       function openMobileModal(itemElement) {
