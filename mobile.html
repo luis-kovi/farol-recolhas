@@ -255,13 +255,6 @@
               <div class="toggle-slider"></div>
             </button>
           </div>
-          
-          <button id="refreshBtn" class="bg-primary text-white p-2 rounded-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-              <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-            </svg>
-          </button>
         </div>
       </div>
     </div>
@@ -482,6 +475,11 @@
       
       setupPhaseToggles();
       restoreFilterState();
+      
+      // Aplicar filtros após a atualização
+      if (currentSearchTerm !== '' || currentSlaFilter !== 'all' || hideEmptyPhases) {
+        filterAndSearch();
+      }
     }
 
     function buildMobileCardHTML(card) {
@@ -786,7 +784,6 @@
       
       const searchInput = document.getElementById('searchInput');
       const slaFilter = document.getElementById('slaFilter');
-      const refreshBtn = document.getElementById('refreshBtn');
       const loadingIndicator = document.getElementById('loading-indicator');
       const mobileContent = document.getElementById('mobile-content');
       const mobileModal = document.getElementById('mobileModal');
@@ -795,9 +792,11 @@
 
       let hideEmptyPhases = false;
       let currentSlaFilter = 'all';
+      let currentSearchTerm = '';
       
       function filterAndSearch() {
         const searchTerm = searchInput.value.toLowerCase();
+        currentSearchTerm = searchTerm;
         currentSlaFilter = slaFilter.value;
         
         // Filtrar cards normais (com data-item)
@@ -831,7 +830,7 @@
           
           let shouldShowPhase = true;
           
-          // Se não há busca ativa, aplicar apenas filtro de fases vazias
+          // Se não há busca ativa e não há filtro de SLA, aplicar apenas filtro de fases vazias
           if (searchTerm === '' && currentSlaFilter === 'all') {
             shouldShowPhase = !hideEmptyPhases || totalCards > 0;
           } else {
@@ -867,6 +866,9 @@
       
       // Função para restaurar estado dos filtros após atualizações
       function restoreFilterState() {
+        // Restaurar campo de busca
+        searchInput.value = currentSearchTerm;
+        
         // Restaurar filtro de SLA
         slaFilter.value = currentSlaFilter;
         
@@ -917,7 +919,6 @@
         window.location.href = 'login.html';
       }
 
-      refreshBtn.addEventListener('click', fetchData);
       logoutBtn.addEventListener('click', logout);
 
       function fetchData() {
