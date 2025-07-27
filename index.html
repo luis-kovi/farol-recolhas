@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -250,23 +249,14 @@
       background: #fff;
       transform: translateX(16px);
     }
-    /* CSS fixo para faixa inferior do card - evita alterações visuais */
+    /* CSS fixo para faixa inferior do card */
     .kanban-card .p-2.flex.items-center.justify-between.border-t,
     .kanban-card .p-2.flex.items-center.justify-center.border-t {
-      min-height: 38px !important;
-      max-height: 38px !important;
-      padding-top: 8px !important;
-      padding-bottom: 8px !important;
-      height: 38px !important;
-      box-sizing: border-box !important;
-      flex-shrink: 0 !important;
-    }
-    
-    /* Garantir que o conteúdo do rodapé não altere o tamanho */
-    .kanban-card .p-2.flex.items-center.justify-between.border-t > *,
-    .kanban-card .p-2.flex.items-center.justify-center.border-t > * {
-      flex-shrink: 0 !important;
-      line-height: 1.2 !important;
+      min-height: 38px;
+      padding-top: 8px;
+      padding-bottom: 8px;
+      height: 38px;
+      box-sizing: border-box;
     }
     #list-view > div {
       width: 100% !important;
@@ -407,11 +397,6 @@
     // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; 
 
-    // Variáveis globais para persistir o estado dos filtros
-    let currentSearchTerm = '';
-    let currentSlaFilter = 'all';
-    let hideEmptyPhases = false;
-
     // VERIFICAÇÃO DE LOGIN
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user) {
@@ -523,28 +508,64 @@
         const container = document.getElementById('kanban-container');
         if (!container) return;
         
-        // Salvar estado dos filtros antes de reconstruir a view
-        const savedSearch = searchInput.value;
-        const savedSla = slaFilter.value;
-        const savedToggle = toggleEmptyPhasesBtn.classList.contains("active");
-
+        // Salvar posições de scroll antes da atualização
+        const scrollPositions = {};
+        container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
+            scrollPositions[index] = scrollContainer.scrollTop;
+        });
+        
+        const phases = {};
+        fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
+        cards.forEach(card => {
+            if (phases[card.faseAtual]) {
+                phases[card.faseAtual].push(card);
+            }
+        });
+        let html = '';
+        fixedPhaseOrder.forEach(phaseName => {
+            const cardsInPhase = phases[phaseName];
+            const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
+            const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
+            const isDisabledPhase = disabledPhases.includes(phaseName);
+            
+            // Estilos diferentes para fases desabilitadas
+            const headerBorderClass = isDisabledPhase ? 'border-gray-400' : 'border-primary';
+            const headerTextClass = isDisabledPhase ? 'text-gray-400' : 'text-primary';
+            
+            html += `
+                <div class="w-52 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
+                    <div class="p-2 flex items-center bg-white rounded-t-lg border-t-3 ${headerBorderClass}">
+                        <h2 class="phase-title ${headerTextClass} text-sm font-semibold">${displayPhaseName}</h2>
+                        <span class="text-xs font-semibold text-gray-500 bg-gray-200 rounded-md px-1.5 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
+                        ${!isDisabledPhase && lateOrAlertCount > 0 ? `<span class="ml-auto flex items-center text-amber-600 font-semibold text-xs"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${lateOrAlertCount}</span>` : ''}
+                    </div>
+                    <div class="flex-1 p-2 space-y-2 overflow-y-auto scroll-container">
+                        ${cardsInPhase.length > 0 ? cardsInPhase.map(card => buildCardHTML(card)).join('') : `<div class="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4"><p class="text-sm font-medium">Não há recolha nesta fase.</p></div>`}
+                    </div>
+                </div>`;
+        });
         container.innerHTML = html;
         
         // Restaurar posições de scroll após a atualização
         setTimeout(() => {
-            container.querySelectorAll(".scroll-container").forEach((scrollContainer, index) => {
+            container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
                 if (scrollPositions[index] !== undefined) {
                     scrollContainer.scrollTop = scrollPositions[index];
                 }
             });
-
-            // Restaurar e aplicar filtros
+        }, 0);
+        // Salvar estado dos filtros
+        const savedSearch = currentSearchTerm;
+        const savedSla = currentSlaFilter;
+        const savedToggle = hideEmptyPhases;
+        setTimeout(() => {
+            console.log('[Kanban] Restaurando filtros:', { savedSearch, savedSla, savedToggle });
             currentSearchTerm = savedSearch;
             currentSlaFilter = savedSla;
             hideEmptyPhases = savedToggle;
             searchInput.value = currentSearchTerm;
             slaFilter.value = currentSlaFilter;
-            toggleEmptyPhasesBtn.classList.toggle("active", hideEmptyPhases);
+            toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
             filterAndSearch();
         }, 0);
     }
