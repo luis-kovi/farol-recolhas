@@ -223,8 +223,8 @@
     .toggle-switch {
       display: inline-block;
       position: relative;
-      width: 40px;
-      height: 24px;
+      width: 32px;
+      height: 20px;
       background: #fff;
       border: 1.5px solid #e5e7eb;
       border-radius: 9999px;
@@ -238,8 +238,8 @@
       position: absolute;
       top: -1px;
       left: -1px;
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
       background: #e5e7eb;
       border-radius: 50%;
       transition: transform 0.2s, background 0.2s;
@@ -247,16 +247,25 @@
     }
     .toggle-switch.active .toggle-slider {
       background: #fff;
-      transform: translateX(16px);
+      transform: translateX(12px);
     }
-    /* CSS fixo para faixa inferior do card */
+    /* CSS fixo para faixa inferior do card - evita alterações visuais */
     .kanban-card .p-2.flex.items-center.justify-between.border-t,
     .kanban-card .p-2.flex.items-center.justify-center.border-t {
-      min-height: 38px;
-      padding-top: 8px;
-      padding-bottom: 8px;
-      height: 38px;
-      box-sizing: border-box;
+      min-height: 38px !important;
+      max-height: 38px !important;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+      height: 38px !important;
+      box-sizing: border-box !important;
+      flex-shrink: 0 !important;
+    }
+    
+    /* Garantir que o conteúdo do rodapé não altere o tamanho */
+    .kanban-card .p-2.flex.items-center.justify-between.border-t > *,
+    .kanban-card .p-2.flex.items-center.justify-center.border-t > * {
+      flex-shrink: 0 !important;
+      line-height: 1.2 !important;
     }
     #list-view > div {
       width: 100% !important;
@@ -304,10 +313,10 @@
               </button>
             </div>
             <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2">
-                  <span class="text-xs text-gray-700 leading-tight block text-center" style="font-size: 11px; margin-bottom: 2px;">ocultar fases vazias</span>
-                  <button id="toggleEmptyPhasesBtn" class="toggle-switch relative w-8 h-5 bg-white border border-gray-300 rounded-full transition-colors duration-200 focus:outline-none" style="margin-top: 0;">
-                    <span class="toggle-slider absolute left-0 top-0 w-5 h-5 bg-gray-300 rounded-full shadow transition-transform duration-200"></span>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-xs text-gray-700 leading-tight" style="font-size: 10px;">ocultar fases vazias</span>
+                  <button id="toggleEmptyPhasesBtn" class="toggle-switch relative bg-white border border-gray-300 rounded-full transition-colors duration-200 focus:outline-none">
+                    <span class="toggle-slider absolute left-0 top-0 bg-gray-300 rounded-full shadow transition-transform duration-200"></span>
                   </button>
                 </div>
                 <select id="slaFilter" class="text-sm border border-gray-300 rounded-md p-2 focus-primary">
@@ -396,6 +405,11 @@
   <script>
     // IMPORTANTE: Substitua pela URL da sua implantação do Apps Script
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFO0dh_zKxsq0xNOY4pJH85A4-OKxUewqhYPZldsjqbM2E5GIOjJ2wL5JdZcXD44/exec"; 
+
+    // Variáveis globais para persistir o estado dos filtros
+    let currentSearchTerm = '';
+    let currentSlaFilter = 'all';
+    let hideEmptyPhases = false;
 
     // VERIFICAÇÃO DE LOGIN
     const user = JSON.parse(localStorage.getItem('user'));
@@ -508,64 +522,72 @@
         const container = document.getElementById('kanban-container');
         if (!container) return;
         
-        // Salvar posições de scroll antes da atualização
-        const scrollPositions = {};
-        container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
-            scrollPositions[index] = scrollContainer.scrollTop;
-        });
+        // Salvar estado dos filtros antes de reconstruir a view
+        const searchInput = document.getElementById('searchInput');
+        const slaFilter = document.getElementById('slaFilter');
+        const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
         
-        const phases = {};
-        fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
+        const savedSearch = searchInput ? searchInput.value : '';
+        const savedSla = slaFilter ? slaFilter.value : 'all';
+        const savedToggle = toggleEmptyPhasesBtn ? toggleEmptyPhasesBtn.classList.contains("active") : false;
+
+        // Agrupar cards por fase
+        const cardsByPhase = {};
+        fixedPhaseOrder.forEach(phase => {
+            cardsByPhase[phase] = [];
+        });
+
         cards.forEach(card => {
-            if (phases[card.faseAtual]) {
-                phases[card.faseAtual].push(card);
+            if (cardsByPhase[card.faseAtual]) {
+                cardsByPhase[card.faseAtual].push(card);
             }
         });
+
         let html = '';
-        fixedPhaseOrder.forEach(phaseName => {
-            const cardsInPhase = phases[phaseName];
-            const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
-            const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
-            const isDisabledPhase = disabledPhases.includes(phaseName);
+        fixedPhaseOrder.forEach(phase => {
+            const phaseCards = cardsByPhase[phase];
+            const displayName = phaseDisplayNames[phase] || phase;
             
-            // Estilos diferentes para fases desabilitadas
-            const headerBorderClass = isDisabledPhase ? 'border-gray-400' : 'border-primary';
-            const headerTextClass = isDisabledPhase ? 'text-gray-400' : 'text-primary';
+            // Separar cards normais dos desabilitados
+            const normalCards = phaseCards.filter(card => !disabledPhases.includes(card.faseAtual));
+            const disabledCards = phaseCards.filter(card => disabledPhases.includes(card.faseAtual));
+            
+            // Ordenar cards normais por SLA decrescente
+            normalCards.sort((a, b) => b.sla - a.sla);
+            
+            // Combinar cards: normais primeiro, depois desabilitados
+            const sortedCards = [...normalCards, ...disabledCards];
             
             html += `
-                <div class="w-52 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
-                    <div class="p-2 flex items-center bg-white rounded-t-lg border-t-3 ${headerBorderClass}">
-                        <h2 class="phase-title ${headerTextClass} text-sm font-semibold">${displayPhaseName}</h2>
-                        <span class="text-xs font-semibold text-gray-500 bg-gray-200 rounded-md px-1.5 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
-                        ${!isDisabledPhase && lateOrAlertCount > 0 ? `<span class="ml-auto flex items-center text-amber-600 font-semibold text-xs"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${lateOrAlertCount}</span>` : ''}
+                <div class="kanban-column flex-shrink-0 w-80 bg-white rounded-lg shadow-md border border-gray-200 flex flex-col h-full">
+                    <div class="p-3 border-b border-gray-100 bg-gray-50 rounded-t-lg">
+                        <h2 class="phase-title text-gray-800">${displayName}</h2>
+                        <p class="text-xs text-gray-500 mt-1">${sortedCards.length} ${sortedCards.length === 1 ? 'item' : 'itens'}</p>
                     </div>
-                    <div class="flex-1 p-2 space-y-2 overflow-y-auto scroll-container">
-                        ${cardsInPhase.length > 0 ? cardsInPhase.map(card => buildCardHTML(card)).join('') : `<div class="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4"><p class="text-sm font-medium">Não há recolha nesta fase.</p></div>`}
+                    <div class="flex-1 overflow-y-auto p-3 space-y-3 scroll-container">
+                        ${sortedCards.map(card => buildCardHTML(card)).join('')}
                     </div>
-                </div>`;
+                </div>
+            `;
         });
+
         container.innerHTML = html;
         
         // Restaurar posições de scroll após a atualização
         setTimeout(() => {
-            container.querySelectorAll('.scroll-container').forEach((scrollContainer, index) => {
-                if (scrollPositions[index] !== undefined) {
+            container.querySelectorAll(".scroll-container").forEach((scrollContainer, index) => {
+                if (scrollPositions && scrollPositions[index] !== undefined) {
                     scrollContainer.scrollTop = scrollPositions[index];
                 }
             });
-        }, 0);
-        // Salvar estado dos filtros
-        const savedSearch = currentSearchTerm;
-        const savedSla = currentSlaFilter;
-        const savedToggle = hideEmptyPhases;
-        setTimeout(() => {
-            console.log('[Kanban] Restaurando filtros:', { savedSearch, savedSla, savedToggle });
+
+            // Restaurar e aplicar filtros
             currentSearchTerm = savedSearch;
             currentSlaFilter = savedSla;
             hideEmptyPhases = savedToggle;
-            searchInput.value = currentSearchTerm;
-            slaFilter.value = currentSlaFilter;
-            toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
+            if (searchInput) searchInput.value = currentSearchTerm;
+            if (slaFilter) slaFilter.value = currentSlaFilter;
+            if (toggleEmptyPhasesBtn) toggleEmptyPhasesBtn.classList.toggle("active", hideEmptyPhases);
             filterAndSearch();
         }, 0);
     }
@@ -597,27 +619,25 @@
                         </div>
                     </div>
                     <div class="p-2 flex items-center justify-center border-t border-gray-300">
-                        <div class="flex items-center text-xs text-gray-500 font-medium">
-                            <svg class="animate-spin mr-1 h-3 w-3 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <div class="flex items-center text-xs text-gray-500">
+                            <svg class="animate-spin h-3 w-3 text-gray-500 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            <span class="text-center text-xs">${message}</span>
+                            <span class="font-medium">${message}</span>
                         </div>
                     </div>
                 </div>`;
         }
-        
-        // Card normal para outras fases
-        let slaColor = '', slaText = '';
-        if (card.sla >= 3) { slaColor = 'bg-red-100 text-red-700 blink'; slaText = 'Atrasado'; }
-        else if (card.sla == 2) { slaColor = 'bg-yellow-100 text-yellow-700'; slaText = 'Em Alerta'; }
-        else { slaColor = 'bg-green-100 text-green-700'; slaText = 'No Prazo'; }
-        
-        const formattedDate = formatDate(card.dataCriacao);
-        
+
+        // Card normal clicável
+        let slaText = '', slaColor = '';
+        if (card.sla >= 3) { slaColor = 'bg-red-100 text-red-800 blink'; slaText = 'Atrasado'; }
+        else if (card.sla == 2) { slaColor = 'bg-yellow-100 text-yellow-800'; slaText = 'Em Alerta'; }
+        else { slaColor = 'bg-green-100 text-green-800'; slaText = 'No Prazo'; }
+
         return `
-            <div class="kanban-card data-item bg-white rounded-md shadow-sm border border-gray-200 flex flex-col h-48 cursor-pointer hover:border-primary transition-all" ${buildDataAttributes(card)}>
+            <div class="kanban-card bg-white rounded-md shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer flex flex-col h-48" ${buildDataAttributes(card)}>
                 <div class="p-2 flex justify-between items-center">
                     <h3 class="font-bold text-gray-800 card-placa truncate text-sm">${card.placa}</h3>
                     <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full ${slaColor}">${slaText}</span>
@@ -769,577 +789,378 @@
 
                 <!-- Informações do Veículo -->
                 <div class="bg-white border rounded-lg p-3">
-                    <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
-                        <span class="mr-2">🚗</span>
+                    <h4 class="font-bold text-gray-800 mb-3 flex items-center">
+                        <span class="text-blue-600 mr-2">🚗</span>
                         Informações do Veículo
-                    </h3>
-                    <div class="grid grid-cols-1 gap-2">
-                        <div class="flex items-start">
-                            <span class="text-gray-600 mr-3 mt-1">🏷️</span>
-                            <div>
-                                <p class="text-sm text-gray-500">Modelo do Veículo</p>
-                                <p class="font-semibold text-gray-800">${formatPersonName(data.modeloVeiculo)}</p>
-                            </div>
+                    </h4>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <p class="text-gray-600 font-semibold">Placa:</p>
+                            <p class="text-gray-800">${data.placa}</p>
                         </div>
-                        <div class="flex items-start">
-                            <span class="text-gray-600 mr-3 mt-1">🏢</span>
-                            <div>
-                                <p class="text-sm text-gray-500">Origem da Locação</p>
-                                <p class="font-semibold text-gray-800">${keepOriginalFormat(data.origem)}</p>
-                            </div>
+                        <div>
+                            <p class="text-gray-600 font-semibold">Modelo:</p>
+                            <p class="text-gray-800">${data.modeloVeiculo}</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Pessoas Envolvidas -->
+                <!-- Informações de Contato -->
                 <div class="bg-white border rounded-lg p-3">
-                    <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
-                        <span class="mr-2">👥</span>
-                        Pessoas Envolvidas
-                    </h3>
-                    <div class="grid grid-cols-1 gap-2">
-                        <div class="flex items-start">
-                            <span class="text-gray-600 mr-3 mt-1">👤</span>
-                            <div>
-                                <p class="text-sm text-gray-500">Driver</p>
-                                <p class="font-semibold text-gray-800">${formatPersonName(data.driver)}</p>
-                            </div>
+                    <h4 class="font-bold text-gray-800 mb-3 flex items-center">
+                        <span class="text-green-600 mr-2">👤</span>
+                        Informações de Contato
+                    </h4>
+                    <div class="space-y-2 text-sm">
+                        <div>
+                            <p class="text-gray-600 font-semibold">Driver:</p>
+                            <p class="text-gray-800">${data.driver}</p>
                         </div>
-                        ${!isFila ? `
-                        <div class="flex items-start">
-                            <span class="text-gray-600 mr-3 mt-1">🚛</span>
-                            <div>
-                                <p class="text-sm text-gray-500">Chofer</p>
-                                <p class="font-semibold text-gray-800">${formatPersonName(data.chofer)}</p>
-                            </div>
-                        </div>` : ''}
-                    </div>
-                </div>
-
-                <!-- Contatos -->
-                <div class="bg-white border rounded-lg p-3">
-                    <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
-                        <span class="mr-2">📞</span>
-                        Contatos
-                    </h3>
-                    <div class="grid grid-cols-1 gap-2">
-                        <div class="flex items-start">
-                            <span class="text-gray-600 mr-3 mt-1">📱</span>
-                            <div>
-                                <p class="text-sm text-gray-500">Telefone de Contato</p>
-                                <p class="font-semibold text-gray-800">${data.telefoneContato}</p>
-                            </div>
+                        <div>
+                            <p class="text-gray-600 font-semibold">Chofer:</p>
+                            <p class="text-gray-800">${data.chofer}</p>
                         </div>
-                        <div class="flex items-start">
-                            <span class="text-gray-600 mr-3 mt-1">📞</span>
-                            <div>
-                                <p class="text-sm text-gray-500">Telefone Opcional</p>
-                                <p class="font-semibold text-gray-800">${data.telefoneOpcional}</p>
-                            </div>
+                        <div>
+                            <p class="text-gray-600 font-semibold">Telefone Principal:</p>
+                            <p class="text-gray-800">${data.telefoneContato}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 font-semibold">Telefone Opcional:</p>
+                            <p class="text-gray-800">${data.telefoneOpcional}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Endereços -->
                 <div class="bg-white border rounded-lg p-3">
-                    <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
-                        <span class="mr-2">📍</span>
+                    <h4 class="font-bold text-gray-800 mb-3 flex items-center">
+                        <span class="text-purple-600 mr-2">📍</span>
                         Endereços
-                    </h3>
-                    <div class="grid grid-cols-1 gap-2">
-                        <div class="flex items-start">
-                            <span class="text-gray-600 mr-3 mt-1">🏠</span>
-                            <div>
-                                <p class="text-sm text-gray-500">Endereço de Cadastro</p>
-                                <p class="font-semibold text-gray-800">${data.enderecoCadastro}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start">
-                            <span class="text-gray-600 mr-3 mt-1">📍</span>
-                            <div class="flex-1">
-                                <p class="text-sm text-gray-500">Endereço Onde o Veículo Está</p>
-                                <p class="font-semibold text-gray-800 mb-2">${data.enderecoVeiculo}</p>
-                                ${data.mapaUrl && data.mapaUrl !== 'null' ? `
-                                <a href="${data.mapaUrl}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-md transition-colors">
-                                    <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                                    </svg>
-                                    Google Maps
-                                </a>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Valores (se existirem) -->
-                ${valorHTML || custoKmHTML ? `
-                <div class="grid grid-cols-1 gap-3">
-                    ${valorHTML}
-                    ${custoKmHTML}
-                </div>` : ''}
-
-                <!-- Data de Criação -->
-                <div class="bg-gray-50 p-3 rounded-lg">
-                    <div class="flex items-center">
-                        <span class="text-gray-600 mr-3">📅</span>
+                    </h4>
+                    <div class="space-y-2 text-sm">
                         <div>
-                            <p class="text-sm text-gray-500">Data de Criação</p>
-                            <p class="font-semibold text-gray-800">${data.criacao}</p>
+                            <p class="text-gray-600 font-semibold">Endereço de Cadastro:</p>
+                            <p class="text-gray-800">${data.enderecoCadastro}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 font-semibold">Endereço do Veículo:</p>
+                            <p class="text-gray-800">${data.enderecoVeiculo}</p>
                         </div>
                     </div>
                 </div>
-            </div>`;
-    }
-    
-    // Função para tornar o modal arrastável
-    function makeDraggable(modal, header) {
-      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-      header.onmousedown = dragMouseDown;
 
-      function dragMouseDown(e) {
-        e = e || window.event;
-        e.preventDefault();
-        // Pega a posição do cursor do mouse na inicialização
-        pos3 = e.clientX;
-        pos4 = e.clientY;
-        document.onmouseup = closeDragElement;
-        // Chama a função sempre que o cursor se move
-        document.onmousemove = elementDrag;
-      }
+                <!-- Valores (apenas se não for Fila de Recolha) -->
+                ${valorHTML}
+                ${custoKmHTML}
 
-      function elementDrag(e) {
-        e = e || window.event;
-        e.preventDefault();
-        // Calcula a nova posição do cursor
-        pos1 = pos3 - e.clientX;
-        pos2 = pos4 - e.clientY;
-        pos3 = e.clientX;
-        pos4 = e.clientY;
-        // Define a nova posição do elemento
-        modal.style.top = (modal.offsetTop - pos2) + "px";
-        modal.style.left = (modal.offsetLeft - pos1) + "px";
-      }
+                <!-- Informações Adicionais -->
+                <div class="bg-white border rounded-lg p-3">
+                    <h4 class="font-bold text-gray-800 mb-3 flex items-center">
+                        <span class="text-orange-600 mr-2">ℹ️</span>
+                        Informações Adicionais
+                    </h4>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <p class="text-gray-600 font-semibold">Origem da Locação:</p>
+                            <p class="text-gray-800">${data.origem}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 font-semibold">Data de Criação:</p>
+                            <p class="text-gray-800">${data.criacao}</p>
+                        </div>
+                    </div>
+                </div>
 
-      function closeDragElement() {
-        // Para de mover quando o botão do mouse é solto
-        document.onmouseup = null;
-        document.onmousemove = null;
-      }
+                <!-- Botões de Ação -->
+                <div class="flex gap-3 pt-2">
+                    ${data.mapaUrl && data.mapaUrl !== 'N/A' ? `
+                        <a href="${data.mapaUrl}" target="_blank" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-center text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            Ver no Mapa
+                        </a>
+                    ` : ''}
+                </div>
+            </div>
+        `;
     }
 
-    // Sistema de logout automático por inatividade (8 horas)
-    let inactivityTimer;
-    const INACTIVITY_TIMEOUT = 8 * 60 * 60 * 1000; // 8 horas em milissegundos
-    
-    function resetInactivityTimer() {
-      clearTimeout(inactivityTimer);
-      inactivityTimer = setTimeout(() => {
-        alert('Sessão expirada por inatividade. Você será redirecionado para o login.');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-      }, INACTIVITY_TIMEOUT);
-    }
-    
-    function setupInactivityMonitoring() {
-      // Eventos que resetam o timer
-      const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-      events.forEach(event => {
-        document.addEventListener(event, resetInactivityTimer, true);
-      });
-      
-      // Iniciar o timer
-      resetInactivityTimer();
+    // Variável global para armazenar posições de scroll
+    let scrollPositions = [];
+
+    // Função para salvar posições de scroll antes da atualização
+    function saveScrollPositions() {
+        const scrollContainers = document.querySelectorAll('.kanban-column .scroll-container');
+        scrollPositions = Array.from(scrollContainers).map(container => container.scrollTop);
     }
 
-    // Variáveis globais para filtros (antes de qualquer função)
-    let currentSearchTerm = '';
-    let currentSlaFilter = 'all';
-    let hideEmptyPhases = false;
-
-    // Elementos globais
-    let searchInput, slaFilter, toggleEmptyPhasesBtn;
-
-    document.addEventListener('DOMContentLoaded', function() {
-      // Configurar monitoramento de inatividade
-      setupInactivityMonitoring();
-      
-      // Atualiza as informações do usuário no cabeçalho
-      document.getElementById('user-name').textContent = user.displayName;
-      document.getElementById('user-email').textContent = user.email;
-      document.getElementById('user-avatar').src = user.photoURL;
-
-      searchInput = document.getElementById('searchInput');
-      slaFilter = document.getElementById('slaFilter');
-      toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
-      const kanbanView = document.getElementById('kanban-view');
-      const listView = document.getElementById('list-view');
-      const loadingIndicator = document.getElementById('loading-indicator');
-      const kanbanBtn = document.getElementById('kanban-view-btn');
-      const listBtn = document.getElementById('list-view-btn');
-      const cardModal = document.getElementById('cardModal');
-      const closeCardModalBtn = document.getElementById('closeCardModal');
-      const modalFormIframe = document.getElementById('modalFormIframe');
-      const mainContent = document.querySelector('main');
-      const logoutBtn = document.getElementById('logout-btn');
-      
-      // Elementos da calculadora
-      const openCalculatorBtn = document.getElementById('openCalculatorBtn');
-      
-      // Força o botão da calculadora a ficar oculto inicialmente
-      if (openCalculatorBtn) {
-        openCalculatorBtn.classList.add('hidden');
-        openCalculatorBtn.style.display = 'none'; // Força ocultação com CSS inline
-        console.log("🔒 Botão da calculadora forçadamente oculto na inicialização");
-      }
-      const calculatorModal = document.getElementById('calculatorModal');
-      const closeCalculatorBtn = document.getElementById('closeCalculator');
-      const calculatorIframe = document.getElementById('calculatorIframe');
-      const calculatorContainer = document.getElementById('calculatorContainer');
-      const calculatorHeader = document.querySelector('.calculator-header');
-      
-      // Torna o modal arrastável
-      makeDraggable(calculatorContainer, calculatorHeader);
-
-      // Adiciona o event listener para os cards e botões de formulário
-      mainContent.addEventListener('click', function(event) {
-        const target = event.target;
-        
-        // Verifica se o clique foi em um card desabilitado
-        const clickedElement = target.closest('.kanban-card, .table-list-item');
-        if (clickedElement && clickedElement.classList.contains('cursor-not-allowed')) {
-          event.preventDefault();
-          event.stopPropagation();
-          return; // Não faz nada se o card estiver desabilitado
-        }
-        
-        const formButton = target.closest('.open-form-btn');
-        if (formButton) {
-          event.stopPropagation();
-          const cardElement = formButton.closest('.data-item');
-          const formUrl = cardElement.dataset.formUrl;
-          if (formUrl) openCardModal(cardElement);
-          return;
-        }
-        const cardElement = target.closest('.data-item');
-        if (cardElement) {
-          openCardModal(cardElement);
-        }
-      });
-
-      searchInput.addEventListener('input', () => {
-        currentSearchTerm = searchInput.value;
-        filterAndSearch();
-      });
-      slaFilter.addEventListener('change', () => {
-        currentSlaFilter = slaFilter.value;
-        filterAndSearch();
-      });
-      toggleEmptyPhasesBtn.addEventListener('click', () => {
-        hideEmptyPhases = !hideEmptyPhases;
-        toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
-        filterAndSearch();
-      });
-
-      function restoreFilterState() {
-        searchInput.value = currentSearchTerm;
-        slaFilter.value = currentSlaFilter;
-        toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
-      }
-
-      function filterAndSearch() {
-        console.log('[Kanban] Aplicando filtros:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
+    // Função para aplicar filtros e busca
+    function filterAndSearch() {
         const searchTerm = currentSearchTerm.toLowerCase();
-        const currentSla = currentSlaFilter;
+        const slaFilterValue = currentSlaFilter;
+        const hideEmpty = hideEmptyPhases;
+
+        // Filtrar cards no Kanban
+        const kanbanCards = document.querySelectorAll('.kanban-card');
+        const kanbanColumns = document.querySelectorAll('.kanban-column');
         
-        // Filtrar cards normais (com data-item)
-        document.querySelectorAll('.data-item').forEach(item => {
-          const placa = item.dataset.placa.toLowerCase();
-          const driver = item.dataset.driver.toLowerCase();
-          const chofer = item.dataset.chofer.toLowerCase();
-          const slaText = item.dataset.slaText;
-          const matchesSearch = placa.includes(searchTerm) || driver.includes(searchTerm) || chofer.includes(searchTerm);
-          const matchesSla = (currentSla === 'all') || (slaText === currentSla);
-          const shouldBeVisible = matchesSearch && matchesSla;
-          if (item.classList.contains('kanban-card')) {
-            item.style.display = shouldBeVisible ? 'block' : 'none';
-          } else if (item.classList.contains('table-list-item')) {
-            item.style.display = shouldBeVisible ? 'table-row' : 'none';
-          }
+        kanbanCards.forEach(card => {
+            const placa = card.getAttribute('data-placa')?.toLowerCase() || '';
+            const driver = card.getAttribute('data-driver')?.toLowerCase() || '';
+            const chofer = card.getAttribute('data-chofer')?.toLowerCase() || '';
+            const slaText = card.getAttribute('data-sla-text') || '';
+            
+            const matchesSearch = !searchTerm || 
+                placa.includes(searchTerm) || 
+                driver.includes(searchTerm) || 
+                chofer.includes(searchTerm);
+            
+            const matchesSla = slaFilterValue === 'all' || slaText === slaFilterValue;
+            
+            const shouldShow = matchesSearch && matchesSla;
+            card.style.display = shouldShow ? 'flex' : 'none';
         });
-        
-        // Filtrar cards desabilitados (sem data-item) apenas por busca de texto
-        document.querySelectorAll('.kanban-card:not(.data-item), .table-list-item:not(.data-item)').forEach(item => {
-          const textContent = item.textContent.toLowerCase();
-          const matchesSearch = textContent.includes(searchTerm);
-          // Cards desabilitados não têm SLA, então sempre passam no filtro de SLA
-          const shouldBeVisible = matchesSearch;
-          if (item.classList.contains('kanban-card')) {
-            item.style.display = shouldBeVisible ? 'block' : 'none';
-          } else if (item.classList.contains('table-list-item')) {
-            item.style.display = shouldBeVisible ? 'table-row' : 'none';
-          }
-        });
-        
-        // Kanban: ocultar fases vazias se o toggle estiver ativo
-        if (document.getElementById('kanban-view').classList.contains('flex')) {
-          document.querySelectorAll('#kanban-container > .w-52.bg-gray-100.rounded-lg.flex.flex-col.flex-shrink-0').forEach(col => {
-            const visibleCards = col.querySelectorAll('.kanban-card:not([style*="display: none"])').length;
-            if (hideEmptyPhases && visibleCards === 0) {
-              col.style.display = 'none';
-            } else {
-              col.style.display = '';
-            }
-          });
-        }
 
-        // Atualizar contadores das colunas
-        document.querySelectorAll('#kanban-view .w-52').forEach(column => {
-          const visibleCards = column.querySelectorAll('.kanban-card:not([style*="display: none"])').length;
-          const countElement = column.querySelector('.card-count');
-          if(countElement) { countElement.textContent = visibleCards; }
-        });
-      }
-
-      kanbanBtn.addEventListener('click', () => {
-        kanbanView.classList.remove('hidden');
-        kanbanView.classList.add('flex');
-        listView.classList.add('hidden');
-        kanbanBtn.classList.add('active');
-        listBtn.classList.remove('active');
-      });
-
-      listBtn.addEventListener('click', () => {
-        kanbanView.classList.add('hidden');
-        kanbanView.classList.remove('flex');
-        listView.classList.remove('hidden');
-        listBtn.classList.add('active');
-        kanbanBtn.classList.remove('active');
-        // Recriar a lista ao exibir
-        if (window.lastCardsData) buildListView(window.lastCardsData);
-      });
-
-      function openCardModal(itemElement) {
-        const data = itemElement.dataset;
-        document.getElementById('modalPlaca').textContent = data.placa;
-        document.getElementById('modal-content').innerHTML = buildModalContent(data);
-        
-        // Carregar o formulário no iframe
-        if (data.formUrl && data.formUrl !== 'null') {
-          modalFormIframe.src = data.formUrl;
-        } else {
-          modalFormIframe.src = "about:blank";
-        }
-
-        
-        cardModal.classList.remove('hidden');
-        setTimeout(() => cardModal.querySelector('.modal-panel').classList.remove('opacity-0', 'scale-95'), 10);
-      }
-
-      function closeCardModal() {
-        const panel = cardModal.querySelector('.modal-panel');
-        panel.classList.add('opacity-0', 'scale-95');
-        setTimeout(() => {
-          cardModal.classList.add('hidden');
-          modalFormIframe.src = "about:blank";
-        }, 200);
-      }
-      
-      // Funções para a calculadora de KM
-      function openCalculator() {
-        calculatorModal.classList.remove('hidden');
-        calculatorIframe.src = "https://calculadorakm.vercel.app/";
-      }
-
-      function closeCalculator() {
-        calculatorModal.classList.add('hidden');
-        calculatorIframe.src = "about:blank";
-      }
-
-      ;
-
-      // Configurar evento de fechar
-      closeCalculatorBtn.addEventListener('click', closeCalculator);
-      
-      function checkCalculatorPermission(responseData) {
-          // Verifica múltiplas fontes de permissão
-          let userPermission = null;
-          
-          // Primeira tentativa: permissionType da resposta (verificar múltiplas variações)
-          if (responseData) {
-              if (responseData.permissionType) {
-                  userPermission = responseData.permissionType.toString().toLowerCase().trim();
-                  console.log("📋 Permissão encontrada em responseData.permissionType:", userPermission);
-              } else if (responseData.userPermission) {
-                  userPermission = responseData.userPermission.toString().toLowerCase().trim();
-                  console.log("📋 Permissão encontrada em responseData.userPermission:", userPermission);
-              } else if (responseData.permission) {
-                  userPermission = responseData.permission.toString().toLowerCase().trim();
-                  console.log("📋 Permissão encontrada em responseData.permission:", userPermission);
-              } else {
-                  console.log("⚠️ Nenhum campo de permissão encontrado na resposta da API");
-              }
-          } else {
-              console.log("⚠️ responseData é null ou undefined");
-          }
-          
-          // Segunda tentativa: verificar no objeto user do localStorage (apenas se há dados da API)
-          if (!userPermission && responseData && user) {
-              if (user.permission) {
-                  userPermission = user.permission.toString().toLowerCase().trim();
-              } else if (user.role) {
-                  userPermission = user.role.toString().toLowerCase().trim();
-              } else if (user.permissionType) {
-                  userPermission = user.permissionType.toString().toLowerCase().trim();
-              }
-          }
-          
-          // Terceira tentativa: verificar email específico (fallback) - APENAS se há dados da API
-          if (!userPermission && responseData && user && user.email) {
-              const email = user.email.toLowerCase();
-              if (email.includes('kovi') || email.includes('onsystem') || 
-                  email.endsWith('@kovi.com.br') || email.endsWith('@onsystem.com.br')) {
-                  userPermission = 'kovi';
-              }
-          }
-          
-          console.log("Permissão do usuário detectada:", userPermission);
-          console.log("Email do usuário:", user?.email);
-          console.log("Objeto user completo:", user);
-          console.log("ResponseData recebido:", responseData);
-          
-          // Verifica se o usuário tem permissão para ver a calculadora
-          // APENAS 'kovi' e 'onsystem' podem ver o botão
-          console.log("🔍 Verificando permissão:", userPermission);
-          
-          // Armazena a permissão detectada no localStorage para verificação de segurança
-          const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-          currentUser.detectedPermission = userPermission;
-          localStorage.setItem('user', JSON.stringify(currentUser));
-          
-          if (userPermission === 'kovi' || userPermission === 'onsystem') {
-              console.log("✅ AUTORIZADO - Mostrando botão da calculadora para:", userPermission);
-              openCalculatorBtn.classList.remove('hidden');
-              openCalculatorBtn.style.display = 'flex'; // Força exibição
-          } else {
-              console.log("❌ NÃO AUTORIZADO - Ocultando botão da calculadora para:", userPermission);
-              openCalculatorBtn.classList.add('hidden');
-              openCalculatorBtn.style.display = 'none'; // Força ocultação
-          }
-      }
-
-      function onDataRefreshed(responseData) {
-          console.log("Dados completos recebidos:", responseData);
-          
-          buildUI(responseData.cards);
-          console.log("Dados atualizados em: " + responseData.lastUpdate);
-          
-          // Força ocultação antes de verificar permissões
-          openCalculatorBtn.classList.add('hidden');
-          openCalculatorBtn.style.display = 'none';
-          console.log("🔒 Botão forçadamente oculto antes da verificação de permissões");
-          
-          // Verifica permissões para a calculadora
-          checkCalculatorPermission(responseData);
-          window.lastCardsData = responseData.cards;
-      }
-      
-      function fetchData() {
-          const url = `${SCRIPT_URL}?email=${encodeURIComponent(user.email)}&t=${new Date().getTime()}`;
-          console.log("Buscando dados da URL:", url);
-          
-          fetch(url)
-            .then(response => {
-                console.log("Resposta recebida. Status:", response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log("Dados recebidos:", data);
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                loadingIndicator.style.display = 'none';
-                kanbanView.classList.remove('hidden');
-                kanbanView.classList.add('flex');
-                onDataRefreshed(data);
-            })
-            .catch(err => {
-                console.error("Falha ao carregar dados:", err);
-                loadingIndicator.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique as permissões da planilha, o URL da API e a configuração de implantação.</p>`;
+        // Ocultar colunas vazias se a opção estiver ativada
+        if (hideEmpty) {
+            kanbanColumns.forEach(column => {
+                const visibleCards = column.querySelectorAll('.kanban-card[style*="flex"], .kanban-card:not([style*="none"])');
+                column.style.display = visibleCards.length > 0 ? 'flex' : 'none';
             });
-      }
-
-      // Função de Logoff
-      async function logout() {
-        localStorage.removeItem('user');
-        try {
-          const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/10.12.1/firebase-auth.js');
-          const auth = getAuth();
-          await signOut(auth);
-        } catch (e) { /* ignora erro de signOut */ }
-        window.location.href = 'login.html?loggedout=1';
-      }
-
-      closeCardModalBtn.addEventListener('click', closeCardModal);
-      cardModal.addEventListener('click', e => { if (e.target === cardModal) closeCardModal(); });
-      openCalculatorBtn.addEventListener('click', openCalculator);
-      logoutBtn.addEventListener('click', logout);
-
-      // Garantir que o botão comece oculto até que as permissões sejam verificadas via API
-      openCalculatorBtn.classList.add('hidden');
-      openCalculatorBtn.style.display = 'none';
-      console.log("🔒 Verificação final: botão da calculadora oculto antes de fetchData");
-
-      fetchData(); // Carregamento inicial
-
-      setInterval(fetchData, 10000); // Atualiza a cada 10 segundos
-      
-      // Verificação de segurança: força ocultação do botão a cada 1 segundo até permissão válida
-      const securityCheck = setInterval(() => {
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        const currentPermission = currentUser.detectedPermission; // Vamos armazenar a permissão detectada
-        
-        if (currentPermission !== 'kovi' && currentPermission !== 'onsystem') {
-          if (openCalculatorBtn && !openCalculatorBtn.classList.contains('hidden')) {
-            openCalculatorBtn.classList.add('hidden');
-            openCalculatorBtn.style.display = 'none';
-            console.log("🛡️ Verificação de segurança: botão forçadamente oculto");
-          }
         } else {
-          // Se a permissão for válida, podemos parar a verificação de segurança
-          clearInterval(securityCheck);
-          console.log("🛡️ Verificação de segurança finalizada - permissão válida detectada");
+            kanbanColumns.forEach(column => {
+                column.style.display = 'flex';
+            });
         }
-      }, 1000);
-      
-      // MutationObserver para detectar mudanças não autorizadas no botão
-      if (openCalculatorBtn) {
-        const observer = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            if (mutation.type === 'attributes') {
-              const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-              const currentPermission = currentUser.detectedPermission;
-              
-              if (currentPermission !== 'kovi' && currentPermission !== 'onsystem') {
-                if (!openCalculatorBtn.classList.contains('hidden') || openCalculatorBtn.style.display !== 'none') {
-                  console.log("🚨 Mudança não autorizada detectada no botão da calculadora! Forçando ocultação...");
-                  openCalculatorBtn.classList.add('hidden');
-                  openCalculatorBtn.style.display = 'none';
-                }
-              }
-            }
-          });
-        });
-        
-        observer.observe(openCalculatorBtn, { 
-          attributes: true, 
-          attributeFilter: ['class', 'style'] 
-        });
-      }
-    });
-  </script>
 
+        // Filtrar linhas na lista
+        const listItems = document.querySelectorAll('.table-list-item');
+        listItems.forEach(item => {
+            const placa = item.getAttribute('data-placa')?.toLowerCase() || '';
+            const driver = item.getAttribute('data-driver')?.toLowerCase() || '';
+            const chofer = item.getAttribute('data-chofer')?.toLowerCase() || '';
+            const slaText = item.getAttribute('data-sla-text') || '';
+            
+            const matchesSearch = !searchTerm || 
+                placa.includes(searchTerm) || 
+                driver.includes(searchTerm) || 
+                chofer.includes(searchTerm);
+            
+            const matchesSla = slaFilterValue === 'all' || slaText === slaFilterValue;
+            
+            const shouldShow = matchesSearch && matchesSla;
+            item.style.display = shouldShow ? 'table-row' : 'none';
+        });
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const slaFilter = document.getElementById('slaFilter');
+        const toggleEmptyPhasesBtn = document.getElementById('toggleEmptyPhasesBtn');
+        const kanbanViewBtn = document.getElementById('kanban-view-btn');
+        const listViewBtn = document.getElementById('list-view-btn');
+        const kanbanView = document.getElementById('kanban-view');
+        const listView = document.getElementById('list-view');
+
+        // Busca em tempo real
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                currentSearchTerm = this.value;
+                filterAndSearch();
+            });
+        }
+
+        // Filtro SLA
+        if (slaFilter) {
+            slaFilter.addEventListener('change', function() {
+                currentSlaFilter = this.value;
+                filterAndSearch();
+            });
+        }
+
+        // Toggle fases vazias
+        if (toggleEmptyPhasesBtn) {
+            toggleEmptyPhasesBtn.addEventListener('click', function() {
+                hideEmptyPhases = !hideEmptyPhases;
+                this.classList.toggle('active', hideEmptyPhases);
+                filterAndSearch();
+            });
+        }
+
+        // Alternar entre visualizações
+        if (kanbanViewBtn && listViewBtn && kanbanView && listView) {
+            kanbanViewBtn.addEventListener('click', function() {
+                kanbanViewBtn.classList.add('active');
+                listViewBtn.classList.remove('active');
+                kanbanView.classList.remove('hidden');
+                listView.classList.add('hidden');
+            });
+
+            listViewBtn.addEventListener('click', function() {
+                listViewBtn.classList.add('active');
+                kanbanViewBtn.classList.remove('active');
+                listView.classList.remove('hidden');
+                kanbanView.classList.add('hidden');
+            });
+        }
+
+        // Event delegation para cards clicáveis
+        document.addEventListener('click', function(e) {
+            const card = e.target.closest('.kanban-card[data-placa], .table-list-item[data-placa]');
+            if (card && !card.classList.contains('cursor-not-allowed')) {
+                openCardModal(card);
+            }
+        });
+
+        // Carregar dados iniciais
+        fetchData();
+        
+        // Atualizar dados a cada 30 segundos
+        setInterval(fetchData, 30000);
+    });
+
+    // Função para abrir modal do card
+    function openCardModal(element) {
+        const modal = document.getElementById('cardModal');
+        const modalPlaca = document.getElementById('modalPlaca');
+        const modalContent = document.getElementById('modal-content');
+        const modalIframe = document.getElementById('modalFormIframe');
+
+        if (!modal || !modalPlaca || !modalContent || !modalIframe) return;
+
+        const data = {
+            placa: element.getAttribute('data-placa') || '',
+            driver: element.getAttribute('data-driver') || '',
+            chofer: element.getAttribute('data-chofer') || '',
+            origem: element.getAttribute('data-origem') || '',
+            fase: element.getAttribute('data-fase') || '',
+            criacao: element.getAttribute('data-criacao') || '',
+            slaDias: element.getAttribute('data-sla-dias') || '',
+            mapaUrl: element.getAttribute('data-mapa-url') || '',
+            formUrl: element.getAttribute('data-form-url') || '',
+            slaText: element.getAttribute('data-sla-text') || '',
+            valorRecolha: element.getAttribute('data-valor-recolha') || '',
+            custoKm: element.getAttribute('data-custo-km') || '',
+            modeloVeiculo: element.getAttribute('data-modelo-veiculo') || '',
+            telefoneContato: element.getAttribute('data-telefone-contato') || '',
+            telefoneOpcional: element.getAttribute('data-telefone-opcional') || '',
+            enderecoCadastro: element.getAttribute('data-endereco-cadastro') || '',
+            enderecoVeiculo: element.getAttribute('data-endereco-veiculo') || ''
+        };
+
+        modalPlaca.textContent = data.placa;
+        modalContent.innerHTML = buildModalContent(data);
+        
+        if (data.formUrl && data.formUrl !== 'N/A') {
+            modalIframe.src = data.formUrl;
+        } else {
+            modalIframe.src = 'about:blank';
+        }
+
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.querySelector('.modal-panel').classList.remove('scale-95', 'opacity-0');
+            modal.querySelector('.modal-panel').classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    // Fechar modal
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'closeCardModal' || e.target.id === 'cardModal') {
+            const modal = document.getElementById('cardModal');
+            const panel = modal.querySelector('.modal-panel');
+            panel.classList.remove('scale-100', 'opacity-100');
+            panel.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+    });
+
+    // Função para buscar dados
+    async function fetchData() {
+        try {
+            saveScrollPositions();
+            
+            const response = await fetch(SCRIPT_URL);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Ocultar indicador de carregamento
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const kanbanView = document.getElementById('kanban-view');
+            
+            if (loadingIndicator && kanbanView) {
+                loadingIndicator.classList.add('hidden');
+                kanbanView.classList.remove('hidden');
+            }
+            
+            buildUI(data);
+            onDataRefreshed();
+            
+        } catch (error) {
+            console.error('Falha ao carregar dados:', error);
+            const loadingText = document.getElementById('loading-text');
+            if (loadingText) {
+                loadingText.textContent = 'Erro ao carregar dados. Tentando novamente...';
+            }
+        }
+    }
+
+    // Função chamada após atualização dos dados
+    function onDataRefreshed() {
+        // Aplicar filtros após a atualização
+        setTimeout(() => {
+            filterAndSearch();
+        }, 100);
+    }
+
+    // Configurar informações do usuário
+    if (user) {
+        const userNameElement = document.getElementById('user-name');
+        const userEmailElement = document.getElementById('user-email');
+        
+        if (userNameElement) userNameElement.textContent = user.name || 'Utilizador Kovi';
+        if (userEmailElement) userEmailElement.textContent = user.email || 'Carregando...';
+    }
+
+    // Logout
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        });
+    }
+
+    // Calculadora KM
+    const openCalculatorBtn = document.getElementById('openCalculatorBtn');
+    const calculatorModal = document.getElementById('calculatorModal');
+    const closeCalculator = document.getElementById('closeCalculator');
+
+    if (openCalculatorBtn && calculatorModal && closeCalculator) {
+        openCalculatorBtn.addEventListener('click', function() {
+            calculatorModal.classList.remove('hidden');
+        });
+
+        closeCalculator.addEventListener('click', function() {
+            calculatorModal.classList.add('hidden');
+        });
+
+        calculatorModal.addEventListener('click', function(e) {
+            if (e.target === calculatorModal) {
+                calculatorModal.classList.add('hidden');
+            }
+        });
+    }
+  </script>
 </body>
 </html>
+
