@@ -279,7 +279,7 @@
       gap: 8px;
     }
     
-    /* Garantir que a lista não se desloque */
+    /* Garantir que a lista não se desloque e cubra toda a largura */
     #list-view {
       position: relative !important;
       left: 0 !important;
@@ -288,6 +288,13 @@
       margin-left: 0 !important;
       margin-right: 0 !important;
       transform: none !important;
+      padding: 0 !important;
+      box-sizing: border-box !important;
+      display: none !important;
+    }
+    
+    #list-view.block {
+      display: block !important;
     }
     
     #list-view > div {
@@ -297,6 +304,54 @@
       position: relative !important;
       left: 0 !important;
       right: 0 !important;
+      padding: 1rem !important;
+      box-sizing: border-box !important;
+    }
+    
+    /* Garantir que a tabela cubra toda a largura */
+    #list-view table {
+      width: 100% !important;
+      table-layout: fixed !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    /* Garantir que as colunas da tabela tenham larguras apropriadas */
+    #list-view th,
+    #list-view td {
+      box-sizing: border-box !important;
+    }
+    
+    /* Ajustar larguras das colunas para melhor distribuição */
+    #list-view th:nth-child(1), /* Placa */
+    #list-view td:nth-child(1) {
+      width: 15% !important;
+    }
+    
+    #list-view th:nth-child(2), /* Driver */
+    #list-view td:nth-child(2) {
+      width: 20% !important;
+    }
+    
+    #list-view th:nth-child(3), /* Chofer */
+    #list-view td:nth-child(3) {
+      width: 20% !important;
+    }
+    
+    #list-view th:nth-child(4), /* Fase Atual */
+    #list-view td:nth-child(4) {
+      width: 20% !important;
+    }
+    
+    #list-view th:nth-child(5), /* Data Criação */
+    #list-view td:nth-child(5) {
+      width: 15% !important;
+    }
+    
+    #list-view th:nth-child(6), /* SLA */
+    #list-view td:nth-child(6) {
+      width: 10% !important;
+      text-align: center !important;
     }
     
     /* Garantir que os filtros sejam aplicados corretamente após atualizações */
@@ -385,7 +440,7 @@
             </div>
       </div>
       
-      <div id="list-view" class="h-full w-full p-4 hidden">
+      <div id="list-view" class="h-full w-full hidden">
         <div class="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
           <table class="w-full text-sm text-left text-gray-500">
             <thead class="text-xs uppercase bg-gray-50 sticky top-0 z-10 table-header-primary">
@@ -1251,6 +1306,7 @@
         kanbanView.classList.remove('hidden');
         kanbanView.classList.add('flex');
         listView.classList.add('hidden');
+        listView.classList.remove('block');
         kanbanBtn.classList.add('active');
         listBtn.classList.remove('active');
       });
@@ -1259,6 +1315,7 @@
         kanbanView.classList.add('hidden');
         kanbanView.classList.remove('flex');
         listView.classList.remove('hidden');
+        listView.classList.add('block');
         listBtn.classList.add('active');
         kanbanBtn.classList.remove('active');
         // Recriar a lista ao exibir
@@ -1410,6 +1467,8 @@
                 loadingIndicator.style.display = 'none';
                 kanbanView.classList.remove('hidden');
                 kanbanView.classList.add('flex');
+                listView.classList.add('hidden');
+                listView.classList.remove('block');
                 onDataRefreshed(data);
             })
             .catch(err => {
