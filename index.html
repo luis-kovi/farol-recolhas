@@ -1124,6 +1124,9 @@
     let currentSearchTerm = '';
     let currentSlaFilter = 'all';
     let hideEmptyPhases = false;
+    
+    // Variável para rastrear qual aba está ativa
+    let activeView = 'kanban'; // 'kanban' ou 'list'
 
     // Elementos globais
     let searchInput, slaFilter, toggleEmptyPhasesBtn;
@@ -1303,6 +1306,8 @@
       }
 
       kanbanBtn.addEventListener('click', () => {
+        activeView = 'kanban';
+        console.log('[kanbanBtn] Mudando para kanban, activeView:', activeView);
         kanbanView.classList.remove('hidden');
         kanbanView.classList.add('flex');
         listView.classList.add('hidden');
@@ -1312,6 +1317,8 @@
       });
 
       listBtn.addEventListener('click', () => {
+        activeView = 'list';
+        console.log('[listBtn] Mudando para lista, activeView:', activeView);
         kanbanView.classList.add('hidden');
         kanbanView.classList.remove('flex');
         listView.classList.remove('hidden');
@@ -1465,10 +1472,23 @@
                     throw new Error(data.error);
                 }
                 loadingIndicator.style.display = 'none';
-                kanbanView.classList.remove('hidden');
-                kanbanView.classList.add('flex');
-                listView.classList.add('hidden');
-                listView.classList.remove('block');
+                
+                // Manter a aba ativa durante as atualizações
+                console.log('[fetchData] Aba ativa:', activeView);
+                if (activeView === 'list') {
+                    console.log('[fetchData] Mantendo lista ativa');
+                    listView.classList.remove('hidden');
+                    listView.classList.add('block');
+                    kanbanView.classList.add('hidden');
+                    kanbanView.classList.remove('flex');
+                } else {
+                    console.log('[fetchData] Mantendo kanban ativo');
+                    kanbanView.classList.remove('hidden');
+                    kanbanView.classList.add('flex');
+                    listView.classList.add('hidden');
+                    listView.classList.remove('block');
+                }
+                
                 onDataRefreshed(data);
             })
             .catch(err => {
