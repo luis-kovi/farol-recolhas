@@ -541,6 +541,11 @@
         cards.forEach(card => {
           card.sla = calcularSLA(card.dataCriacao);
         });
+        
+        // Verificar se há filtros ativos para otimização
+        const hasActiveFilters = currentSearchTerm !== '' || currentSlaFilter !== 'all' || hideEmptyPhases;
+        console.log('[buildUI] Renderizando com filtros ativos:', hasActiveFilters);
+        
         buildKanbanView(cards);
         buildListView(cards);
     }
@@ -555,6 +560,9 @@
             scrollPositions[index] = scrollContainer.scrollTop;
         });
         
+        // Verificar se há filtros ativos
+        const hasActiveFilters = currentSearchTerm !== '' || currentSlaFilter !== 'all' || hideEmptyPhases;
+        
         const phases = {};
         fixedPhaseOrder.forEach(phaseName => { phases[phaseName] = []; });
         cards.forEach(card => {
@@ -562,12 +570,47 @@
                 phases[card.faseAtual].push(card);
             }
         });
+        
         let html = '';
         fixedPhaseOrder.forEach(phaseName => {
             const cardsInPhase = phases[phaseName];
-            const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
             const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
             const isDisabledPhase = disabledPhases.includes(phaseName);
+            
+            // Filtrar cards durante a renderização se há filtros ativos
+            let filteredCards = cardsInPhase;
+            let visibleCardsCount = cardsInPhase.length;
+            
+            if (hasActiveFilters) {
+                filteredCards = cardsInPhase.filter(card => {
+                    const placa = card.placa.toLowerCase();
+                    const driver = card.nomeDriver.toLowerCase();
+                    const chofer = card.chofer ? card.chofer.toLowerCase() : '';
+                    const slaText = card.sla >= 3 ? 'Atrasado' : card.sla == 2 ? 'Em Alerta' : 'No Prazo';
+                    
+                    const matchesSearch = !currentSearchTerm || 
+                        placa.includes(currentSearchTerm.toLowerCase()) || 
+                        driver.includes(currentSearchTerm.toLowerCase()) || 
+                        chofer.includes(currentSearchTerm.toLowerCase());
+                    
+                    const matchesSla = currentSlaFilter === 'all' || slaText === currentSlaFilter;
+                    
+                    return matchesSearch && matchesSla;
+                });
+                visibleCardsCount = filteredCards.length;
+            }
+            
+            // Verificar se deve mostrar a fase
+            let shouldShowPhase = true;
+            if (hasActiveFilters) {
+                shouldShowPhase = visibleCardsCount > 0;
+            } else if (hideEmptyPhases) {
+                shouldShowPhase = cardsInPhase.length > 0;
+            }
+            
+            if (!shouldShowPhase) return; // Pular esta fase se não deve ser mostrada
+            
+            const lateOrAlertCount = filteredCards.filter(c => c.sla >= 2).length;
             
             // Estilos diferentes para fases desabilitadas
             const headerBorderClass = isDisabledPhase ? 'border-gray-400' : 'border-primary';
@@ -577,11 +620,11 @@
                 <div class="w-52 bg-gray-100 rounded-lg flex flex-col flex-shrink-0">
                     <div class="p-2 flex items-center bg-white rounded-t-lg border-t-3 ${headerBorderClass}">
                         <h2 class="phase-title ${headerTextClass} text-sm font-semibold">${displayPhaseName}</h2>
-                        <span class="text-xs font-semibold text-gray-500 bg-gray-200 rounded-md px-1.5 py-0.5 ml-2 card-count">${cardsInPhase.length}</span>
+                        <span class="text-xs font-semibold text-gray-500 bg-gray-200 rounded-md px-1.5 py-0.5 ml-2 card-count">${visibleCardsCount}</span>
                         ${!isDisabledPhase && lateOrAlertCount > 0 ? `<span class="ml-auto flex items-center text-amber-600 font-semibold text-xs"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${lateOrAlertCount}</span>` : ''}
                     </div>
                     <div class="flex-1 p-2 space-y-2 overflow-y-auto scroll-container">
-                        ${cardsInPhase.length > 0 ? cardsInPhase.map(card => buildCardHTML(card)).join('') : `<div class="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4"><p class="text-sm font-medium">Não há recolha nesta fase.</p></div>`}
+                        ${filteredCards.length > 0 ? filteredCards.map(card => buildCardHTML(card)).join('') : `<div class="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4"><p class="text-sm font-medium">Não há recolha nesta fase.</p></div>`}
                     </div>
                 </div>`;
         });
@@ -595,17 +638,13 @@
                 }
             });
         }, 0);
-        // Aplicar filtros após a atualização
+        
+        // Restaurar valores dos campos sem aplicar filtros novamente
         setTimeout(() => {
-            console.log('[Kanban] Aplicando filtros após atualização:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
-            
-            // Restaurar valores dos campos
+            console.log('[Kanban] Restaurando valores dos campos:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
             if (searchInput) searchInput.value = currentSearchTerm;
             if (slaFilter) slaFilter.value = currentSlaFilter;
             if (toggleEmptyPhasesBtn) toggleEmptyPhasesBtn.classList.toggle('active', hideEmptyPhases);
-            
-            // Aplicar filtros
-            applyFiltersAfterUpdate();
         }, 10);
     }
 
@@ -690,6 +729,9 @@
         if (!container) return;
         let html = '';
         
+        // Verificar se há filtros ativos
+        const hasActiveFilters = currentSearchTerm !== '' || currentSlaFilter !== 'all';
+        
         // Filtrar apenas as fases desejadas
         const filteredCards = cards.filter(card => 
             fixedPhaseOrder.includes(card.faseAtual)
@@ -702,9 +744,36 @@
         // Ordenar cards normais por SLA decrescente
         normalCards.sort((a, b) => b.sla - a.sla);
         
-        if (filteredCards.length > 0) {
+        // Filtrar cards durante a renderização se há filtros ativos
+        let visibleNormalCards = normalCards;
+        let visibleDisabledCards = disabledCards;
+        
+        if (hasActiveFilters) {
+            visibleNormalCards = normalCards.filter(card => {
+                const placa = card.placa.toLowerCase();
+                const driver = card.nomeDriver.toLowerCase();
+                const chofer = card.chofer ? card.chofer.toLowerCase() : '';
+                const slaText = card.sla >= 3 ? 'Atrasado' : card.sla == 2 ? 'Em Alerta' : 'No Prazo';
+                
+                const matchesSearch = !currentSearchTerm || 
+                    placa.includes(currentSearchTerm.toLowerCase()) || 
+                    driver.includes(currentSearchTerm.toLowerCase()) || 
+                    chofer.includes(currentSearchTerm.toLowerCase());
+                
+                const matchesSla = currentSlaFilter === 'all' || slaText === currentSlaFilter;
+                
+                return matchesSearch && matchesSla;
+            });
+            
+            visibleDisabledCards = disabledCards.filter(card => {
+                const textContent = `${card.placa} ${card.nomeDriver} ${card.chofer || ''}`.toLowerCase();
+                return !currentSearchTerm || textContent.includes(currentSearchTerm.toLowerCase());
+            });
+        }
+        
+        if (visibleNormalCards.length > 0 || visibleDisabledCards.length > 0) {
             // Primeiro, renderizar cards normais
-            normalCards.forEach(card => {
+            visibleNormalCards.forEach(card => {
                 let slaText = '', slaBg = '';
                 if (card.sla >= 3) { slaBg = 'bg-red-100 blink'; slaText = 'Atrasado'; }
                 else if (card.sla == 2) { slaBg = 'bg-yellow-100'; slaText = 'Em Alerta'; }
@@ -723,7 +792,7 @@
             });
             
             // Depois, renderizar cards desabilitados (sempre no final)
-            disabledCards.forEach(card => {
+            visibleDisabledCards.forEach(card => {
                 const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
                 const message = disabledPhaseMessages[card.faseAtual];
                 const formattedDate = formatDate(card.dataCriacao);
@@ -748,11 +817,11 @@
         }
         container.innerHTML = html;
         
-        // Aplicar filtros após a atualização da lista
-        setTimeout(() => {
-            console.log('[Lista] Aplicando filtros após atualização:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
-            applyFiltersAfterUpdate();
-        }, 10);
+        console.log('[Lista] Renderização concluída com filtros aplicados:', { 
+            totalCards: filteredCards.length, 
+            visibleNormalCards: visibleNormalCards.length, 
+            visibleDisabledCards: visibleDisabledCards.length 
+        });
     }
 
     function buildDataAttributes(card) {
@@ -1145,9 +1214,37 @@
         });
       }
 
+      // Variáveis para rastrear mudanças nos filtros
+      let lastSearchTerm = '';
+      let lastSlaFilter = 'all';
+      let lastHideEmptyPhases = false;
+
       function filterAndSearch() {
-        console.log('[Kanban] Aplicando filtros:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
-        applyFiltersAfterUpdate();
+        console.log('[Filtros] Aplicando filtros:', { currentSearchTerm, currentSlaFilter, hideEmptyPhases });
+        
+        // Verificar se houve mudança real nos filtros
+        const hasChanged = currentSearchTerm !== lastSearchTerm || 
+                          currentSlaFilter !== lastSlaFilter || 
+                          hideEmptyPhases !== lastHideEmptyPhases;
+        
+        if (!hasChanged) {
+          console.log('[Filtros] Nenhuma mudança detectada, pulando re-renderização');
+          return;
+        }
+        
+        // Atualizar valores de referência
+        lastSearchTerm = currentSearchTerm;
+        lastSlaFilter = currentSlaFilter;
+        lastHideEmptyPhases = hideEmptyPhases;
+        
+        // Se há dados disponíveis, re-renderizar com filtros aplicados
+        if (window.lastCardsData) {
+          console.log('[Filtros] Re-renderizando com filtros aplicados');
+          buildUI(window.lastCardsData);
+        } else {
+          // Fallback para aplicar filtros no DOM existente
+          applyFiltersAfterUpdate();
+        }
       }
 
       kanbanBtn.addEventListener('click', () => {
@@ -1291,12 +1388,6 @@
           // Verifica permissões para a calculadora
           checkCalculatorPermission(responseData);
           window.lastCardsData = responseData.cards;
-          
-          // Garantir que os filtros sejam aplicados após a atualização
-          setTimeout(() => {
-              console.log('[onDataRefreshed] Aplicando filtros após atualização completa');
-              applyFiltersAfterUpdate();
-          }, 50);
       }
       
       function fetchData() {
